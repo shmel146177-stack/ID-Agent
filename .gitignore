@@ -1,0 +1,14 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+uploads/
+output/
+projects/
+backup/
+checkpoints/
+**/*_backup*.py
+**/*_working*.py
+**/*_before_*.py
+main_*.py
+patch_*.py
