@@ -215,7 +215,7 @@ class ProjectPackage:
 
         try:
 
-            return str(path.relative_to(package_folder))
+            return path.relative_to(package_folder).as_posix()
 
         except ValueError:
 
