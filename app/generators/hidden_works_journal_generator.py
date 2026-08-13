@@ -395,11 +395,12 @@ class HiddenWorksJournalGenerator:
         self,
         document: Document,
         registry: dict,
+        act_data: dict | None = None,
     ) -> None:
 
         paragraph = document.add_paragraph()
 
-        run = paragraph.add_run("Реестр актов")
+        run = paragraph.add_run("?????? ?????")
 
         run.bold = True
         run.font.size = Pt(11)
@@ -408,6 +409,16 @@ class HiddenWorksJournalGenerator:
             "acts",
             [],
         )
+
+        act_data = act_data or {}
+
+        saved_acts = act_data.get(
+            "acts",
+            {},
+        )
+
+        if not isinstance(saved_acts, dict):
+            saved_acts = {}
 
         headers = [
             "№",
@@ -425,7 +436,6 @@ class HiddenWorksJournalGenerator:
         )
 
         table.style = "Table Grid"
-
         table.alignment = WD_TABLE_ALIGNMENT.CENTER
 
         for column_index, header in enumerate(headers):
@@ -452,14 +462,59 @@ class HiddenWorksJournalGenerator:
             start=1,
         ):
 
+            act_code = act.get("code") or ""
+
+            saved = saved_acts.get(
+                act_code,
+                {},
+            )
+
+            if not isinstance(saved, dict):
+                saved = {}
+
+            work_start_date = (
+                saved.get("work_start_date")
+                or ""
+            )
+
+            work_finish_date = (
+                saved.get("work_finish_date")
+                or ""
+            )
+
+            if work_start_date and work_finish_date:
+                work_date = (
+                    f"{work_start_date} - "
+                    f"{work_finish_date}"
+                )
+            else:
+                work_date = (
+                    work_start_date
+                    or work_finish_date
+                    or saved.get("act_date")
+                    or "[УКАЗАТЬ]"
+                )
+
+            act_number = (
+                saved.get("act_number")
+                or "[УКАЗАТЬ]"
+            )
+
             values = [
                 str(row_index),
-                (act.get("act_title") or act.get("title") or ""),
+                (
+                    act.get("act_title")
+                    or act.get("title")
+                    or ""
+                ),
                 self._evidence_text(act),
                 (act.get("priority") or ""),
-                "[УКАЗАТЬ]",
-                "[УКАЗАТЬ]",
-                (act.get("status") or "Требует подтверждения"),
+                work_date,
+                act_number,
+                (
+                    act.get("status")
+                    or "Требует подтверждения"
+                ),
             ]
 
             for column_index, value in enumerate(values):
@@ -611,6 +666,10 @@ class HiddenWorksJournalGenerator:
 
         project_card = self._load_json(self._project_card_path(project_name))
 
+        act_data = self._load_json(
+            project_path / "hidden_works_act_data.json"
+        )
+
         # ---------------------------------------------------------
         # 3. DOCX
         # ---------------------------------------------------------
@@ -637,6 +696,7 @@ class HiddenWorksJournalGenerator:
         self._add_registry_table(
             document,
             registry,
+            act_data=act_data,
         )
 
         self._add_notes(document)
