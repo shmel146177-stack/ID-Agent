@@ -454,8 +454,8 @@ def create_hidden_works_act(
     )
 
     headers = {
-        "X-Act-Number": str(
-            act.act_number
+        "X-Act-Number": quote(
+            str(act.act_number)
         ),
         "X-Acts-Count": str(
             registry.get(
