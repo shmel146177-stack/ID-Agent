@@ -5,6 +5,7 @@ from pathlib import Path
 from app.services.document_completeness import document_completeness
 from app.services.hidden_works_registry import hidden_works_registry
 from app.services.supporting_documents_registry import supporting_documents_registry
+from app.services.supporting_document_matcher import supporting_document_matcher
 
 
 class ProjectDocumentSet:
@@ -517,10 +518,95 @@ class ProjectDocumentSet:
                         0,
                     )
 
-                    found_count = min(
-                        len(actual_files),
-                        required_count,
+                    requirements = supporting_section.get(
+                        "documents",
+                        [],
                     )
+
+                    verifiable_requirements = [
+                        requirement
+                        for requirement in requirements
+                        if requirement.get("document_types")
+                        or requirement.get("match_keywords")
+                    ]
+
+                    project_analysis = self._load_json(
+                        self._analysis_path(project_name)
+                        / "project_analysis.json"
+                    )
+
+                    page_analysis = self._load_json(
+                        self._analysis_path(project_name)
+                        / "page_analysis.json"
+                    )
+
+                    analysis_available = bool(
+                        project_analysis.get("documents")
+                        and page_analysis.get("documents")
+                    )
+
+                    if verifiable_requirements and analysis_available:
+
+                        analysis_documents = (
+                            supporting_document_matcher.build_documents(
+                                project_analysis,
+                                page_analysis,
+                            )
+                        )
+
+                        actual_file_names = {
+                            item.get("name")
+                            for item in actual_files
+                            if item.get("name")
+                        }
+
+                        candidate_documents = [
+                            document
+                            for document in analysis_documents
+                            if document.get("filename")
+                            in actual_file_names
+                        ]
+
+                        match_result = (
+                            supporting_document_matcher.match_requirements(
+                                verifiable_requirements,
+                                candidate_documents,
+                            )
+                        )
+
+                        exact_found_count = match_result.get(
+                            "found_count",
+                            0,
+                        )
+
+                        unverified_required_count = max(
+                            required_count
+                            - len(verifiable_requirements),
+                            0,
+                        )
+
+                        remaining_file_count = max(
+                            len(actual_files)
+                            - exact_found_count,
+                            0,
+                        )
+
+                        fallback_found_count = min(
+                            remaining_file_count,
+                            unverified_required_count,
+                        )
+
+                        found_count = (
+                            exact_found_count
+                            + fallback_found_count
+                        )
+
+                    else:
+
+                        found_count = min(
+                            len(actual_files),
+                            required_count,
+                        )
 
                     missing_count = max(
                         required_count - found_count,

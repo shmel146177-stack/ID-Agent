@@ -35,6 +35,10 @@ class SupportingDocumentsRegistry:
                 "section_number": "04",
                 "section_title": "Исполнительные схемы",
                 "title": ("Исполнительная схема " "заземляющего устройства"),
+                "document_types": ["\u0418\u0441\u043f\u043e\u043b\u043d\u0438\u0442\u0435\u043b\u044c\u043d\u0430\u044f \u0441\u0445\u0435\u043c\u0430"],
+                "match_keywords": [
+                    "\u0437\u0430\u0437\u0435\u043c\u043b",
+                ],
                 "priority": "Высокий",
                 "reason": (
                     "Для подтверждения фактического "
@@ -50,6 +54,11 @@ class SupportingDocumentsRegistry:
                 "title": (
                     "Протокол измерения сопротивления " "заземляющего устройства"
                 ),
+                "document_types": ["\u041f\u0440\u043e\u0442\u043e\u043a\u043e\u043b"],
+                "match_keywords": [
+                    "\u0441\u043e\u043f\u0440\u043e\u0442\u0438\u0432\u043b\u0435\u043d",
+                    "\u0437\u0430\u0437\u0435\u043c\u043b",
+                ],
                 "priority": "Высокий",
                 "reason": (
                     "Для подтверждения результатов "
@@ -79,6 +88,11 @@ class SupportingDocumentsRegistry:
                 "section_number": "04",
                 "section_title": "Исполнительные схемы",
                 "title": ("Исполнительная схема " "кабельного ввода"),
+                "document_types": ["\u0418\u0441\u043f\u043e\u043b\u043d\u0438\u0442\u0435\u043b\u044c\u043d\u0430\u044f \u0441\u0445\u0435\u043c\u0430"],
+                "match_keywords": [
+                    "\u043a\u0430\u0431\u0435\u043b\u044c\u043d",
+                    "\u0432\u0432\u043e\u0434",
+                ],
                 "priority": "Высокий",
                 "reason": (
                     "Для фиксации фактической трассы, "
@@ -92,6 +106,10 @@ class SupportingDocumentsRegistry:
                 "section_number": "05",
                 "section_title": "Протоколы и испытания",
                 "title": ("Протокол испытаний или измерений " "кабельной линии"),
+                "document_types": ["\u041f\u0440\u043e\u0442\u043e\u043a\u043e\u043b"],
+                "match_keywords": [
+                    "\u043a\u0430\u0431\u0435\u043b\u044c\u043d",
+                ],
                 "priority": "Средний",
                 "reason": (
                     "Необходимость и состав испытаний "
