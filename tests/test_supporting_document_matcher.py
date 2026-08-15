@@ -351,3 +351,97 @@ def test_real_supports_scheme_requirement_rejects_cable_scheme():
 
     assert matcher.matches(requirement, supports_scheme) is True
     assert matcher.matches(requirement, cable_scheme) is False
+
+
+def test_matcher_supports_any_keyword_group():
+    matcher = SupportingDocumentMatcher()
+
+    requirement = {
+        "code": "grounding_quality",
+        "document_types": ["Сертификат"],
+        "match_any_keywords": [
+            "заземл",
+            "электрод",
+            "полос",
+        ],
+    }
+
+    grounding_certificate = {
+        "filename": "grounding_certificate.pdf",
+        "classification": "Сертификат",
+        "text": "Сертификат соответствия на полосу стальную 40х5 мм",
+    }
+
+    cable_certificate = {
+        "filename": "cable_certificate.pdf",
+        "classification": "Сертификат",
+        "text": "Сертификат соответствия на кабель силовой 10 кВ",
+    }
+
+    assert matcher.matches(requirement, grounding_certificate) is True
+    assert matcher.matches(requirement, cable_certificate) is False
+
+
+def test_real_grounding_quality_requirement_rejects_cable_certificate():
+    matcher = SupportingDocumentMatcher()
+
+    requirement = SupportingDocumentsRegistry.REQUIREMENTS[
+        "grounding_device"
+    ][2]
+
+    grounding_certificate = {
+        "filename": "grounding_strip_certificate.pdf",
+        "classification": "Сертификат",
+        "text": "Сертификат соответствия на полосу стальную 40х5 мм",
+    }
+
+    cable_certificate = {
+        "filename": "cable_certificate.pdf",
+        "classification": "Сертификат",
+        "text": "Сертификат соответствия на кабель силовой 10 кВ",
+    }
+
+    assert matcher.matches(requirement, grounding_certificate) is True
+    assert matcher.matches(requirement, cable_certificate) is False
+
+
+def test_real_cable_quality_requirement_rejects_grounding_certificate():
+    matcher = SupportingDocumentMatcher()
+
+    requirement = SupportingDocumentsRegistry.REQUIREMENTS["cable_entry"][2]
+
+    cable_certificate = {
+        "filename": "cable_certificate.pdf",
+        "classification": "Сертификат",
+        "text": "Сертификат соответствия на кабель силовой 10 кВ",
+    }
+
+    grounding_certificate = {
+        "filename": "grounding_strip_certificate.pdf",
+        "classification": "Сертификат",
+        "text": "Сертификат соответствия на полосу стальную 40х5 мм",
+    }
+
+    assert matcher.matches(requirement, cable_certificate) is True
+    assert matcher.matches(requirement, grounding_certificate) is False
+
+
+def test_real_supports_quality_requirement_rejects_cable_certificate():
+    matcher = SupportingDocumentMatcher()
+
+    requirement = SupportingDocumentsRegistry.REQUIREMENTS["support_foundations"][1]
+
+    supports_certificate = {
+        "filename": "supports_certificate.pdf",
+        "classification": "Сертификат",
+        "text": "Сертификат соответствия на элементы временных опор и фундаментов",
+    }
+
+    cable_certificate = {
+        "filename": "cable_certificate.pdf",
+        "classification": "Сертификат",
+        "text": "Сертификат соответствия на кабель силовой 10 кВ",
+    }
+
+    assert matcher.matches(requirement, supports_certificate) is True
+    assert matcher.matches(requirement, cable_certificate) is False

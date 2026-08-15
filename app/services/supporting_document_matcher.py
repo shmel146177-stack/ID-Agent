@@ -25,11 +25,21 @@ class SupportingDocumentMatcher:
 
         keywords = requirement.get("match_keywords", [])
 
-        return all(
+        if not all(
             self._normalize(keyword) in normalized_text
             for keyword in keywords
-        )
+        ):
+            return False
 
+        any_keywords = requirement.get("match_any_keywords", [])
+
+        if any_keywords and not any(
+            self._normalize(keyword) in normalized_text
+            for keyword in any_keywords
+        ):
+            return False
+
+        return True
 
 
     def build_documents(
