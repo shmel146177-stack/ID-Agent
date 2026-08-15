@@ -653,6 +653,78 @@ class ProjectReportGenerator:
                 style="List Bullet",
             )
 
+    def _add_supporting_documents(
+        self,
+        document: Document,
+        supporting_documents: dict,
+    ):
+
+        document.add_heading(
+            "6. Сопроводительная исполнительная документация",
+            level=1,
+        )
+
+        requirements_count = supporting_documents.get(
+            "requirements_count",
+            0,
+        )
+
+        high_priority_count = supporting_documents.get(
+            "high_priority_count",
+            0,
+        )
+
+        document.add_paragraph(
+            f"Требуется документов: {requirements_count}. "
+            f"Высокого приоритета: {high_priority_count}."
+        )
+
+        sections = supporting_documents.get(
+            "sections",
+            [],
+        )
+
+        if not sections:
+            document.add_paragraph(
+                "Сопроводительные документы автоматически не определены."
+            )
+            return
+
+        for section in sections:
+
+            number = section.get("number", "")
+            title = section.get("title", "")
+            required_count = section.get("required_count", 0)
+
+            paragraph = document.add_paragraph()
+            run = paragraph.add_run(
+                f"Раздел {number}. {title} — требуется: {required_count}"
+            )
+            run.bold = True
+
+            for item in section.get("documents", []):
+
+                document_title = item.get(
+                    "title",
+                    item.get("code", ""),
+                )
+
+                priority = item.get(
+                    "priority",
+                    "",
+                )
+
+                text = document_title
+
+                if priority:
+                    text += f" (приоритет: {priority})"
+
+                document.add_paragraph(
+                    text,
+                    style="List Bullet",
+                )
+
+
     def _add_conclusion(
         self,
         document: Document,
@@ -757,6 +829,17 @@ class ProjectReportGenerator:
             or {}
         )
 
+        supporting_documents = (
+            self._load_json(
+                self._analysis_path(
+                    project_name,
+                    "supporting_documents_registry.json",
+                ),
+                {},
+            )
+            or {}
+        )
+
         completeness = document_completeness.check(project_name)
 
         document = Document()
@@ -792,6 +875,11 @@ class ProjectReportGenerator:
         self._add_missing_sheets(
             document,
             completeness,
+        )
+
+        self._add_supporting_documents(
+            document,
+            supporting_documents,
         )
 
         self._add_conclusion(
