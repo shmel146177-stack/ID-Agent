@@ -12,6 +12,7 @@ from app.services.drawing_register_service import drawing_register_service
 from app.services.page_analysis_service import page_analysis_service
 from app.services.project_metadata_service import project_metadata_service
 from app.services.project_section_exporter import project_section_exporter
+from app.services.supporting_documents_registry import supporting_documents_registry
 
 
 class ProjectProcessor:
@@ -93,6 +94,10 @@ class ProjectProcessor:
         routing_result = executive_document_router.route(project_name)
 
         result["document_routing"] = routing_result
+
+        supporting_documents_result = supporting_documents_registry.analyze_project(project_name)
+
+        result["supporting_documents"] = supporting_documents_result
 
         # ---------------------------------------------------------
         # 8. АВТОМАТИЧЕСКОЕ СОЗДАНИЕ ЧЕРНОВИКОВ АОСР

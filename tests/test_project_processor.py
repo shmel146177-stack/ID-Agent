@@ -1,4 +1,4 @@
-﻿import app.services.project_processor as processor_module
+import app.services.project_processor as processor_module
 from app.services.project_processor import ProjectProcessor
 
 
@@ -54,6 +54,12 @@ def test_project_processor_pipeline(monkeypatch):
     )
 
     monkeypatch.setattr(
+        processor_module.supporting_documents_registry,
+        "analyze_project",
+        lambda name: {"status": "supporting_documents_ok"},
+    )
+
+    monkeypatch.setattr(
         processor_module.hidden_works_act_generator,
         "create_all",
         lambda name: {"status": "acts_ok"},
@@ -90,6 +96,7 @@ def test_project_processor_pipeline(monkeypatch):
     assert result["registry"]["status"] == "registry_ok"
     assert result["completeness"]["status"] == "completeness_ok"
     assert result["document_routing"]["status"] == "routing_ok"
+    assert result["supporting_documents"]["status"] == "supporting_documents_ok"
     assert result["hidden_works_acts"]["status"] == "acts_ok"
 
     assert result["hidden_works_journal"] == "journal.docx"
