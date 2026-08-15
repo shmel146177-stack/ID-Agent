@@ -511,10 +511,26 @@ class ProjectDocumentSet:
                 supporting_section = supporting_by_code.get(code, {})
 
                 if code != "journals" and supporting_section:
+
+                    required_count = supporting_section.get(
+                        "required_count",
+                        0,
+                    )
+
+                    found_count = min(
+                        len(actual_files),
+                        required_count,
+                    )
+
+                    missing_count = max(
+                        required_count - found_count,
+                        0,
+                    )
+
                     section["detected"] = {
-                        "required_count": (
-                            supporting_section.get("required_count", 0)
-                        ),
+                        "required_count": required_count,
+                        "found_count": found_count,
+                        "missing_count": missing_count,
                         "high_priority_count": (
                             supporting_section.get("high_priority_count", 0)
                         ),
@@ -523,17 +539,29 @@ class ProjectDocumentSet:
                         ),
                     }
 
-                if actual_files:
+                    if actual_files:
+                        section["detected"]["files_count"] = len(actual_files)
+                        section["detected"]["files"] = actual_files
 
-                    section["detected"]["files_count"] = len(actual_files)
-                    section["detected"]["files"] = actual_files
+                    if missing_count > 0:
+                        section["status"] = "Неполный комплект"
+
+                    elif required_count > 0:
+                        section["status"] = "Комплект сформирован"
+
+                    elif actual_files:
+                        section["status"] = "Документы обнаружены"
+
+                elif actual_files:
+
+                    section["detected"] = {
+                        "files_count": len(actual_files),
+                        "files": actual_files,
+                    }
 
                     if code == "journals":
-
                         section["status"] = "Документы сформированы"
-
                     else:
-
                         section["status"] = "Документы обнаружены"
 
             # -----------------------------------------------------
