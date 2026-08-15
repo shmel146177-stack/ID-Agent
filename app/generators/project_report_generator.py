@@ -732,7 +732,7 @@ class ProjectReportGenerator:
     ):
 
         document.add_heading(
-            "6. Заключение ID-Agent",
+            "7. Заключение ID-Agent",
             level=1,
         )
 
