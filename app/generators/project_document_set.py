@@ -4,6 +4,7 @@ from pathlib import Path
 
 from app.services.document_completeness import document_completeness
 from app.services.hidden_works_registry import hidden_works_registry
+from app.services.supporting_documents_registry import supporting_documents_registry
 
 
 class ProjectDocumentSet:
@@ -409,9 +410,21 @@ class ProjectDocumentSet:
         project_name: str,
         folders: list[dict],
         hidden_works_result: dict,
+        supporting_documents_result: dict | None = None,
     ) -> list[dict]:
 
         detected = self._detected_documents(project_name)
+
+        if supporting_documents_result is None:
+            supporting_documents_result = supporting_documents_registry.analyze_project(
+                project_name
+            )
+
+        supporting_by_code = {
+            item.get("code"): item
+            for item in supporting_documents_result.get("sections", [])
+            if item.get("code")
+        }
 
         sections = []
 
@@ -495,12 +508,25 @@ class ProjectDocumentSet:
                 "journals",
             }:
 
+                supporting_section = supporting_by_code.get(code, {})
+
+                if code != "journals" and supporting_section:
+                    section["detected"] = {
+                        "required_count": (
+                            supporting_section.get("required_count", 0)
+                        ),
+                        "high_priority_count": (
+                            supporting_section.get("high_priority_count", 0)
+                        ),
+                        "documents": (
+                            supporting_section.get("documents", [])
+                        ),
+                    }
+
                 if actual_files:
 
-                    section["detected"] = {
-                        "files_count": (len(actual_files)),
-                        "files": (actual_files),
-                    }
+                    section["detected"]["files_count"] = len(actual_files)
+                    section["detected"]["files"] = actual_files
 
                     if code == "journals":
 
