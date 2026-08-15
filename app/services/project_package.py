@@ -432,6 +432,27 @@ class ProjectPackage:
                     False,
                 )
 
+            elif code in {
+                "executive_schemes",
+                "tests",
+                "quality_documents",
+            }:
+
+                section_data["required_count"] = detected.get(
+                    "required_count",
+                    0,
+                )
+
+                section_data["high_priority_count"] = detected.get(
+                    "high_priority_count",
+                    0,
+                )
+
+                section_data["required_documents"] = detected.get(
+                    "documents",
+                    [],
+                )
+
             elif code == "final_documents":
 
                 section_data["generated_files_count"] = detected.get(
