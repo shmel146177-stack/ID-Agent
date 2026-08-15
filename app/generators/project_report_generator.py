@@ -653,6 +653,66 @@ class ProjectReportGenerator:
                 style="List Bullet",
             )
 
+    def _with_supporting_completeness(
+        self,
+        project_name: str,
+        supporting_documents: dict,
+    ) -> dict:
+
+        from app.generators.project_document_set import ProjectDocumentSet
+
+        result = dict(supporting_documents)
+        document_set = ProjectDocumentSet()
+
+        folder_by_code = {
+            section["code"]: section["folder"]
+            for section in document_set.SECTIONS
+        }
+
+        executive_root = (
+            self._project_path(project_name)
+            / "executive_docs"
+            / "Исполнительная_документация"
+        )
+
+        enriched_sections = []
+
+        for section in supporting_documents.get("sections", []):
+            enriched = dict(section)
+            code = section.get("code")
+
+            if code in {
+                "executive_schemes",
+                "tests",
+                "quality_documents",
+            }:
+                folder_name = folder_by_code.get(code)
+                actual_files = []
+
+                if folder_name:
+                    actual_files = document_set._list_section_files(
+                        executive_root / folder_name
+                    )
+
+                required_count = section.get("required_count", 0)
+                found_count = min(
+                    len(actual_files),
+                    required_count,
+                )
+                missing_count = max(
+                    required_count - found_count,
+                    0,
+                )
+
+                enriched["found_count"] = found_count
+                enriched["missing_count"] = missing_count
+
+            enriched_sections.append(enriched)
+
+        result["sections"] = enriched_sections
+
+        return result
+
     def _add_supporting_documents(
         self,
         document: Document,
@@ -696,10 +756,19 @@ class ProjectReportGenerator:
             title = section.get("title", "")
             required_count = section.get("required_count", 0)
 
+            found_count = section.get("found_count")
+            missing_count = section.get("missing_count")
+
             paragraph = document.add_paragraph()
             run = paragraph.add_run(
-                f"Раздел {number}. {title} — требуется: {required_count}"
+                f"\u0420\u0430\u0437\u0434\u0435\u043b {number}. {title} \u2014 \u0442\u0440\u0435\u0431\u0443\u0435\u0442\u0441\u044f: {required_count}"
             )
+
+            if found_count is not None and missing_count is not None:
+                run.add_text(
+                    f", \u043d\u0430\u0439\u0434\u0435\u043d\u043e: {found_count}, "
+                    f"\u043e\u0442\u0441\u0443\u0442\u0441\u0442\u0432\u0443\u0435\u0442: {missing_count}"
+                )
             run.bold = True
 
             for item in section.get("documents", []):
@@ -838,6 +907,11 @@ class ProjectReportGenerator:
                 {},
             )
             or {}
+        )
+
+        supporting_documents = self._with_supporting_completeness(
+            project_name,
+            supporting_documents,
         )
 
         completeness = document_completeness.check(project_name)

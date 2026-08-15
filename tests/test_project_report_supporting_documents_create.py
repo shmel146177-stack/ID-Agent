@@ -60,6 +60,30 @@ def test_project_report_create_uses_supporting_documents(monkeypatch, tmp_path):
         lambda name: output_path,
     )
 
+    enriched_supporting_documents = {
+        **supporting_documents,
+        "sections": [
+            {
+                **supporting_documents["sections"][0],
+                "found_count": 1,
+                "missing_count": 0,
+            },
+        ],
+    }
+
+    enrichment = {}
+
+    def fake_with_supporting_completeness(name, data):
+        enrichment["project_name"] = name
+        enrichment["data"] = data
+        return enriched_supporting_documents
+
+    monkeypatch.setattr(
+        generator,
+        "_with_supporting_completeness",
+        fake_with_supporting_completeness,
+    )
+
     captured = {}
 
     def capture_supporting(document, data):
@@ -73,5 +97,7 @@ def test_project_report_create_uses_supporting_documents(monkeypatch, tmp_path):
 
     generator.create(project_name)
 
-    assert captured["data"] == supporting_documents
+    assert enrichment["project_name"] == project_name
+    assert enrichment["data"] == supporting_documents
+    assert captured["data"] == enriched_supporting_documents
     assert output_path.exists()
