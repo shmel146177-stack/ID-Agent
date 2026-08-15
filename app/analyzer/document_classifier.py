@@ -353,7 +353,18 @@ class DocumentClassifier:
                 )
 
         # 1. Strong text markers have highest priority
-        result = self._classify_by_strong_markers(text)
+        filename_result = self._classify_by_filename(filename)
+
+        priority_filename_types = {
+            "Паспорт оборудования",
+            "Сертификат",
+            "Декларация",
+        }
+
+        if filename_result in priority_filename_types:
+            result = filename_result
+        else:
+            result = self._classify_by_strong_markers(text)
 
         # 2. Text / OCR scoring
         if not result:
