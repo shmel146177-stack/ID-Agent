@@ -28,6 +28,7 @@ class ProjectPackage:
         "drawing_register.json",
         "drawing_sheet_match.json",
         "hidden_works_registry.json",
+        "supporting_documents_registry.json",
         "project_document_set.json",
     ]
 
