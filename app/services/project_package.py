@@ -468,6 +468,11 @@ class ProjectPackage:
             destination_folder,
         )
 
+        supporting_documents = processor_result.get(
+            "supporting_documents",
+            {},
+        )
+
         hidden_works_journal = self._build_journal(
             processor_result,
             destination_folder,
@@ -513,6 +518,22 @@ class ProjectPackage:
             },
             "hidden_works_acts": (generated_acts),
             "hidden_works_journal": (hidden_works_journal),
+            "supporting_documents": {
+                "status": (supporting_documents.get("status")),
+                "requirements_count": (
+                    supporting_documents.get("requirements_count", 0)
+                ),
+                "high_priority_count": (
+                    supporting_documents.get("high_priority_count", 0)
+                ),
+                "requires_field_confirmation": (
+                    supporting_documents.get(
+                        "requires_field_confirmation",
+                        False,
+                    )
+                ),
+                "sections": (supporting_documents.get("sections", [])),
+            },
             "document_set": {
                 "sections_count": (
                     document_set_result.get(
