@@ -7,6 +7,7 @@ from app.generators.project_document_set import ProjectDocumentSet
 
 class ExecutiveDocumentRouter:
     ROUTES = {
+        "\u0418\u0441\u043f\u043e\u043b\u043d\u0438\u0442\u0435\u043b\u044c\u043d\u0430\u044f \u0441\u0445\u0435\u043c\u0430": "executive_schemes",
         "\u041f\u0430\u0441\u043f\u043e\u0440\u0442 \u043e\u0431\u043e\u0440\u0443\u0434\u043e\u0432\u0430\u043d\u0438\u044f": "quality_documents",
         "\u0421\u0435\u0440\u0442\u0438\u0444\u0438\u043a\u0430\u0442": "quality_documents",
         "\u0414\u0435\u043a\u043b\u0430\u0440\u0430\u0446\u0438\u044f": "quality_documents",
