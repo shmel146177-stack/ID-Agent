@@ -443,6 +443,16 @@ class ProjectPackage:
                     0,
                 )
 
+                section_data["found_count"] = detected.get(
+                    "found_count",
+                    0,
+                )
+
+                section_data["missing_count"] = detected.get(
+                    "missing_count",
+                    0,
+                )
+
                 section_data["high_priority_count"] = detected.get(
                     "high_priority_count",
                     0,
