@@ -246,6 +246,9 @@ class SupportingDocumentsRegistry:
             "priority": (requirement["priority"]),
             "confirmation_required": (True),
             "reason": (requirement["reason"]),
+            **({"document_types": list(requirement["document_types"])} if requirement.get("document_types") else {}),
+            **({"match_keywords": list(requirement["match_keywords"])} if requirement.get("match_keywords") else {}),
+            **({"match_any_keywords": list(requirement["match_any_keywords"])} if requirement.get("match_any_keywords") else {}),
             "source_act": {
                 "code": (act.get("code")),
                 "title": (act.get("act_title") or act.get("title")),

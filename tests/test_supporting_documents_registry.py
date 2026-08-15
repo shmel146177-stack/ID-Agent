@@ -1,4 +1,4 @@
-﻿import json
+import json
 from pathlib import Path
 
 import app.services.supporting_documents_registry as registry_module
@@ -101,6 +101,16 @@ def test_supporting_documents_registry_builds_requirements(monkeypatch, tmp_path
     for section in result["sections"]:
         assert section["required_count"] == 1
         assert section["high_priority_count"] == 1
+
+    by_code = {item["code"]: item for item in result["requirements"]}
+
+    scheme = by_code["grounding_executive_scheme"]
+    assert scheme["document_types"] == ["Исполнительная схема"]
+    assert scheme["match_keywords"] == ["заземл"]
+
+    quality = by_code["grounding_quality_documents"]
+    assert quality["document_types"] == ["Паспорт оборудования", "Сертификат", "Декларация"]
+    assert "полос" in quality["match_any_keywords"]
 
     first = result["requirements"][0]
 
