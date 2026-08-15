@@ -328,3 +328,26 @@ def test_matcher_matches_real_requirements_from_analysis_data():
     }
 
     assert missing_codes == {"cable_entry_executive_scheme"}
+
+
+def test_real_supports_scheme_requirement_rejects_cable_scheme():
+    matcher = SupportingDocumentMatcher()
+
+    requirement = SupportingDocumentsRegistry.REQUIREMENTS[
+        "support_foundations"
+    ][0]
+
+    supports_scheme = {
+        "filename": "supports_scheme.pdf",
+        "classification": "\u0418\u0441\u043f\u043e\u043b\u043d\u0438\u0442\u0435\u043b\u044c\u043d\u0430\u044f \u0441\u0445\u0435\u043c\u0430",
+        "text": "\u0418\u0441\u043f\u043e\u043b\u043d\u0438\u0442\u0435\u043b\u044c\u043d\u0430\u044f \u0441\u0445\u0435\u043c\u0430 \u0440\u0430\u0441\u043f\u043e\u043b\u043e\u0436\u0435\u043d\u0438\u044f \u0432\u0440\u0435\u043c\u0435\u043d\u043d\u044b\u0445 \u043e\u043f\u043e\u0440",
+    }
+
+    cable_scheme = {
+        "filename": "cable_entry_scheme.pdf",
+        "classification": "\u0418\u0441\u043f\u043e\u043b\u043d\u0438\u0442\u0435\u043b\u044c\u043d\u0430\u044f \u0441\u0445\u0435\u043c\u0430",
+        "text": "\u0418\u0441\u043f\u043e\u043b\u043d\u0438\u0442\u0435\u043b\u044c\u043d\u0430\u044f \u0441\u0445\u0435\u043c\u0430 \u043a\u0430\u0431\u0435\u043b\u044c\u043d\u043e\u0433\u043e \u0432\u0432\u043e\u0434\u0430",
+    }
+
+    assert matcher.matches(requirement, supports_scheme) is True
+    assert matcher.matches(requirement, cable_scheme) is False

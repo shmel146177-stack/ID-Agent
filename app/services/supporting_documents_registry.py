@@ -142,6 +142,11 @@ class SupportingDocumentsRegistry:
                 "section_number": "04",
                 "section_title": "Исполнительные схемы",
                 "title": ("Исполнительная схема " "расположения временных опор"),
+                "document_types": ["\u0418\u0441\u043f\u043e\u043b\u043d\u0438\u0442\u0435\u043b\u044c\u043d\u0430\u044f \u0441\u0445\u0435\u043c\u0430"],
+                "match_keywords": [
+                    "\u0440\u0430\u0441\u043f\u043e\u043b\u043e\u0436",
+                    "\u043e\u043f\u043e\u0440",
+                ],
                 "priority": "Средний",
                 "reason": (
                     "Для фиксации фактического положения "
