@@ -15,6 +15,7 @@ from app.services.project_processor import project_processor
 from app.services.project_package import project_package
 from app.services.project_manager import project_manager
 from app.services.hidden_works_registry import hidden_works_registry
+from app.services.supporting_documents_registry import supporting_documents_registry
 
 from app.generators.document_registry_excel import document_registry_excel
 from app.generators.project_executive_generator import (
@@ -519,6 +520,29 @@ def get_hidden_works_registry(
 # =========================================================
 # ЖУРНАЛ АОСР
 # =========================================================
+
+@router.get("/{project_name}/supporting-documents-registry")
+def get_supporting_documents_registry(
+    project_name: str
+):
+
+    try:
+        return supporting_documents_registry.analyze_project(
+            project_name
+        )
+
+    except FileNotFoundError as error:
+        raise HTTPException(
+            status_code=404,
+            detail=str(error)
+        )
+
+    except Exception as error:
+        raise HTTPException(
+            status_code=500,
+            detail=str(error)
+        )
+
 
 @router.get("/{project_name}/hidden-works-journal")
 def download_hidden_works_journal(
