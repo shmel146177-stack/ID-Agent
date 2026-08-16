@@ -1255,3 +1255,122 @@ def test_project_document_set_rejects_wrong_supports_scheme(
     assert detected["found_count"] == 0
     assert detected["missing_count"] == 1
     assert section["status"] == "\u041d\u0435\u043f\u043e\u043b\u043d\u044b\u0439 \u043a\u043e\u043c\u043f\u043b\u0435\u043a\u0442"
+
+
+def test_project_document_set_counts_matching_supports_quality_document(
+    monkeypatch,
+    tmp_path,
+):
+    generator = ProjectDocumentSet()
+
+    project_name = "TEST_PROJECT"
+    section_path = tmp_path / "06"
+
+    folders = [
+        {
+            "number": "06",
+            "code": "quality_documents",
+            "title": "Паспорта и сертификаты",
+            "folder": "06_quality_documents",
+            "path": section_path,
+            "description": "Документы качества",
+        },
+    ]
+
+    supporting_documents = {
+        "sections": [
+            {
+                "number": "06",
+                "code": "quality_documents",
+                "required_count": 1,
+                "high_priority_count": 0,
+                "documents": [
+                    {
+                        "code": "supports_quality_documents",
+                        "title": "Документы качества на материалы оснований и элементов временных опор",
+                        "document_types": [
+                            "Паспорт оборудования",
+                            "Сертификат",
+                            "Декларация",
+                        ],
+                        "match_any_keywords": [
+                            "опор",
+                            "фундамент",
+                        ],
+                    },
+                ],
+            },
+        ],
+    }
+
+    actual_files = [
+        {
+            "name": "supports_certificate.pdf",
+            "relative_path": "supports_certificate.pdf",
+            "extension": ".pdf",
+            "size_bytes": 100,
+        },
+    ]
+
+    project_analysis = {
+        "documents": [
+            {
+                "filename": "supports_certificate.pdf",
+                "classification": "Сертификат",
+            },
+        ],
+    }
+
+    page_analysis = {
+        "documents": [
+            {
+                "filename": "supports_certificate.pdf",
+                "pages": [
+                    {
+                        "text": "Сертификат соответствия на элементы временных опор и фундаментов",
+                    },
+                ],
+            },
+        ],
+    }
+
+    monkeypatch.setattr(
+        generator,
+        "_detected_documents",
+        lambda name: {},
+    )
+
+    monkeypatch.setattr(
+        generator,
+        "_list_section_files",
+        lambda path: actual_files,
+    )
+
+    def fake_load_json(path):
+        if path.name == "project_analysis.json":
+            return project_analysis
+        if path.name == "page_analysis.json":
+            return page_analysis
+        return {}
+
+    monkeypatch.setattr(
+        generator,
+        "_load_json",
+        fake_load_json,
+    )
+
+    sections = generator._build_sections(
+        project_name,
+        folders,
+        {},
+        supporting_documents,
+    )
+
+    section = sections[0]
+    detected = section["detected"]
+
+    assert section["actual_files_count"] == 1
+    assert detected["required_count"] == 1
+    assert detected["found_count"] == 1
+    assert detected["missing_count"] == 0
+    assert section["status"] == "Комплект сформирован"
