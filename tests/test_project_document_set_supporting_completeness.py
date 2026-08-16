@@ -435,3 +435,123 @@ def test_project_document_set_does_not_count_unrelated_quality_documents(
     assert detected["found_count"] == 0
     assert detected["missing_count"] == 1
     assert section["status"] == "Неполный комплект"
+
+
+def test_project_document_set_counts_matching_quality_document(
+    monkeypatch,
+    tmp_path,
+):
+    generator = ProjectDocumentSet()
+
+    project_name = "TEST_PROJECT"
+    section_path = tmp_path / "06"
+
+    folders = [
+        {
+            "number": "06",
+            "code": "quality_documents",
+            "title": "\u041f\u0430\u0441\u043f\u043e\u0440\u0442\u0430 \u0438 \u0441\u0435\u0440\u0442\u0438\u0444\u0438\u043a\u0430\u0442\u044b",
+            "folder": "06_quality_documents",
+            "path": section_path,
+            "description": "\u0414\u043e\u043a\u0443\u043c\u0435\u043d\u0442\u044b \u043a\u0430\u0447\u0435\u0441\u0442\u0432\u0430",
+        },
+    ]
+
+    supporting_documents = {
+        "sections": [
+            {
+                "number": "06",
+                "code": "quality_documents",
+                "required_count": 1,
+                "high_priority_count": 1,
+                "documents": [
+                    {
+                        "code": "cable_quality_documents",
+                        "title": "\u0414\u043e\u043a\u0443\u043c\u0435\u043d\u0442\u044b \u043a\u0430\u0447\u0435\u0441\u0442\u0432\u0430 \u043d\u0430 \u043a\u0430\u0431\u0435\u043b\u044c",
+                        "document_types": [
+                            "\u041f\u0430\u0441\u043f\u043e\u0440\u0442 \u043e\u0431\u043e\u0440\u0443\u0434\u043e\u0432\u0430\u043d\u0438\u044f",
+                            "\u0421\u0435\u0440\u0442\u0438\u0444\u0438\u043a\u0430\u0442",
+                            "\u0414\u0435\u043a\u043b\u0430\u0440\u0430\u0446\u0438\u044f",
+                        ],
+                        "match_any_keywords": [
+                            "\u043a\u0430\u0431\u0435\u043b",
+                            "\u0442\u0440\u0443\u0431",
+                            "\u043f\u0440\u043e\u0445\u043e\u0434",
+                        ],
+                    },
+                ],
+            },
+        ],
+    }
+
+    actual_files = [
+        {
+            "name": "cable_certificate.pdf",
+            "relative_path": "cable_certificate.pdf",
+            "extension": ".pdf",
+            "size_bytes": 100,
+        },
+    ]
+
+    project_analysis = {
+        "documents": [
+            {
+                "filename": "cable_certificate.pdf",
+                "classification": "\u0421\u0435\u0440\u0442\u0438\u0444\u0438\u043a\u0430\u0442",
+            },
+        ],
+    }
+
+    page_analysis = {
+        "documents": [
+            {
+                "filename": "cable_certificate.pdf",
+                "pages": [
+                    {
+                        "text": "\u0421\u0435\u0440\u0442\u0438\u0444\u0438\u043a\u0430\u0442 \u0441\u043e\u043e\u0442\u0432\u0435\u0442\u0441\u0442\u0432\u0438\u044f \u043d\u0430 \u043a\u0430\u0431\u0435\u043b\u044c \u0441\u0438\u043b\u043e\u0432\u043e\u0439 10 \u043a\u0412",
+                    },
+                ],
+            },
+        ],
+    }
+
+    monkeypatch.setattr(
+        generator,
+        "_detected_documents",
+        lambda name: {},
+    )
+
+    monkeypatch.setattr(
+        generator,
+        "_list_section_files",
+        lambda path: actual_files,
+    )
+
+    def fake_load_json(path):
+        if path.name == "project_analysis.json":
+            return project_analysis
+        if path.name == "page_analysis.json":
+            return page_analysis
+        return {}
+
+    monkeypatch.setattr(
+        generator,
+        "_load_json",
+        fake_load_json,
+    )
+
+    sections = generator._build_sections(
+        project_name,
+        folders,
+        {},
+        supporting_documents,
+    )
+
+    section = sections[0]
+    detected = section["detected"]
+
+    assert section["actual_files_count"] == 1
+    assert detected["required_count"] == 1
+    assert detected["found_count"] == 1
+    assert detected["missing_count"] == 0
+    assert section["status"] == "\u041a\u043e\u043c\u043f\u043b\u0435\u043a\u0442 \u0441\u0444\u043e\u0440\u043c\u0438\u0440\u043e\u0432\u0430\u043d"
