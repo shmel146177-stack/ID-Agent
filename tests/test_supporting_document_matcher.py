@@ -445,3 +445,75 @@ def test_real_supports_quality_requirement_rejects_cable_certificate():
 
     assert matcher.matches(requirement, supports_certificate) is True
     assert matcher.matches(requirement, cable_certificate) is False
+
+
+def test_matcher_matches_real_quality_filenames_from_project_analysis():
+    matcher = SupportingDocumentMatcher()
+
+    requirements = [
+        {
+            "code": "certificate",
+            "title": "\u0421\u0435\u0440\u0442\u0438\u0444\u0438\u043a\u0430\u0442",
+            "document_types": [
+                "\u0421\u0435\u0440\u0442\u0438\u0444\u0438\u043a\u0430\u0442"
+            ],
+            "match_keywords": [
+                "\u0441\u0435\u0440\u0442\u0438\u0444\u0438\u043a\u0430\u0442"
+            ],
+        },
+        {
+            "code": "passport",
+            "title": "\u041f\u0430\u0441\u043f\u043e\u0440\u0442 \u043e\u0431\u043e\u0440\u0443\u0434\u043e\u0432\u0430\u043d\u0438\u044f",
+            "document_types": [
+                "\u041f\u0430\u0441\u043f\u043e\u0440\u0442 \u043e\u0431\u043e\u0440\u0443\u0434\u043e\u0432\u0430\u043d\u0438\u044f"
+            ],
+            "match_keywords": [
+                "\u043f\u0430\u0441\u043f\u043e\u0440\u0442"
+            ],
+        },
+    ]
+
+    project_analysis = {
+        "documents": [
+            {
+                "filename": "\u0421\u0435\u0440\u0442\u0438\u0444\u0438\u043a\u0430\u0442.pdf",
+                "path": "projects/test/input/certificate.pdf",
+                "classification": "\u0421\u0435\u0440\u0442\u0438\u0444\u0438\u043a\u0430\u0442",
+            },
+            {
+                "filename": "\u043f\u0430\u0441\u043f\u043e\u0440\u0442.pdf",
+                "path": "projects/test/input/passport.pdf",
+                "classification": "\u041f\u0430\u0441\u043f\u043e\u0440\u0442 \u043e\u0431\u043e\u0440\u0443\u0434\u043e\u0432\u0430\u043d\u0438\u044f",
+            },
+        ]
+    }
+
+    page_analysis = {
+        "documents": [
+            {
+                "filename": "\u0421\u0435\u0440\u0442\u0438\u0444\u0438\u043a\u0430\u0442.pdf",
+                "pages": [],
+            },
+            {
+                "filename": "\u043f\u0430\u0441\u043f\u043e\u0440\u0442.pdf",
+                "pages": [],
+            },
+        ]
+    }
+
+    result = matcher.match_analysis(
+        requirements,
+        project_analysis,
+        page_analysis,
+    )
+
+    assert result["required_count"] == 2
+    assert result["found_count"] == 2
+    assert result["missing_count"] == 0
+    assert result["missing"] == []
+
+    assert result["matched"][0]["filename"] == "\u0421\u0435\u0440\u0442\u0438\u0444\u0438\u043a\u0430\u0442.pdf"
+    assert result["matched"][0]["classification"] == "\u0421\u0435\u0440\u0442\u0438\u0444\u0438\u043a\u0430\u0442"
+
+    assert result["matched"][1]["filename"] == "\u043f\u0430\u0441\u043f\u043e\u0440\u0442.pdf"
+    assert result["matched"][1]["classification"] == "\u041f\u0430\u0441\u043f\u043e\u0440\u0442 \u043e\u0431\u043e\u0440\u0443\u0434\u043e\u0432\u0430\u043d\u0438\u044f"
