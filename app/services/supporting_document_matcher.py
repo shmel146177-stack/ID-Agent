@@ -1,6 +1,26 @@
+import re
+
 class SupportingDocumentMatcher:
     def _normalize(self, value: str) -> str:
         return (value or "").lower().replace("ё", "е")
+
+    def _contains_keyword(
+        self,
+        text: str,
+        keyword: str,
+    ) -> bool:
+
+        normalized_keyword = self._normalize(keyword)
+
+        if not normalized_keyword:
+            return False
+
+        pattern = rf"(?<!\w){re.escape(normalized_keyword)}"
+
+        return re.search(
+            pattern,
+            text,
+        ) is not None
 
     def matches(
         self,
@@ -26,7 +46,10 @@ class SupportingDocumentMatcher:
         keywords = requirement.get("match_keywords", [])
 
         if not all(
-            self._normalize(keyword) in normalized_text
+            self._contains_keyword(
+                normalized_text,
+                keyword,
+            )
             for keyword in keywords
         ):
             return False
@@ -34,7 +57,10 @@ class SupportingDocumentMatcher:
         any_keywords = requirement.get("match_any_keywords", [])
 
         if any_keywords and not any(
-            self._normalize(keyword) in normalized_text
+            self._contains_keyword(
+                normalized_text,
+                keyword,
+            )
             for keyword in any_keywords
         ):
             return False

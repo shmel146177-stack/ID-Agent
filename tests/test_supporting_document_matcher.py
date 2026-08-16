@@ -517,3 +517,26 @@ def test_matcher_matches_real_quality_filenames_from_project_analysis():
 
     assert result["matched"][1]["filename"] == "\u043f\u0430\u0441\u043f\u043e\u0440\u0442.pdf"
     assert result["matched"][1]["classification"] == "\u041f\u0430\u0441\u043f\u043e\u0440\u0442 \u043e\u0431\u043e\u0440\u0443\u0434\u043e\u0432\u0430\u043d\u0438\u044f"
+
+
+def test_quality_keyword_does_not_match_inside_compound_word():
+    matcher = SupportingDocumentMatcher()
+
+    requirement = SupportingDocumentsRegistry.REQUIREMENTS[
+        "cable_entry"
+    ][2]
+
+    false_certificate = {
+        "filename": "\u0421\u0435\u0440\u0442\u0438\u0444\u0438\u043a\u0430\u0442.pdf",
+        "classification": "\u0421\u0435\u0440\u0442\u0438\u0444\u0438\u043a\u0430\u0442",
+        "text": (
+            "\u041a\u043b\u0435\u043c\u043c\u0430 "
+            "\u0434\u0432\u0443\u0445\u043f\u0440\u043e\u0445\u043e\u0434\u043d\u0430\u044f "
+            "2x2,5 \u043a\u0432.\u043c\u043c."
+        ),
+    }
+
+    assert matcher.matches(
+        requirement,
+        false_certificate,
+    ) is False
