@@ -297,3 +297,141 @@ def test_project_document_set_counts_matching_supporting_document(
     assert detected["found_count"] == 1
     assert detected["missing_count"] == 0
     assert sections[0]["status"] == "\u041a\u043e\u043c\u043f\u043b\u0435\u043a\u0442 \u0441\u0444\u043e\u0440\u043c\u0438\u0440\u043e\u0432\u0430\u043d"
+
+
+def test_project_document_set_does_not_count_unrelated_quality_documents(
+    monkeypatch,
+    tmp_path,
+):
+    generator = ProjectDocumentSet()
+
+    project_name = "TEST_PROJECT"
+    section_path = tmp_path / "06"
+
+    folders = [
+        {
+            "number": "06",
+            "code": "quality_documents",
+            "title": "Паспорта и сертификаты",
+            "folder": "06_Паспорта_и_сертификаты",
+            "path": section_path,
+            "description": "Документы качества",
+        },
+    ]
+
+    supporting_documents = {
+        "sections": [
+            {
+                "number": "06",
+                "code": "quality_documents",
+                "required_count": 1,
+                "high_priority_count": 1,
+                "documents": [
+                    {
+                        "code": "cable_quality_documents",
+                        "title": "Документы качества на кабель",
+                        "document_types": [
+                            "Паспорт оборудования",
+                            "Сертификат",
+                            "Декларация",
+                        ],
+                        "match_any_keywords": [
+                            "кабел",
+                            "труб",
+                            "проход",
+                        ],
+                    },
+                ],
+            },
+        ],
+    }
+
+    actual_files = [
+        {
+            "name": "Сертификат.pdf",
+            "relative_path": "Сертификат.pdf",
+            "extension": ".pdf",
+            "size_bytes": 100,
+        },
+        {
+            "name": "паспорт.pdf",
+            "relative_path": "паспорт.pdf",
+            "extension": ".pdf",
+            "size_bytes": 100,
+        },
+    ]
+
+    project_analysis = {
+        "documents": [
+            {
+                "filename": "Сертификат.pdf",
+                "classification": "Сертификат",
+            },
+            {
+                "filename": "паспорт.pdf",
+                "classification": "Паспорт оборудования",
+            },
+        ],
+    }
+
+    page_analysis = {
+        "documents": [
+            {
+                "filename": "Сертификат.pdf",
+                "pages": [
+                    {
+                        "text": "Клемма двухпроходная 2x2,5 кв.мм.",
+                    },
+                ],
+            },
+            {
+                "filename": "паспорт.pdf",
+                "pages": [
+                    {
+                        "text": "Паспорт шкафа управления и электрического оборудования.",
+                    },
+                ],
+            },
+        ],
+    }
+
+    monkeypatch.setattr(
+        generator,
+        "_detected_documents",
+        lambda name: {},
+    )
+
+    monkeypatch.setattr(
+        generator,
+        "_list_section_files",
+        lambda path: actual_files,
+    )
+
+    def fake_load_json(path):
+        if path.name == "project_analysis.json":
+            return project_analysis
+        if path.name == "page_analysis.json":
+            return page_analysis
+        return {}
+
+    monkeypatch.setattr(
+        generator,
+        "_load_json",
+        fake_load_json,
+    )
+
+    sections = generator._build_sections(
+        project_name,
+        folders,
+        {},
+        supporting_documents,
+    )
+
+    section = sections[0]
+    detected = section["detected"]
+
+    assert section["actual_files_count"] == 2
+    assert detected["required_count"] == 1
+    assert detected["found_count"] == 0
+    assert detected["missing_count"] == 1
+    assert section["status"] == "Неполный комплект"
