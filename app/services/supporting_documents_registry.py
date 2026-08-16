@@ -304,6 +304,43 @@ class SupportingDocumentsRegistry:
 
         return result
 
+    def _apply_matching(
+        self,
+        requirements: list[dict],
+        matching: dict,
+    ) -> list[dict]:
+
+        matched_by_code = {
+            item.get("requirement_code"): item
+            for item in matching.get("matched", [])
+            if item.get("requirement_code")
+        }
+
+        result = []
+
+        for requirement in requirements:
+
+            item = dict(requirement)
+
+            matched_document = matched_by_code.get(
+                item.get("code")
+            )
+
+            if matched_document:
+
+                item["status"] = "\u0414\u043e\u043a\u0443\u043c\u0435\u043d\u0442 \u043e\u0431\u043d\u0430\u0440\u0443\u0436\u0435\u043d"
+
+                item["matched_document"] = {
+                    "filename": matched_document.get("filename"),
+                    "classification": matched_document.get(
+                        "classification"
+                    ),
+                }
+
+            result.append(item)
+
+        return result
+
     def _build_sections(
         self,
         requirements: list[dict],
@@ -419,6 +456,11 @@ class SupportingDocumentsRegistry:
             requirements,
             project_analysis,
             page_analysis,
+        )
+
+        requirements = self._apply_matching(
+            requirements,
+            matching,
         )
 
         # ---------------------------------------------------------
