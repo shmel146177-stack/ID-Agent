@@ -671,3 +671,119 @@ def test_project_document_set_counts_matching_cable_test_protocol(
     assert detected["found_count"] == 1
     assert detected["missing_count"] == 0
     assert section["status"] == "\u041a\u043e\u043c\u043f\u043b\u0435\u043a\u0442 \u0441\u0444\u043e\u0440\u043c\u0438\u0440\u043e\u0432\u0430\u043d"
+
+
+def test_project_document_set_rejects_wrong_cable_test_protocol(
+    monkeypatch,
+    tmp_path,
+):
+    generator = ProjectDocumentSet()
+
+    project_name = "TEST_PROJECT"
+    section_path = tmp_path / "05"
+
+    folders = [
+        {
+            "number": "05",
+            "code": "tests",
+            "title": "\u041f\u0440\u043e\u0442\u043e\u043a\u043e\u043b\u044b \u0438 \u0438\u0441\u043f\u044b\u0442\u0430\u043d\u0438\u044f",
+            "folder": "05_tests",
+            "path": section_path,
+            "description": "\u041f\u0440\u043e\u0442\u043e\u043a\u043e\u043b\u044b \u0438 \u0438\u0441\u043f\u044b\u0442\u0430\u043d\u0438\u044f",
+        },
+    ]
+
+    supporting_documents = {
+        "sections": [
+            {
+                "number": "05",
+                "code": "tests",
+                "required_count": 1,
+                "high_priority_count": 0,
+                "documents": [
+                    {
+                        "code": "cable_test_protocol",
+                        "title": "\u041f\u0440\u043e\u0442\u043e\u043a\u043e\u043b \u0438\u0441\u043f\u044b\u0442\u0430\u043d\u0438\u0439 \u043a\u0430\u0431\u0435\u043b\u044c\u043d\u043e\u0439 \u043b\u0438\u043d\u0438\u0438",
+                        "document_types": [
+                            "\u041f\u0440\u043e\u0442\u043e\u043a\u043e\u043b",
+                        ],
+                        "match_keywords": [
+                            "\u043a\u0430\u0431\u0435\u043b\u044c\u043d",
+                        ],
+                    },
+                ],
+            },
+        ],
+    }
+
+    actual_files = [
+        {
+            "name": "grounding_protocol.pdf",
+            "relative_path": "grounding_protocol.pdf",
+            "extension": ".pdf",
+            "size_bytes": 100,
+        },
+    ]
+
+    project_analysis = {
+        "documents": [
+            {
+                "filename": "grounding_protocol.pdf",
+                "classification": "\u041f\u0440\u043e\u0442\u043e\u043a\u043e\u043b",
+            },
+        ],
+    }
+
+    page_analysis = {
+        "documents": [
+            {
+                "filename": "grounding_protocol.pdf",
+                "pages": [
+                    {
+                        "text": "\u041f\u0440\u043e\u0442\u043e\u043a\u043e\u043b \u0438\u0437\u043c\u0435\u0440\u0435\u043d\u0438\u044f \u0441\u043e\u043f\u0440\u043e\u0442\u0438\u0432\u043b\u0435\u043d\u0438\u044f \u0437\u0430\u0437\u0435\u043c\u043b\u044f\u044e\u0449\u0435\u0433\u043e \u0443\u0441\u0442\u0440\u043e\u0439\u0441\u0442\u0432\u0430",
+                    },
+                ],
+            },
+        ],
+    }
+
+    monkeypatch.setattr(
+        generator,
+        "_detected_documents",
+        lambda name: {},
+    )
+
+    monkeypatch.setattr(
+        generator,
+        "_list_section_files",
+        lambda path: actual_files,
+    )
+
+    def fake_load_json(path):
+        if path.name == "project_analysis.json":
+            return project_analysis
+        if path.name == "page_analysis.json":
+            return page_analysis
+        return {}
+
+    monkeypatch.setattr(
+        generator,
+        "_load_json",
+        fake_load_json,
+    )
+
+    sections = generator._build_sections(
+        project_name,
+        folders,
+        {},
+        supporting_documents,
+    )
+
+    section = sections[0]
+    detected = section["detected"]
+
+    assert section["actual_files_count"] == 1
+    assert detected["required_count"] == 1
+    assert detected["found_count"] == 0
+    assert detected["missing_count"] == 1
+    assert section["status"] == "\u041d\u0435\u043f\u043e\u043b\u043d\u044b\u0439 \u043a\u043e\u043c\u043f\u043b\u0435\u043a\u0442"
