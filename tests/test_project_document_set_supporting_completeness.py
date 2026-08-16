@@ -555,3 +555,119 @@ def test_project_document_set_counts_matching_quality_document(
     assert detected["found_count"] == 1
     assert detected["missing_count"] == 0
     assert section["status"] == "\u041a\u043e\u043c\u043f\u043b\u0435\u043a\u0442 \u0441\u0444\u043e\u0440\u043c\u0438\u0440\u043e\u0432\u0430\u043d"
+
+
+def test_project_document_set_counts_matching_cable_test_protocol(
+    monkeypatch,
+    tmp_path,
+):
+    generator = ProjectDocumentSet()
+
+    project_name = "TEST_PROJECT"
+    section_path = tmp_path / "05"
+
+    folders = [
+        {
+            "number": "05",
+            "code": "tests",
+            "title": "\u041f\u0440\u043e\u0442\u043e\u043a\u043e\u043b\u044b \u0438 \u0438\u0441\u043f\u044b\u0442\u0430\u043d\u0438\u044f",
+            "folder": "05_tests",
+            "path": section_path,
+            "description": "\u041f\u0440\u043e\u0442\u043e\u043a\u043e\u043b\u044b \u0438 \u0438\u0441\u043f\u044b\u0442\u0430\u043d\u0438\u044f",
+        },
+    ]
+
+    supporting_documents = {
+        "sections": [
+            {
+                "number": "05",
+                "code": "tests",
+                "required_count": 1,
+                "high_priority_count": 0,
+                "documents": [
+                    {
+                        "code": "cable_test_protocol",
+                        "title": "\u041f\u0440\u043e\u0442\u043e\u043a\u043e\u043b \u0438\u0441\u043f\u044b\u0442\u0430\u043d\u0438\u0439 \u043a\u0430\u0431\u0435\u043b\u044c\u043d\u043e\u0439 \u043b\u0438\u043d\u0438\u0438",
+                        "document_types": [
+                            "\u041f\u0440\u043e\u0442\u043e\u043a\u043e\u043b",
+                        ],
+                        "match_keywords": [
+                            "\u043a\u0430\u0431\u0435\u043b\u044c\u043d",
+                        ],
+                    },
+                ],
+            },
+        ],
+    }
+
+    actual_files = [
+        {
+            "name": "cable_protocol.pdf",
+            "relative_path": "cable_protocol.pdf",
+            "extension": ".pdf",
+            "size_bytes": 100,
+        },
+    ]
+
+    project_analysis = {
+        "documents": [
+            {
+                "filename": "cable_protocol.pdf",
+                "classification": "\u041f\u0440\u043e\u0442\u043e\u043a\u043e\u043b",
+            },
+        ],
+    }
+
+    page_analysis = {
+        "documents": [
+            {
+                "filename": "cable_protocol.pdf",
+                "pages": [
+                    {
+                        "text": "\u041f\u0440\u043e\u0442\u043e\u043a\u043e\u043b \u0438\u0441\u043f\u044b\u0442\u0430\u043d\u0438\u0439 \u043a\u0430\u0431\u0435\u043b\u044c\u043d\u043e\u0439 \u043b\u0438\u043d\u0438\u0438 10 \u043a\u0412",
+                    },
+                ],
+            },
+        ],
+    }
+
+    monkeypatch.setattr(
+        generator,
+        "_detected_documents",
+        lambda name: {},
+    )
+
+    monkeypatch.setattr(
+        generator,
+        "_list_section_files",
+        lambda path: actual_files,
+    )
+
+    def fake_load_json(path):
+        if path.name == "project_analysis.json":
+            return project_analysis
+        if path.name == "page_analysis.json":
+            return page_analysis
+        return {}
+
+    monkeypatch.setattr(
+        generator,
+        "_load_json",
+        fake_load_json,
+    )
+
+    sections = generator._build_sections(
+        project_name,
+        folders,
+        {},
+        supporting_documents,
+    )
+
+    section = sections[0]
+    detected = section["detected"]
+
+    assert section["actual_files_count"] == 1
+    assert detected["required_count"] == 1
+    assert detected["found_count"] == 1
+    assert detected["missing_count"] == 0
+    assert section["status"] == "\u041a\u043e\u043c\u043f\u043b\u0435\u043a\u0442 \u0441\u0444\u043e\u0440\u043c\u0438\u0440\u043e\u0432\u0430\u043d"
