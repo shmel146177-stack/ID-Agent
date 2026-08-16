@@ -292,3 +292,77 @@ def test_project_package_manifest_keeps_matching_cable_protocol_section_complete
     assert section["found_count"] == 1
     assert section["missing_count"] == 0
     assert section["status"] == "\u041a\u043e\u043c\u043f\u043b\u0435\u043a\u0442 \u0441\u0444\u043e\u0440\u043c\u0438\u0440\u043e\u0432\u0430\u043d"
+
+
+def test_project_package_manifest_keeps_wrong_cable_protocol_section_incomplete(
+    tmp_path,
+):
+    package = ProjectPackage()
+
+    project_name = "TEST_PROJECT"
+    destination_folder = tmp_path / "executive_docs"
+    destination_folder.mkdir(parents=True)
+
+    processor_result = {
+        "status": "\u0413\u043e\u0442\u043e\u0432\u043e",
+        "completeness": {},
+        "hidden_works_acts": {},
+        "supporting_documents": {},
+    }
+
+    document_set_result = {
+        "sections_count": 1,
+        "sections_with_files": 1,
+        "actual_files_count": 1,
+        "sections": [
+            {
+                "number": "05",
+                "code": "tests",
+                "title": "\u041f\u0440\u043e\u0442\u043e\u043a\u043e\u043b\u044b \u0438 \u0438\u0441\u043f\u044b\u0442\u0430\u043d\u0438\u044f",
+                "status": "\u041d\u0435\u043f\u043e\u043b\u043d\u044b\u0439 \u043a\u043e\u043c\u043f\u043b\u0435\u043a\u0442",
+                "path": destination_folder / "05_tests",
+                "actual_files_count": 1,
+                "actual_files": [
+                    {
+                        "name": "grounding_protocol.pdf",
+                        "relative_path": "grounding_protocol.pdf",
+                        "extension": ".pdf",
+                        "size_bytes": 100,
+                    },
+                ],
+                "detected": {
+                    "required_count": 1,
+                    "found_count": 0,
+                    "missing_count": 1,
+                    "high_priority_count": 0,
+                    "documents": [
+                        {
+                            "code": "cable_test_protocol",
+                        },
+                    ],
+                },
+            },
+        ],
+    }
+
+    manifest_path = package._create_manifest(
+        project_name,
+        destination_folder,
+        processor_result,
+        document_set_result,
+        {"files": [], "folders": []},
+        [],
+    )
+
+    manifest = json.loads(
+        Path(manifest_path).read_text(encoding="utf-8")
+    )
+
+    section = manifest["document_sections"][0]
+
+    assert section["code"] == "tests"
+    assert section["actual_files_count"] == 1
+    assert section["required_count"] == 1
+    assert section["found_count"] == 0
+    assert section["missing_count"] == 1
+    assert section["status"] == "\u041d\u0435\u043f\u043e\u043b\u043d\u044b\u0439 \u043a\u043e\u043c\u043f\u043b\u0435\u043a\u0442"
