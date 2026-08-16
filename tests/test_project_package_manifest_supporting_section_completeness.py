@@ -810,3 +810,77 @@ def test_project_package_manifest_keeps_wrong_grounding_scheme_incomplete(
     assert section["found_count"] == 0
     assert section["missing_count"] == 1
     assert section["status"] == "Неполный комплект"
+
+
+def test_project_package_manifest_keeps_matching_supports_quality_complete(
+    tmp_path,
+):
+    package = ProjectPackage()
+
+    project_name = "TEST_PROJECT"
+    destination_folder = tmp_path / "executive_docs"
+    destination_folder.mkdir(parents=True)
+
+    processor_result = {
+        "status": "Готово",
+        "completeness": {},
+        "hidden_works_acts": {},
+        "supporting_documents": {},
+    }
+
+    document_set_result = {
+        "sections_count": 1,
+        "sections_with_files": 1,
+        "actual_files_count": 1,
+        "sections": [
+            {
+                "number": "06",
+                "code": "quality_documents",
+                "title": "Паспорта и сертификаты",
+                "status": "Комплект сформирован",
+                "path": destination_folder / "06_quality_documents",
+                "actual_files_count": 1,
+                "actual_files": [
+                    {
+                        "name": "supports_certificate.pdf",
+                        "relative_path": "supports_certificate.pdf",
+                        "extension": ".pdf",
+                        "size_bytes": 100,
+                    },
+                ],
+                "detected": {
+                    "required_count": 1,
+                    "found_count": 1,
+                    "missing_count": 0,
+                    "high_priority_count": 0,
+                    "documents": [
+                        {
+                            "code": "supports_quality_documents",
+                        },
+                    ],
+                },
+            },
+        ],
+    }
+
+    manifest_path = package._create_manifest(
+        project_name,
+        destination_folder,
+        processor_result,
+        document_set_result,
+        {"files": [], "folders": []},
+        [],
+    )
+
+    manifest = json.loads(
+        Path(manifest_path).read_text(encoding="utf-8")
+    )
+
+    section = manifest["document_sections"][0]
+
+    assert section["code"] == "quality_documents"
+    assert section["actual_files_count"] == 1
+    assert section["required_count"] == 1
+    assert section["found_count"] == 1
+    assert section["missing_count"] == 0
+    assert section["status"] == "Комплект сформирован"
