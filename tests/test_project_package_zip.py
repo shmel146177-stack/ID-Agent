@@ -831,3 +831,87 @@ def test_project_package_zip_preserves_matching_grounding_scheme_manifest(
     assert section["required_count"] == 1
     assert section["found_count"] == 1
     assert section["missing_count"] == 0
+
+
+def test_project_package_zip_preserves_wrong_grounding_scheme_incomplete(
+    monkeypatch,
+    tmp_path,
+):
+    import json
+    import zipfile
+    from pathlib import Path
+
+    package = ProjectPackage()
+
+    project_name = "TEST_PROJECT"
+
+    project_path = tmp_path / project_name
+    package_folder = project_path / "executive_docs"
+
+    package_folder.mkdir(parents=True)
+
+    manifest = {
+        "project": project_name,
+        "document_sections": [
+            {
+                "number": "04",
+                "code": "executive_schemes",
+                "title": "Исполнительные схемы",
+                "status": "Неполный комплект",
+                "actual_files_count": 1,
+                "required_count": 1,
+                "found_count": 0,
+                "missing_count": 1,
+            },
+        ],
+    }
+
+    (package_folder / "package_manifest.json").write_text(
+        json.dumps(
+            manifest,
+            ensure_ascii=False,
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(
+        package,
+        "create",
+        lambda name: {
+            "project": name,
+            "package_folder": str(package_folder),
+        },
+    )
+
+    monkeypatch.setattr(
+        package,
+        "_project_path",
+        lambda name: project_path,
+    )
+
+    result = package.create_zip(project_name)
+
+    zip_path = Path(result)
+
+    with zipfile.ZipFile(
+        zip_path,
+        "r",
+    ) as archive:
+
+        assert "package_manifest.json" in archive.namelist()
+
+        archived_manifest = json.loads(
+            archive.read(
+                "package_manifest.json"
+            ).decode("utf-8")
+        )
+
+    section = archived_manifest["document_sections"][0]
+
+    assert section["code"] == "executive_schemes"
+    assert section["status"] == "Неполный комплект"
+    assert section["actual_files_count"] == 1
+    assert section["required_count"] == 1
+    assert section["found_count"] == 0
+    assert section["missing_count"] == 1
