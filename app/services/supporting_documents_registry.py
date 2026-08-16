@@ -3,6 +3,7 @@ from datetime import datetime
 from pathlib import Path
 
 from app.services.hidden_works_registry import hidden_works_registry
+from app.services.supporting_document_matcher import supporting_document_matcher
 
 
 class SupportingDocumentsRegistry:
@@ -206,6 +207,32 @@ class SupportingDocumentsRegistry:
 
         return self._project_path(project_name) / "analysis"
 
+    def _load_analysis_json(
+        self,
+        project_name: str,
+        filename: str,
+    ) -> dict:
+
+        path = self._analysis_path(project_name) / filename
+
+        if not path.exists():
+            return {}
+
+        try:
+            with open(
+                path,
+                "r",
+                encoding="utf-8",
+            ) as file:
+                data = json.load(file)
+        except (
+            OSError,
+            json.JSONDecodeError,
+        ):
+            return {}
+
+        return data if isinstance(data, dict) else {}
+
     def _copy_evidence(
         self,
         act: dict,
@@ -378,6 +405,22 @@ class SupportingDocumentsRegistry:
 
         requirements = self._deduplicate(requirements)
 
+        project_analysis = self._load_analysis_json(
+            project_name,
+            "project_analysis.json",
+        )
+
+        page_analysis = self._load_analysis_json(
+            project_name,
+            "page_analysis.json",
+        )
+
+        matching = supporting_document_matcher.match_analysis(
+            requirements,
+            project_analysis,
+            page_analysis,
+        )
+
         # ---------------------------------------------------------
         # 3. ГРУППИРУЕМ ПО РАЗДЕЛАМ 04 / 05 / 06
         # ---------------------------------------------------------
@@ -402,6 +445,7 @@ class SupportingDocumentsRegistry:
             "requires_field_confirmation": (bool(requirements)),
             "sections": (sections),
             "requirements": (requirements),
+            "matching": (matching),
             "note": (
                 "Перечень сформирован автоматически. "
                 "Он не подтверждает наличие документа "
