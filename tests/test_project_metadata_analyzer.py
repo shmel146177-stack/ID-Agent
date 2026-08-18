@@ -7,6 +7,8 @@ def test_project_metadata_analyzer_extracts_project_fields():
 
     text = """
 Организация заказчика: ООО Заказчик
+Генеральный подрядчик: ООО "МонтажСтрой"
+Договор подряда № 15/ТП-2026 от 01.08.2026
 Проектная организация: ООО "ПроектСтрой"
 Главный инженер проекта Иванов И.И.
 Адрес работ: г. Москва, ул. Тестовая, д. 10
@@ -29,7 +31,5 @@ def test_project_metadata_analyzer_extracts_project_fields():
         "г. Москва, ул. Тестовая, д. 10"
     )
 
-    # Эти поля пока заявлены в структуре результата,
-    # но текущий анализатор их ещё не извлекает.
-    assert result["contractor"] is None
-    assert result["contract_number"] is None
+    assert result["contractor"] == 'ООО "МонтажСтрой"'
+    assert result["contract_number"] == "15/ТП-2026"

@@ -171,6 +171,48 @@ class ProjectMetadataAnalyzer:
                     break
 
         # ---------------------------------------------------------
+        # CONTRACTOR EXTRACTION
+
+        for line in lines:
+            match = re.search(
+                r"(?:\u0433\u0435\u043d\u0435\u0440\u0430\u043b\u044c\u043d\w*"
+                r"\s+\u043f\u043e\u0434\u0440\u044f\u0434\u0447\u0438\u043a|"
+                r"\u043f\u043e\u0434\u0440\u044f\u0434\u043d\w*\s+"
+                r"\u043e\u0440\u0433\u0430\u043d\u0438\u0437\u0430\u0446\u0438\w*|"
+                r"\u043e\u0440\u0433\u0430\u043d\u0438\u0437\u0430\u0446\u0438\w*"
+                r"\s+\u043f\u043e\u0434\u0440\u044f\u0434\u0447\u0438\u043a\u0430|"
+                r"\u043f\u043e\u0434\u0440\u044f\u0434\u0447\u0438\u043a)"
+                r"\s*:\s*(.+)",
+                line,
+                re.IGNORECASE,
+            )
+
+            if match:
+                result["contractor"] = self._clean(
+                    match.group(1)
+                )
+                break
+
+        # CONTRACT NUMBER EXTRACTION
+
+        for line in lines:
+            match = re.search(
+                r"(?:\u0434\u043e\u0433\u043e\u0432\u043e\u0440"
+                r"(?:\s+\u043f\u043e\u0434\u0440\u044f\u0434\u0430)?|"
+                r"\u043a\u043e\u043d\u0442\u0440\u0430\u043a\u0442)"
+                r"\s*(?:\u2116|N(?:o)?\.?)\s*"
+                r"([0-9A-Za-z\u0410-\u042f\u0430-\u044f\u0401\u0451]"
+                r"[0-9A-Za-z\u0410-\u042f\u0430-\u044f\u0401\u0451./_-]*)",
+                line,
+                re.IGNORECASE,
+            )
+
+            if match:
+                result["contract_number"] = self._clean(
+                    match.group(1)
+                )
+                break
+
         # DESIGNER EXTRACTION
         # Project organization
         for line in lines:
