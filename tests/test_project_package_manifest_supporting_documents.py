@@ -73,6 +73,12 @@ def test_project_package_manifest_contains_supporting_documents(tmp_path):
 
     supporting = manifest["supporting_documents"]
 
+    assert manifest["status"] == (
+        "\u0427\u0435\u0440\u043d\u043e\u0432\u0438\u043a. "
+        "\u0422\u0440\u0435\u0431\u0443\u0435\u0442 "
+        "\u043f\u043e\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0435\u043d\u0438\u044f"
+    )
+
     assert supporting["requirements_count"] == 3
     assert supporting["high_priority_count"] == 2
     assert supporting["requires_field_confirmation"] is True
