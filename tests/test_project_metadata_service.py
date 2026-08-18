@@ -36,9 +36,10 @@ def test_project_metadata_service_updates_missing_fields(monkeypatch, tmp_path):
         "object_name": "ТП-101",
         "address": "Москва",
         "customer": "ООО Заказчик",
-        "contractor": None,
+        "contractor": "ООО Новый подрядчик",
         "designer": None,
         "chief_engineer": None,
+        "contract_number": "15/ТП-2026",
     }
 
     monkeypatch.setattr(
@@ -63,6 +64,7 @@ def test_project_metadata_service_updates_missing_fields(monkeypatch, tmp_path):
         "contractor": "ООО Старый подрядчик",
         "designer": "",
         "chief_engineer": "",
+        "contract_number": "",
     }
 
     monkeypatch.setattr(
@@ -103,11 +105,14 @@ def test_project_metadata_service_updates_missing_fields(monkeypatch, tmp_path):
 
     assert result["metadata"]["designer"] == "ООО Проект"
     assert result["metadata"]["chief_engineer"] == "Иванов И.И."
+    assert result["metadata"]["contractor"] == "ООО Новый подрядчик"
+    assert result["metadata"]["contract_number"] == "15/ТП-2026"
 
     assert result["updated_fields"]["address"] == "Москва"
     assert result["updated_fields"]["customer"] == "ООО Заказчик"
     assert result["updated_fields"]["designer"] == "ООО Проект"
     assert result["updated_fields"]["chief_engineer"] == "Иванов И.И."
+    assert result["updated_fields"]["contract_number"] == "15/ТП-2026"
 
     assert "object_name" not in result["updated_fields"]
     assert "contractor" not in result["updated_fields"]
@@ -120,3 +125,8 @@ def test_project_metadata_service_updates_missing_fields(monkeypatch, tmp_path):
     assert result["project_card"]["object_name"] == "Существующее название"
     assert result["project_card"]["address"] == "Москва"
     assert result["project_card"]["designer"] == "ООО Проект"
+    assert (
+        result["project_card"]["contractor"]
+        == "ООО Старый подрядчик"
+    )
+    assert result["project_card"]["contract_number"] == "15/ТП-2026"
