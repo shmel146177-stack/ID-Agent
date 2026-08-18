@@ -82,6 +82,9 @@ class HiddenWorksActData(BaseModel):
     work_finish_date: str = ""
 
     compliance: str = ""
+    materials_compliance: str = ""
+    test_results: str = ""
+    geometric_parameters: str = ""
     next_works: str = ""
 
     additional_information: str = ""

@@ -64,6 +64,9 @@ def test_hidden_works_act_docx_contains_extended_fields(
         "next_works": "Обратная засыпка",
         "remarks": "Замечаний нет",
         "attachments": "Исполнительная схема ИС-01",
+        "materials_compliance": "Materials comply with project",
+        "test_results": "Test protocol 15",
+        "geometric_parameters": "Elevation matches project",
         "actual_materials": (
             "Полоса стальная 40х5 мм, электроды L=3 м"
         ),
@@ -103,5 +106,24 @@ def test_hidden_works_act_docx_contains_extended_fields(
     )
     assert (
         "[ПОДТВЕРДИТЬ ФАКТИЧЕСКИ]"
+        not in full_text
+    )
+    assert "Materials comply with project" in full_text
+    assert "Test protocol 15" in full_text
+    assert "Elevation matches project" in full_text
+    assert (
+        "[\u041f\u041e\u0414\u0422\u0412\u0415\u0420\u0414\u0418\u0422\u042c / "
+        "\u0423\u0422\u041e\u0427\u041d\u0418\u0422\u042c]"
+        not in full_text
+    )
+    assert (
+        "[\u0423\u041a\u0410\u0417\u0410\u0422\u042c "
+        "\u043f\u0440\u043e\u0442\u043e\u043a\u043e\u043b\u044b "
+        "\u0438 \u0437\u043d\u0430\u0447\u0435\u043d\u0438\u044f]"
+        not in full_text
+    )
+    assert (
+        "[\u0423\u041a\u0410\u0417\u0410\u0422\u042c "
+        "\u041f\u041e \u0424\u0410\u041a\u0422\u0423]"
         not in full_text
     )

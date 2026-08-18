@@ -74,6 +74,9 @@ def test_project_api_passes_extended_hidden_works_act_fields(
         next_works="Обратная засыпка",
         remarks="Замечаний нет",
         attachments="Исполнительная схема ИС-01",
+        materials_compliance="Materials comply with project",
+        test_results="Test protocol 15",
+        geometric_parameters="Elevation matches project",
     )
 
     response = api_module.create_hidden_works_act(
@@ -95,4 +98,13 @@ def test_project_api_passes_extended_hidden_works_act_fields(
     assert (
         act_data["attachments"]
         == "Исполнительная схема ИС-01"
+    )
+    assert (
+        act_data["materials_compliance"]
+        == "Materials comply with project"
+    )
+    assert act_data["test_results"] == "Test protocol 15"
+    assert (
+        act_data["geometric_parameters"]
+        == "Elevation matches project"
     )

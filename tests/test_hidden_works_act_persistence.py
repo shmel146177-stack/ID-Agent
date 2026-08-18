@@ -21,6 +21,9 @@ def test_hidden_works_act_data_persistence(monkeypatch, tmp_path):
         "next_works": "Обратная засыпка",
         "remarks": "Замечаний нет",
         "attachments": "Исполнительная схема ИС-01",
+        "materials_compliance": "Materials comply with project",
+        "test_results": "Test protocol 15",
+        "geometric_parameters": "Elevation matches project",
     }
 
     result = generator.save_act_data(
@@ -52,10 +55,23 @@ def test_hidden_works_act_data_persistence(monkeypatch, tmp_path):
         == "Исполнительная схема ИС-01"
     )
 
+    assert (
+        loaded["materials_compliance"]
+        == "Materials comply with project"
+    )
+    assert loaded["test_results"] == "Test protocol 15"
+    assert (
+        loaded["geometric_parameters"]
+        == "Elevation matches project"
+    )
+
     assert set(result["saved_fields"]) >= {
         "act_number",
         "compliance",
         "next_works",
         "remarks",
         "attachments",
+        "materials_compliance",
+        "test_results",
+        "geometric_parameters",
     }
