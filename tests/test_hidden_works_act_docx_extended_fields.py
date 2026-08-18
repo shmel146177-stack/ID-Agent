@@ -58,6 +58,10 @@ def test_hidden_works_act_docx_contains_extended_fields(
     }
 
     act_data = {
+        "customer_representative": "Customer representative",
+        "contractor_representative": "Contractor representative",
+        "construction_control_representative": "Control representative",
+        "designer_representative": "Designer representative",
         "compliance": (
             "Работы соответствуют проектной документации"
         ),
@@ -127,3 +131,4 @@ def test_hidden_works_act_docx_contains_extended_fields(
         "\u041f\u041e \u0424\u0410\u041a\u0422\u0423]"
         not in full_text
     )
+    assert "[\u0424.\u0418.\u041e.]" not in full_text

@@ -1043,7 +1043,10 @@ class HiddenWorksActGenerator:
     def _add_signatures(
         self,
         document: Document,
+        act_data: dict | None = None,
     ) -> None:
+
+        act_data = act_data or {}
 
         document.add_paragraph()
 
@@ -1059,6 +1062,13 @@ class HiddenWorksActGenerator:
             ("Представитель " "проектной организации"),
         ]
 
+        fields = [
+            "customer_representative",
+            "contractor_representative",
+            "construction_control_representative",
+            "designer_representative",
+        ]
+
         table = document.add_table(
             rows=len(rows),
             cols=3,
@@ -1066,7 +1076,7 @@ class HiddenWorksActGenerator:
 
         table.style = "Table Grid"
 
-        for index, role in enumerate(rows):
+        for index, (role, field) in enumerate(zip(rows, fields)):
 
             self._set_cell_text(
                 table.cell(
@@ -1089,7 +1099,7 @@ class HiddenWorksActGenerator:
                     index,
                     2,
                 ),
-                "[Ф.И.О.]",
+                act_data.get(field) or "[\u0424.\u0418.\u041e.]",
             )
 
     def _find_act(
@@ -1189,7 +1199,10 @@ class HiddenWorksActGenerator:
             act_data=act_data,
         )
 
-        self._add_signatures(document)
+        self._add_signatures(
+            document,
+            act_data=act_data,
+        )
 
         document.add_paragraph()
 
