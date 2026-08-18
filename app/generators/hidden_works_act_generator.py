@@ -759,10 +759,21 @@ class HiddenWorksActGenerator:
             or "[УКАЗАТЬ участок / оси / отметки / помещение]"
         )
 
+        actual_materials_value = act_data.get(
+            "actual_materials"
+        )
+
         actual_materials = (
-            act_data.get("actual_materials")
+            actual_materials_value
             or "[УКАЗАТЬ марки, количество и документы качества]"
         )
+
+        materials_hint = config["materials_hint"]
+
+        if not actual_materials_value:
+            materials_hint += (
+                ". [ПОДТВЕРДИТЬ ФАКТИЧЕСКИ]"
+            )
 
         work_start_date = (
             act_data.get("work_start_date")
@@ -794,10 +805,7 @@ class HiddenWorksActGenerator:
             ),
             (
                 "Предполагаемые материалы",
-                (
-                    config["materials_hint"]
-                    + ". [ПОДТВЕРДИТЬ ФАКТИЧЕСКИ]"
-                ),
+                materials_hint,
             ),
             (
                 "Фактически применённые материалы и изделия",

@@ -64,6 +64,9 @@ def test_hidden_works_act_docx_contains_extended_fields(
         "next_works": "Обратная засыпка",
         "remarks": "Замечаний нет",
         "attachments": "Исполнительная схема ИС-01",
+        "actual_materials": (
+            "Полоса стальная 40х5 мм, электроды L=3 м"
+        ),
     }
 
     output_file = generator.create(
@@ -94,3 +97,11 @@ def test_hidden_works_act_docx_contains_extended_fields(
     assert "Обратная засыпка" in full_text
     assert "Замечаний нет" in full_text
     assert "Исполнительная схема ИС-01" in full_text
+    assert (
+        "Полоса стальная 40х5 мм, электроды L=3 м"
+        in full_text
+    )
+    assert (
+        "[ПОДТВЕРДИТЬ ФАКТИЧЕСКИ]"
+        not in full_text
+    )
