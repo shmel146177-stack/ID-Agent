@@ -1,5 +1,9 @@
 ﻿from pathlib import Path
 
+import os
+
+import pytest
+
 from app.services.executive_document_router import ExecutiveDocumentRouter
 
 
@@ -103,3 +107,149 @@ def test_executive_document_router_routes_and_reports(monkeypatch, tmp_path):
         "path_missing",
         "source_not_found",
     }
+
+
+def test_router_keeps_identical_existing_document_unchanged(
+    monkeypatch,
+    tmp_path,
+):
+    router = ExecutiveDocumentRouter()
+    source = tmp_path / "source" / "protocol.pdf"
+    destination = tmp_path / "executive" / "tests" / source.name
+    source.parent.mkdir()
+    destination.parent.mkdir(parents=True)
+    source.write_bytes(b"PROTOCOL")
+    destination.write_bytes(b"PROTOCOL")
+    os.utime(destination, (1_000_000_000, 1_000_000_000))
+    original_mtime = destination.stat().st_mtime_ns
+
+    monkeypatch.setattr(
+        router,
+        "_load_project_analysis",
+        lambda name: {
+            "documents": [
+                {
+                    "filename": source.name,
+                    "classification": "Протокол",
+                    "path": str(source),
+                }
+            ]
+        },
+    )
+    monkeypatch.setattr(
+        router,
+        "_section_folders",
+        lambda: {"tests": "tests"},
+    )
+    monkeypatch.setattr(
+        router,
+        "_executive_root",
+        lambda name: tmp_path / "executive",
+    )
+
+    result = router.route("TEST_PROJECT")
+
+    assert result["routed_count"] == 0
+    assert result["already_routed_count"] == 1
+    assert result["conflict_count"] == 0
+    assert result["already_routed"][0]["reason"] == (
+        "already_routed_same_content"
+    )
+    assert destination.read_bytes() == b"PROTOCOL"
+    assert destination.stat().st_mtime_ns == original_mtime
+
+
+def test_router_reports_conflict_without_overwriting_existing_document(
+    monkeypatch,
+    tmp_path,
+):
+    router = ExecutiveDocumentRouter()
+    source = tmp_path / "source" / "certificate.pdf"
+    destination = tmp_path / "executive" / "quality" / source.name
+    source.parent.mkdir()
+    destination.parent.mkdir(parents=True)
+    source.write_bytes(b"NEW CERTIFICATE")
+    destination.write_bytes(b"ORIGINAL CERTIFICATE")
+
+    monkeypatch.setattr(
+        router,
+        "_load_project_analysis",
+        lambda name: {
+            "documents": [
+                {
+                    "filename": source.name,
+                    "classification": "Сертификат",
+                    "path": str(source),
+                }
+            ]
+        },
+    )
+    monkeypatch.setattr(
+        router,
+        "_section_folders",
+        lambda: {"quality_documents": "quality"},
+    )
+    monkeypatch.setattr(
+        router,
+        "_executive_root",
+        lambda name: tmp_path / "executive",
+    )
+
+    result = router.route("TEST_PROJECT")
+
+    assert result["routed_count"] == 0
+    assert result["already_routed_count"] == 0
+    assert result["conflict_count"] == 1
+    assert result["conflicts"][0]["reason"] == (
+        "destination_exists_different_content"
+    )
+    assert destination.read_bytes() == b"ORIGINAL CERTIFICATE"
+
+
+def test_router_removes_new_partial_destination_after_copy_error(
+    monkeypatch,
+    tmp_path,
+):
+    router = ExecutiveDocumentRouter()
+    source = tmp_path / "source" / "protocol.pdf"
+    destination = tmp_path / "executive" / "tests" / source.name
+    source.parent.mkdir()
+    source.write_bytes(b"PROTOCOL")
+
+    monkeypatch.setattr(
+        router,
+        "_load_project_analysis",
+        lambda name: {
+            "documents": [
+                {
+                    "filename": source.name,
+                    "classification": "Протокол",
+                    "path": str(source),
+                }
+            ]
+        },
+    )
+    monkeypatch.setattr(
+        router,
+        "_section_folders",
+        lambda: {"tests": "tests"},
+    )
+    monkeypatch.setattr(
+        router,
+        "_executive_root",
+        lambda name: tmp_path / "executive",
+    )
+
+    def fail_copy(source_file, destination_file):
+        destination_file.write(b"PARTIAL")
+        raise OSError("copy failed")
+
+    monkeypatch.setattr(
+        "app.services.executive_document_router.shutil.copyfileobj",
+        fail_copy,
+    )
+
+    with pytest.raises(OSError, match="copy failed"):
+        router.route("TEST_PROJECT")
+
+    assert not destination.exists()

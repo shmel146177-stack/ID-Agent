@@ -47,11 +47,65 @@ class ExecutiveDocumentRouter:
             for section in ProjectDocumentSet.SECTIONS
         }
 
+    def _files_equal(
+        self,
+        source: Path,
+        destination: Path,
+    ) -> bool:
+        if source.stat().st_size != destination.stat().st_size:
+            return False
+
+        with source.open("rb") as source_file:
+            with destination.open("rb") as destination_file:
+                while True:
+                    source_chunk = source_file.read(1024 * 1024)
+                    destination_chunk = destination_file.read(1024 * 1024)
+
+                    if source_chunk != destination_chunk:
+                        return False
+
+                    if not source_chunk:
+                        return True
+
+    def _copy_without_overwrite(
+        self,
+        source: Path,
+        destination: Path,
+    ) -> str:
+        """Copy a new route target without replacing an existing file."""
+
+        if destination.exists():
+            if self._files_equal(source, destination):
+                return "already_routed"
+
+            return "conflict"
+
+        try:
+            with source.open("rb") as source_file:
+                with destination.open("xb") as destination_file:
+                    shutil.copyfileobj(source_file, destination_file)
+
+            shutil.copystat(source, destination)
+
+        except FileExistsError:
+            if self._files_equal(source, destination):
+                return "already_routed"
+
+            return "conflict"
+
+        except Exception:
+            destination.unlink(missing_ok=True)
+            raise
+
+        return "routed"
+
     def route(self, project_name: str) -> dict:
         project_analysis = self._load_project_analysis(project_name)
         section_folders = self._section_folders()
 
         routed = []
+        already_routed = []
+        conflicts = []
         skipped = []
         missing_source = []
 
@@ -123,26 +177,51 @@ class ExecutiveDocumentRouter:
 
             destination = destination_folder / source.name
 
-            shutil.copy2(
+            copy_status = self._copy_without_overwrite(
                 source,
                 destination,
             )
 
-            routed.append(
-                {
-                    "filename": filename,
-                    "classification": classification,
-                    "section": section_code,
-                    "destination": str(destination),
-                }
-            )
+            route_data = {
+                "filename": filename,
+                "classification": classification,
+                "section": section_code,
+                "destination": str(destination),
+            }
+
+            if copy_status == "already_routed":
+                already_routed.append(
+                    {
+                        **route_data,
+                        "reason": "already_routed_same_content",
+                    }
+                )
+                continue
+
+            if copy_status == "conflict":
+                conflicts.append(
+                    {
+                        **route_data,
+                        "source": str(source),
+                        "reason": (
+                            "destination_exists_different_content"
+                        ),
+                    }
+                )
+                continue
+
+            routed.append(route_data)
 
         return {
             "project": project_name,
             "routed_count": len(routed),
+            "already_routed_count": len(already_routed),
+            "conflict_count": len(conflicts),
             "skipped_count": len(skipped),
             "missing_source_count": len(missing_source),
             "routed": routed,
+            "already_routed": already_routed,
+            "conflicts": conflicts,
             "skipped": skipped,
             "missing_source": missing_source,
         }
