@@ -80,3 +80,41 @@ def test_upload_document_pdf_pipeline(monkeypatch, tmp_path):
     assert result["drawing_number"] == "TEST-001"
 
     assert saved_analysis == analysis
+
+
+def test_upload_document_sanitizes_windows_filename_path(
+    monkeypatch,
+    tmp_path,
+):
+    upload_dir = tmp_path / "uploads"
+
+    monkeypatch.setattr(
+        documents_module,
+        "UPLOAD_DIR",
+        str(upload_dir),
+    )
+    monkeypatch.setattr(
+        documents_module.document_service,
+        "analyze",
+        lambda file_path: {
+            "filename": "safe.docx",
+            "extension": ".docx",
+            "size_bytes": 4,
+            "status": "Документ определён",
+        },
+    )
+
+    upload = UploadFile(
+        filename=r"..\..\safe.docx",
+        file=BytesIO(b"SAFE"),
+    )
+
+    result = asyncio.run(
+        documents_module.upload_document(upload)
+    )
+
+    saved_file = upload_dir / "safe.docx"
+
+    assert saved_file.read_bytes() == b"SAFE"
+    assert result["filename"] == "safe.docx"
+    assert not (tmp_path / "safe.docx").exists()

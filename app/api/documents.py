@@ -18,9 +18,16 @@ async def upload_document(file: UploadFile = File(...)):
 
     os.makedirs(UPLOAD_DIR, exist_ok=True)
 
+    filename = os.path.basename(
+        (file.filename or "").replace(
+            "\\",
+            "/"
+        )
+    )
+
     file_path = os.path.join(
         UPLOAD_DIR,
-        file.filename
+        filename
     )
 
     with open(file_path, "wb") as buffer:

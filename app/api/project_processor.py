@@ -171,7 +171,10 @@ def upload_project_file(
             )
 
         filename = os.path.basename(
-            file.filename
+            file.filename.replace(
+                "\\",
+                "/"
+            )
         )
 
         if not filename:
