@@ -6,6 +6,8 @@ def test_project_card_model_defaults_and_values():
     empty_card = ProjectCard()
 
     assert empty_card.project_name == ""
+    assert empty_card.project_mode == "production"
+    assert empty_card.project_note == ""
     assert empty_card.object_name == ""
     assert empty_card.address == ""
     assert empty_card.customer == ""
@@ -18,6 +20,8 @@ def test_project_card_model_defaults_and_values():
 
     card = ProjectCard(
         project_name="TEST_PROJECT",
+        project_mode="training",
+        project_note="Используется для разработки ИИ-Агента",
         object_name="ТП-101",
         address="Москва, ул. Тестовая, д. 10",
         customer="ООО Заказчик",
@@ -30,6 +34,8 @@ def test_project_card_model_defaults_and_values():
     )
 
     assert card.project_name == "TEST_PROJECT"
+    assert card.project_mode == "training"
+    assert card.project_note == "Используется для разработки ИИ-Агента"
     assert card.object_name == "ТП-101"
     assert card.address == "Москва, ул. Тестовая, д. 10"
     assert card.customer == "ООО Заказчик"

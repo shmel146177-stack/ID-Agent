@@ -118,6 +118,28 @@ class ProjectPackage:
             destination_folder,
         )
 
+    def _load_project_card(
+        self,
+        project_name: str,
+    ) -> dict:
+
+        project_file = self._project_path(project_name) / "project.json"
+
+        if not project_file.exists():
+            return {}
+
+        try:
+            return json.loads(
+                project_file.read_text(
+                    encoding="utf-8",
+                )
+            )
+        except (
+            OSError,
+            json.JSONDecodeError,
+        ):
+            return {}
+
     def _copy_output_documents(
         self,
         project_name: str,
@@ -485,7 +507,11 @@ class ProjectPackage:
         generated_acts: dict,
         hidden_works_journal: dict,
         supporting_documents: dict,
+        project_mode: str = "production",
     ) -> str:
+
+        if project_mode == "training":
+            return "Учебный комплект"
 
         incomplete_status = (
             "\u041d\u0435\u043f\u043e\u043b\u043d\u044b\u0439 "
@@ -598,11 +624,19 @@ class ProjectPackage:
             destination_folder,
         )
 
+        project_card = self._load_project_card(project_name)
+
+        project_mode = project_card.get(
+            "project_mode",
+            "production",
+        )
+
         manifest_status = self._resolve_manifest_status(
             processor_result,
             generated_acts,
             hidden_works_journal,
             supporting_documents,
+            project_mode=project_mode,
         )
 
         files = inventory.get(
@@ -617,6 +651,13 @@ class ProjectPackage:
 
         manifest = {
             "project": (project_name),
+            "project_mode": (project_mode),
+            "project_note": (
+                project_card.get(
+                    "project_note",
+                    "",
+                )
+            ),
             "created_at": (datetime.now().isoformat(timespec="seconds")),
             "status": (manifest_status),
             "package": {

@@ -23,6 +23,8 @@ def test_project_manager_list_projects(tmp_path):
         json.dumps(
             {
                 "project_name": "A_PROJECT",
+                "project_mode": "training",
+                "project_note": "Учебный проект",
                 "object_name": "Объект A",
                 "address": "Москва",
                 "customer": "Заказчик A",
@@ -96,6 +98,8 @@ def test_project_manager_list_projects(tmp_path):
     assert result[1]["project_name"] == "B_PROJECT"
 
     assert result[0]["object_name"] == "Объект A"
+    assert result[0]["project_mode"] == "training"
+    assert result[0]["project_note"] == "Учебный проект"
     assert result[0]["address"] == "Москва"
     assert result[0]["customer"] == "Заказчик A"
     assert result[0]["contractor"] == "Подрядчик A"
@@ -105,6 +109,7 @@ def test_project_manager_list_projects(tmp_path):
     assert result[0]["executive_files"] == 1
 
     assert result[1]["object_name"] == "Объект B"
+    assert result[1]["project_mode"] == "production"
     assert result[1]["input_files"] == 1
     assert result[1]["output_files"] == 0
     assert result[1]["executive_files"] == 0

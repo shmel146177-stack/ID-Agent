@@ -211,10 +211,34 @@ class ProjectReportGenerator:
             level=1,
         )
 
+        project_mode = project_card.get(
+            "project_mode",
+            "production",
+        )
+
+        mode_label = {
+            "production": "Рабочий проект",
+            "training": "Учебный/тестовый проект",
+        }.get(
+            project_mode,
+            project_mode,
+        )
+
         rows = [
             (
                 "Наименование проекта",
                 project_name,
+            ),
+            (
+                "Режим использования",
+                mode_label,
+            ),
+            (
+                "Примечание к режиму",
+                project_card.get(
+                    "project_note",
+                    "",
+                ),
             ),
             (
                 "Наименование объекта",

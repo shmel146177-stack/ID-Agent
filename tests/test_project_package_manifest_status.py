@@ -33,6 +33,7 @@ def resolve_status(
     journal_status=READY,
     supporting_confirmation=False,
     supporting_sections=None,
+    project_mode="production",
 ):
 
     package = ProjectPackage()
@@ -57,6 +58,7 @@ def resolve_status(
             ),
             "sections": supporting_sections or [],
         },
+        project_mode=project_mode,
     )
 
 
@@ -124,3 +126,18 @@ def test_manifest_status_is_ready_when_all_checks_are_clear():
     status = resolve_status()
 
     assert status == READY
+
+
+def test_manifest_status_is_training_when_checks_have_warnings():
+
+    status = resolve_status(
+        missing_count=1,
+        supporting_sections=[
+            {
+                "status": WAITING_DOCUMENTS,
+            }
+        ],
+        project_mode="training",
+    )
+
+    assert status == "Учебный комплект"

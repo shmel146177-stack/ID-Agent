@@ -116,6 +116,8 @@ class ProjectManager:
 
         data = {
             "project_name": card.project_name,
+            "project_mode": card.project_mode,
+            "project_note": card.project_note,
             "object_name": card.object_name,
             "address": card.address,
             "customer": card.customer,
@@ -190,6 +192,8 @@ class ProjectManager:
         )
 
         allowed_fields = [
+            "project_mode",
+            "project_note",
             "object_name",
             "address",
             "customer",
@@ -204,6 +208,15 @@ class ProjectManager:
         for field in allowed_fields:
 
             if field in data:
+
+                if (
+                    field == "project_mode"
+                    and data[field] not in {"production", "training"}
+                ):
+                    raise ValueError(
+                        "Режим проекта должен быть production или training"
+                    )
+
                 project[field] = (
                     data[field]
                 )
@@ -367,6 +380,18 @@ class ProjectManager:
                     "object_name": (
                         project.get(
                             "object_name"
+                        )
+                        or ""
+                    ),
+                    "project_mode": (
+                        project.get(
+                            "project_mode"
+                        )
+                        or "production"
+                    ),
+                    "project_note": (
+                        project.get(
+                            "project_note"
                         )
                         or ""
                     ),

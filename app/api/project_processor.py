@@ -40,6 +40,8 @@ class ProjectCreate(BaseModel):
 
 
 class ProjectCardUpdate(BaseModel):
+    project_mode: str | None = None
+    project_note: str | None = None
     object_name: str = ""
     address: str = ""
     customer: str = ""
@@ -369,7 +371,13 @@ def update_project_card(
     try:
         return project_manager.update_project(
             project_name,
-            card.model_dump()
+            card.model_dump(exclude_none=True)
+        )
+
+    except ValueError as error:
+        raise HTTPException(
+            status_code=400,
+            detail=str(error)
         )
 
     except FileNotFoundError as error:

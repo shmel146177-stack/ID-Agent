@@ -44,6 +44,8 @@ def test_project_api_gets_and_updates_project_card(monkeypatch):
     )
 
     card = api_module.ProjectCardUpdate(
+        project_mode="training",
+        project_note="Для разработки ИИ-Агента",
         object_name="ТП-202",
         address="Москва, ул. Тестовая",
         customer="ООО Заказчик",
@@ -58,3 +60,5 @@ def test_project_api_gets_and_updates_project_card(monkeypatch):
     assert received["name"] == project_name
     assert received["data"]["object_name"] == "ТП-202"
     assert received["data"]["customer"] == "ООО Заказчик"
+    assert received["data"]["project_mode"] == "training"
+    assert received["data"]["project_note"] == "Для разработки ИИ-Агента"
