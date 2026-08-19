@@ -35,8 +35,17 @@ class BrokenStream:
         raise OSError("Ошибка чтения")
 
 
-def create_service(tmp_path, processor=None):
-    service = SupportingDocumentUpload(processor=processor)
+def create_service(
+    tmp_path,
+    processor=None,
+    max_file_size_bytes=None,
+):
+    kwargs = {"processor": processor}
+
+    if max_file_size_bytes is not None:
+        kwargs["max_file_size_bytes"] = max_file_size_bytes
+
+    service = SupportingDocumentUpload(**kwargs)
     service.projects_root = tmp_path
     (tmp_path / "TEST_PROJECT").mkdir()
     return service
@@ -421,3 +430,52 @@ def test_upload_rejects_empty_file_and_removes_it(tmp_path):
         / "input"
         / "scheme.pdf"
     ).exists()
+
+
+def test_upload_accepts_file_at_configured_size_limit(tmp_path):
+    processor = ProcessorStub()
+    service = create_service(
+        tmp_path,
+        processor,
+        max_file_size_bytes=8,
+    )
+
+    result = service.upload(
+        "TEST_PROJECT",
+        "tests",
+        "protocol.pdf",
+        BytesIO(b"12345678"),
+    )
+
+    assert result["size_bytes"] == 8
+    assert processor.calls == ["TEST_PROJECT"]
+
+
+def test_upload_rejects_oversized_file_and_removes_it(tmp_path):
+    processor = ProcessorStub()
+    service = create_service(
+        tmp_path,
+        processor,
+        max_file_size_bytes=8,
+    )
+
+    with pytest.raises(ValueError, match="превышает допустимый размер"):
+        service.upload(
+            "TEST_PROJECT",
+            "tests",
+            "protocol.pdf",
+            BytesIO(b"123456789"),
+        )
+
+    assert processor.calls == []
+    assert not (
+        tmp_path
+        / "TEST_PROJECT"
+        / "input"
+        / "protocol.pdf"
+    ).exists()
+
+
+def test_upload_rejects_non_positive_size_limit():
+    with pytest.raises(ValueError, match="должен быть положительным"):
+        SupportingDocumentUpload(max_file_size_bytes=0)

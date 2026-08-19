@@ -1,10 +1,12 @@
-import shutil
 from pathlib import Path, PurePosixPath
 from typing import BinaryIO
 
 
 class SupportingDocumentUpload:
     """Загрузка сопроводительного документа с повторным анализом проекта."""
+
+    DEFAULT_MAX_FILE_SIZE_BYTES = 512 * 1024 * 1024
+    COPY_CHUNK_SIZE = 1024 * 1024
 
     SECTIONS = {
         "executive_schemes": {
@@ -34,9 +36,19 @@ class SupportingDocumentUpload:
         ".tiff",
     }
 
-    def __init__(self, processor=None):
+    def __init__(
+        self,
+        processor=None,
+        max_file_size_bytes: int = DEFAULT_MAX_FILE_SIZE_BYTES,
+    ):
+        if max_file_size_bytes <= 0:
+            raise ValueError(
+                "Максимальный размер файла должен быть положительным"
+            )
+
         self.projects_root = Path("projects")
         self.processor = processor
+        self.max_file_size_bytes = max_file_size_bytes
 
     def _project_path(self, project_name: str) -> Path:
         value = (project_name or "").strip()
@@ -100,6 +112,29 @@ class SupportingDocumentUpload:
             )
 
         return extension
+
+    def _copy_upload(
+        self,
+        source: BinaryIO,
+        target: BinaryIO,
+    ) -> int:
+        total_size = 0
+
+        while True:
+            chunk = source.read(self.COPY_CHUNK_SIZE)
+
+            if not chunk:
+                return total_size
+
+            total_size += len(chunk)
+
+            if total_size > self.max_file_size_bytes:
+                raise ValueError(
+                    "Файл превышает допустимый размер: "
+                    f"{self.max_file_size_bytes} байт"
+                )
+
+            target.write(chunk)
 
     def _target_section(
         self,
@@ -239,7 +274,7 @@ class SupportingDocumentUpload:
 
         try:
             with destination.open("xb") as target:
-                shutil.copyfileobj(source, target)
+                file_size = self._copy_upload(source, target)
         except FileExistsError as error:
             raise FileExistsError(
                 f"Файл уже существует: {safe_name}"
@@ -247,8 +282,6 @@ class SupportingDocumentUpload:
         except Exception:
             destination.unlink(missing_ok=True)
             raise
-
-        file_size = destination.stat().st_size
 
         if file_size == 0:
             destination.unlink()
