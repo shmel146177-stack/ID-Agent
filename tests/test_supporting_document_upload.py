@@ -98,6 +98,7 @@ def test_upload_saves_file_and_reanalyzes_target_section(tmp_path):
     assert result["upload_verification"]["matched_requirements"][0][
         "requirement_code"
     ] == "grounding_resistance_protocol"
+    assert result["upload_verification"]["routing_conflicts"] == []
 
 
 @pytest.mark.parametrize(
@@ -295,6 +296,70 @@ def test_upload_reports_match_in_another_section(tmp_path):
     ] == "quality_documents"
 
 
+def test_upload_reports_routing_conflict_before_confirmed_match(tmp_path):
+    processor = ProcessorStub(
+        {
+            "document_routing": {
+                "conflicts": [
+                    {
+                        "filename": "grounding_protocol.pdf",
+                        "classification": "Протокол",
+                        "section": "tests",
+                        "destination": (
+                            "executive_docs/05/grounding_protocol.pdf"
+                        ),
+                        "reason": (
+                            "destination_exists_different_content"
+                        ),
+                    }
+                ]
+            },
+            "supporting_documents": {
+                "sections": [],
+                "requirements": [
+                    {
+                        "code": "grounding_resistance_protocol",
+                        "section_code": "tests",
+                    }
+                ],
+                "matching": {
+                    "matched": [
+                        {
+                            "requirement_code": (
+                                "grounding_resistance_protocol"
+                            ),
+                            "filename": "grounding_protocol.pdf",
+                            "classification": "Протокол",
+                        }
+                    ]
+                },
+            },
+        }
+    )
+    service = create_service(tmp_path, processor)
+
+    result = service.upload(
+        "TEST_PROJECT",
+        "tests",
+        "grounding_protocol.pdf",
+        BytesIO(b"NEW PROTOCOL"),
+    )
+
+    verification = result["upload_verification"]
+
+    assert result["status"] == (
+        "Файл загружен, но обнаружен конфликт маршрутизации"
+    )
+    assert verification["status"] == "Конфликт маршрутизации"
+    assert verification["matched_requirements"][0][
+        "requirement_code"
+    ] == "grounding_resistance_protocol"
+    assert verification["routing_conflicts"][0]["section"] == "tests"
+    assert verification["routing_conflicts"][0]["reason"] == (
+        "destination_exists_different_content"
+    )
+
+
 def test_upload_does_not_confirm_preexisting_matched_file(tmp_path):
     processor = ProcessorStub(
         {
@@ -335,6 +400,7 @@ def test_upload_does_not_confirm_preexisting_matched_file(tmp_path):
         "filename": "new_protocol.pdf",
         "matched_requirements": [],
         "other_section_matches": [],
+        "routing_conflicts": [],
     }
 
 

@@ -141,6 +141,25 @@ class SupportingDocumentUpload:
 
         confirmed = []
         other_sections = []
+        routing_conflicts = []
+
+        for conflict in processing_result.get(
+            "document_routing",
+            {},
+        ).get("conflicts", []):
+            conflict_value = (
+                conflict.get("filename", "")
+                or conflict.get("destination", "")
+                or ""
+            ).replace("\\", "/")
+            conflict_filename = (
+                PurePosixPath(conflict_value).name
+                if conflict_value
+                else ""
+            )
+
+            if conflict_filename == filename:
+                routing_conflicts.append(dict(conflict))
 
         for match in supporting_documents.get(
             "matching",
@@ -177,7 +196,9 @@ class SupportingDocumentUpload:
             else:
                 other_sections.append(verified_match)
 
-        if confirmed:
+        if routing_conflicts:
+            status = "Конфликт маршрутизации"
+        elif confirmed:
             status = "Подтверждён"
         elif other_sections:
             status = "Раздел не совпадает"
@@ -190,6 +211,7 @@ class SupportingDocumentUpload:
             "filename": filename,
             "matched_requirements": confirmed,
             "other_section_matches": other_sections,
+            "routing_conflicts": routing_conflicts,
         }
 
     def upload(
@@ -257,11 +279,27 @@ class SupportingDocumentUpload:
                     "filename": safe_name,
                     "matched_requirements": [],
                     "other_section_matches": [],
+                    "routing_conflicts": [],
                 },
             }
 
+        upload_verification = self._upload_verification(
+            processing_result,
+            section_code,
+            safe_name,
+        )
+        has_routing_conflict = (
+            upload_verification["status"]
+            == "Конфликт маршрутизации"
+        )
+        response_status = (
+            "Файл загружен, но обнаружен конфликт маршрутизации"
+            if has_routing_conflict
+            else "Файл загружен и проект повторно проанализирован"
+        )
+
         return {
-            "status": "Файл загружен и проект повторно проанализирован",
+            "status": response_status,
             "project": project_name,
             "filename": safe_name,
             "extension": extension,
@@ -280,11 +318,7 @@ class SupportingDocumentUpload:
                 processing_result,
                 section_code,
             ),
-            "upload_verification": self._upload_verification(
-                processing_result,
-                section_code,
-                safe_name,
-            ),
+            "upload_verification": upload_verification,
         }
 
 
