@@ -16,6 +16,9 @@ from app.services.project_package import project_package
 from app.services.project_manager import project_manager
 from app.services.hidden_works_registry import hidden_works_registry
 from app.services.supporting_documents_registry import supporting_documents_registry
+from app.services.supporting_document_upload import (
+    supporting_document_upload,
+)
 
 from app.generators.document_registry_excel import document_registry_excel
 from app.generators.project_executive_generator import (
@@ -305,6 +308,54 @@ def upload_project_file(
 
     finally:
 
+        file.file.close()
+
+
+# =========================================================
+# СОПРОВОДИТЕЛЬНЫЕ ДОКУМЕНТЫ РАЗДЕЛОВ 04–06
+# =========================================================
+
+@router.post(
+    "/{project_name}/supporting-documents/{section_code}/upload"
+)
+def upload_supporting_document(
+    project_name: str,
+    section_code: str,
+    file: UploadFile = File(...),
+):
+    try:
+        return supporting_document_upload.upload(
+            project_name,
+            section_code,
+            file.filename or "",
+            file.file,
+        )
+
+    except ValueError as error:
+        raise HTTPException(
+            status_code=400,
+            detail=str(error),
+        )
+
+    except FileNotFoundError as error:
+        raise HTTPException(
+            status_code=404,
+            detail=str(error),
+        )
+
+    except FileExistsError as error:
+        raise HTTPException(
+            status_code=409,
+            detail=str(error),
+        )
+
+    except Exception as error:
+        raise HTTPException(
+            status_code=500,
+            detail=str(error),
+        )
+
+    finally:
         file.file.close()
 
 
