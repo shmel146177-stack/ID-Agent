@@ -187,6 +187,104 @@ class OCRService:
 
             document.close()
 
+    def recognize_page_region(
+        self,
+        file_path: str,
+        page_number: int,
+        region: tuple[float, float, float, float],
+        language: str = "rus",
+        dpi: int = 300,
+        psm: int = 4,
+    ) -> dict:
+        """OCR прямоугольной области страницы в относительных координатах."""
+
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(f"Файл не найден: {file_path}")
+
+        if not file_path.lower().endswith(".pdf"):
+            raise ValueError("OCR пока поддерживает только PDF")
+
+        left, top, right, bottom = region
+
+        if not (
+            0 <= left < right <= 1
+            and 0 <= top < bottom <= 1
+        ):
+            raise ValueError("Область OCR должна находиться в пределах страницы")
+
+        document = fitz.open(file_path)
+
+        try:
+
+            if page_number < 1 or page_number > len(document):
+                raise ValueError(
+                    f"Страница вне диапазона: {page_number}. "
+                    f"Всего страниц: {len(document)}"
+                )
+
+            image = self._page_to_image(
+                document[page_number - 1],
+                dpi=dpi,
+            )
+
+            try:
+
+                rotation = self._detect_rotation(image)
+
+                corrected_image = self._rotate_image(
+                    image,
+                    rotation,
+                )
+
+                try:
+
+                    width, height = corrected_image.size
+
+                    region_image = corrected_image.crop(
+                        (
+                            round(width * left),
+                            round(height * top),
+                            round(width * right),
+                            round(height * bottom),
+                        )
+                    )
+
+                    try:
+
+                        text = pytesseract.image_to_string(
+                            region_image,
+                            lang=language,
+                            config=f"--psm {psm}",
+                        )
+
+                    finally:
+                        region_image.close()
+
+                finally:
+
+                    if corrected_image is not image:
+                        corrected_image.close()
+
+            finally:
+                image.close()
+
+            text = (text or "").strip()
+
+            return {
+                "file": os.path.basename(file_path),
+                "page": page_number,
+                "rotation": rotation,
+                "region": region,
+                "text": text,
+                "text_length": len(text),
+                "ocr": True,
+                "language": language,
+                "psm": psm,
+            }
+
+        finally:
+            document.close()
+
     def recognize_pdf(
         self,
         file_path: str,

@@ -79,3 +79,60 @@ def test_drawing_register_service_builds_register(monkeypatch, tmp_path):
 
     assert saved["registers_count"] == 1
     assert saved["entries_count"] == 2
+
+
+def test_drawing_register_service_prefers_visible_ocr(monkeypatch, tmp_path):
+
+    service = DrawingRegisterService()
+
+    fake_page_analysis = {
+        "documents": [
+            {
+                "filename": "project.pdf",
+                "path": "project.pdf",
+                "pages": [
+                    {
+                        "page": 1,
+                        "page_type": "Ведомость рабочих чертежей",
+                        "text": (
+                            "Ведомость рабочих чертежей\n"
+                            "Общие данные\n1\n"
+                            "Технические условия\n2\n"
+                            "Чертеж ограждения\n3"
+                        ),
+                    }
+                ],
+            }
+        ]
+    }
+
+    visual_text = (
+        "Ведомость рабочих чертежей\n"
+        "1 Общие данные\n"
+        "2 Ситуационный план\n"
+        "3 План строительства линий\n"
+        "4 Устройство очага заземления\n"
+        "5 Чертеж ограждения"
+    )
+
+    monkeypatch.setattr(
+        service,
+        "_load_page_analysis",
+        lambda project_name: fake_page_analysis,
+    )
+    monkeypatch.setattr(
+        service,
+        "_ocr_register_text",
+        lambda document, page: visual_text,
+    )
+    monkeypatch.setattr(
+        service,
+        "_output_path",
+        lambda project_name: tmp_path / "drawing_register.json",
+    )
+
+    result = service.analyze_project("TEST_PROJECT")
+    register = result["registers"][0]
+
+    assert register["analysis_source"] == "visual_ocr"
+    assert register["entries"][1]["title"] == "Ситуационный план"

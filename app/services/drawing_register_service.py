@@ -4,6 +4,7 @@ from pathlib import Path
 from app.services.drawing_register_analyzer import (
     drawing_register_analyzer,
 )
+from app.services.ocr_service import ocr_service
 
 
 class DrawingRegisterService:
@@ -57,6 +58,34 @@ class DrawingRegisterService:
 
             return json.load(file)
 
+    def _ocr_register_text(
+        self,
+        document: dict,
+        page: dict,
+    ) -> str:
+        """Читает видимую таблицу, не доверяя скрытому текстовому слою PDF."""
+
+        file_path = document.get("path")
+        page_number = page.get("page")
+
+        if not file_path or not isinstance(page_number, int):
+            return ""
+
+        try:
+
+            result = ocr_service.recognize_page_region(
+                file_path,
+                page_number,
+                region=(0.0, 0.0, 0.505, 0.5),
+                language="rus",
+                psm=3,
+            )
+
+        except Exception:
+            return ""
+
+        return result.get("text", "") or ""
+
     def analyze_project(
         self,
         project_name: str,
@@ -83,10 +112,68 @@ class DrawingRegisterService:
 
                 analysis = drawing_register_analyzer.analyze_text(text)
 
+                analysis_source = "embedded_text"
+
+                visual_text = self._ocr_register_text(
+                    document,
+                    page,
+                )
+
+                if visual_text:
+
+                    visual_analysis = drawing_register_analyzer.analyze_text(
+                        visual_text,
+                        allow_title_only=True,
+                    )
+
+                    visual_is_usable = (
+                        visual_analysis.get("register_block_detected", False)
+                        and visual_analysis.get("entries_count", 0)
+                        >= analysis.get("entries_count", 0)
+                    )
+
+                    if visual_is_usable:
+
+                        embedded_expected_count = analysis.get(
+                            "expected_sheet_count",
+                            0,
+                        )
+
+                        visual_entries = visual_analysis.get(
+                            "entries",
+                            [],
+                        )
+
+                        if (
+                            not visual_analysis.get("numbering_restored", False)
+                            and embedded_expected_count == len(visual_entries)
+                        ):
+
+                            for index, entry in enumerate(
+                                visual_entries,
+                                start=1,
+                            ):
+                                entry["sheet_number"] = index
+                                entry["number_source"] = (
+                                    "restored_visual_sequence"
+                                )
+
+                            visual_analysis["numbering_restored"] = True
+                            visual_analysis["numbered_entries_count"] = len(
+                                visual_entries
+                            )
+                            visual_analysis["expected_sheet_count"] = (
+                                embedded_expected_count
+                            )
+
+                        analysis = visual_analysis
+                        analysis_source = "visual_ocr"
+
                 register_data = {
                     "filename": (filename),
                     "page": page.get("page"),
                     "page_type": (page_type),
+                    "analysis_source": (analysis_source),
                     "register_detected": (
                         analysis.get(
                             "register_detected",

@@ -32,9 +32,13 @@ class DrawingRegisterAnalyzer:
             ),
         ),
         (
+            "Ситуационный план",
+            (r"\bситуац\w*\b.*\bплан\b",),
+        ),
+        (
             "План строительства линий",
             (
-                r"\bплан строительства\b.*\bлиний\b",
+                r"\bплан строительства\b.*\bлини\w*",
                 r"\bплан строительства\b.*\bвл\b",
                 r"\bплан строительства\b.*\bквл\b",
             ),
@@ -45,7 +49,10 @@ class DrawingRegisterAnalyzer:
         ),
         (
             "Компоновка ВРЩ-0,4кВ абонента",
-            (r"\bкомпоновка\b.*\bврщ\b.*\bаб",),
+            (
+                r"\bкомпоновка\b.*\bврщ\b.*\bаб",
+                r"\bкомпоновка\b(?!.*\bтерритор)",
+            ),
         ),
         (
             "Узел монтажа ВРЩ-0,4кВ абонента",
@@ -53,7 +60,7 @@ class DrawingRegisterAnalyzer:
         ),
         (
             "Однолинейная схема ВРЩ-0,4кВ территории",
-            (r"\bоднолинейн\w*\b.*\bсхем\w*\b.*\bврщ\b",),
+            (r"\bоднолин\w*\b.*\bсхем\w*\b.*\bврщ\b",),
         ),
         (
             "Компоновка ВРЩ-0,4кВ территории",
@@ -122,6 +129,23 @@ class DrawingRegisterAnalyzer:
             "компоновка",
         )
 
+        text = text.replace(
+            "компанобка",
+            "компоновка",
+        )
+
+        text = text.replace(
+            "ае-та",
+            "аб-та",
+        )
+
+        # Частые ошибки OCR на чертежных шрифтах.
+        text = re.sub(
+            r"\b[чз]зел\b",
+            "узел",
+            text,
+        )
+
         text = re.sub(
             r"\s+",
             " ",
@@ -176,6 +200,34 @@ class DrawingRegisterAnalyzer:
 
         return 1 <= number <= 99
 
+    def _extract_row_number(
+        self,
+        line: str,
+    ) -> int | None:
+
+        value = line.strip()
+
+        pure_number = re.fullmatch(
+            r"\d{1,2}",
+            value,
+        )
+
+        if pure_number:
+            number = int(value)
+            return number if 1 <= number <= 99 else None
+
+        numbered_row = re.match(
+            r"^(\d{1,2})(?:\s+|[.)-])",
+            value,
+        )
+
+        if not numbered_row:
+            return None
+
+        number = int(numbered_row.group(1))
+
+        return number if 1 <= number <= 99 else None
+
     def _match_title(
         self,
         line: str,
@@ -205,6 +257,7 @@ class DrawingRegisterAnalyzer:
     def _find_register_block_start(
         self,
         lines: list[str],
+        allow_title_only: bool = False,
     ) -> int | None:
         """
         Фраза "Общие данные" может встречаться
@@ -219,7 +272,7 @@ class DrawingRegisterAnalyzer:
 
         for index, line in enumerate(lines):
 
-            if self._normalize(line) != "общие данные":
+            if self._match_title(line) != "Общие данные":
                 continue
 
             end_index = min(
@@ -230,7 +283,7 @@ class DrawingRegisterAnalyzer:
             number_count = sum(
                 1
                 for candidate_line in lines[index:end_index]
-                if self._is_number_line(candidate_line)
+                if self._extract_row_number(candidate_line) is not None
             )
 
             title_count = sum(
@@ -259,7 +312,10 @@ class DrawingRegisterAnalyzer:
             ),
         )
 
-        if best["number_count"] < 5 or best["title_count"] < 5:
+        if best["title_count"] < 5:
+            return None
+
+        if best["number_count"] < 5 and not allow_title_only:
             return None
 
         return best["index"]
@@ -267,6 +323,7 @@ class DrawingRegisterAnalyzer:
     def _extract_register_block(
         self,
         lines: list[str],
+        allow_title_only: bool = False,
     ) -> list[str]:
         """
         В некоторых PDF табличный текст ведомости
@@ -277,7 +334,10 @@ class DrawingRegisterAnalyzer:
         а продолжаем до конца текста страницы.
         """
 
-        start_index = self._find_register_block_start(lines)
+        start_index = self._find_register_block_start(
+            lines,
+            allow_title_only=allow_title_only,
+        )
 
         if start_index is None:
             return []
@@ -323,10 +383,10 @@ class DrawingRegisterAnalyzer:
 
         for line in block:
 
-            if not self._is_number_line(line):
-                continue
+            number = self._extract_row_number(line)
 
-            number = int(line.strip())
+            if number is None:
+                continue
 
             if number not in numbers:
                 numbers.append(number)
@@ -372,6 +432,7 @@ class DrawingRegisterAnalyzer:
     def analyze_text(
         self,
         text: str,
+        allow_title_only: bool = False,
     ) -> dict:
 
         text = text or ""
@@ -380,7 +441,10 @@ class DrawingRegisterAnalyzer:
 
         register_detected = self._is_register(text)
 
-        block = self._extract_register_block(lines)
+        block = self._extract_register_block(
+            lines,
+            allow_title_only=allow_title_only,
+        )
 
         if not block:
 
