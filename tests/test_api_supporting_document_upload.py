@@ -5,6 +5,9 @@ from fastapi import HTTPException
 from starlette.datastructures import UploadFile
 
 import app.api.project_processor as api_module
+from app.services.supporting_document_upload import (
+    SupportingDocumentTooLargeError,
+)
 
 
 def test_supporting_upload_api_delegates_and_closes_file(monkeypatch):
@@ -56,6 +59,7 @@ def test_supporting_upload_api_delegates_and_closes_file(monkeypatch):
 @pytest.mark.parametrize(
     ("raised_error", "expected_status"),
     [
+        (SupportingDocumentTooLargeError("Файл слишком большой"), 413),
         (ValueError("Неверный раздел"), 400),
         (FileNotFoundError("Проект не найден"), 404),
         (FileExistsError("Файл уже существует"), 409),

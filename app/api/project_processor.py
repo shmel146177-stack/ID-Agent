@@ -17,6 +17,7 @@ from app.services.project_manager import project_manager
 from app.services.hidden_works_registry import hidden_works_registry
 from app.services.supporting_documents_registry import supporting_documents_registry
 from app.services.supporting_document_upload import (
+    SupportingDocumentTooLargeError,
     supporting_document_upload,
 )
 
@@ -329,6 +330,12 @@ def upload_supporting_document(
             section_code,
             file.filename or "",
             file.file,
+        )
+
+    except SupportingDocumentTooLargeError as error:
+        raise HTTPException(
+            status_code=413,
+            detail=str(error),
         )
 
     except ValueError as error:
