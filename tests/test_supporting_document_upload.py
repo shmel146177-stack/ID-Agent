@@ -3,6 +3,7 @@ from io import BytesIO
 import pytest
 
 from app.services.supporting_document_upload import (
+    SupportingDocumentTooLargeError,
     SupportingDocumentUpload,
 )
 
@@ -459,7 +460,7 @@ def test_upload_rejects_oversized_file_and_removes_it(tmp_path):
         max_file_size_bytes=8,
     )
 
-    with pytest.raises(ValueError, match="превышает допустимый размер"):
+    with pytest.raises(SupportingDocumentTooLargeError, match="превышает допустимый размер"):
         service.upload(
             "TEST_PROJECT",
             "tests",

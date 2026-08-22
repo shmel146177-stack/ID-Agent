@@ -5,6 +5,7 @@ from typing import BinaryIO
 class SupportingDocumentTooLargeError(ValueError):
     """Загружаемый файл превышает допустимый размер."""
 
+
 class SupportingDocumentUpload:
     """Загрузка сопроводительного документа с повторным анализом проекта."""
 
@@ -132,7 +133,7 @@ class SupportingDocumentUpload:
             total_size += len(chunk)
 
             if total_size > self.max_file_size_bytes:
-                                raise SupportingDocumentTooLargeError(
+                raise SupportingDocumentTooLargeError(
                     "Файл превышает допустимый размер: "
                     f"{self.max_file_size_bytes} байт"
                 )
