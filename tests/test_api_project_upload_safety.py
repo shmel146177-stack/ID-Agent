@@ -18,7 +18,7 @@ def _prepare_project(monkeypatch):
         "process",
         lambda name: {
             "project": name,
-            "status": "??????",
+            "status": "READY",
         },
     )
 
@@ -137,7 +137,7 @@ class FailingStream(BytesIO):
         if self.read_calls == 1:
             return super().read(4)
 
-        raise OSError("?????? ????????? ???????????")
+        raise OSError("copy failure")
 
 
 def test_project_upload_removes_partial_file_on_copy_failure(
