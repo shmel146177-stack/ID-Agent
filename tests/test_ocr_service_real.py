@@ -1,13 +1,20 @@
 ﻿from pathlib import Path
 
+import pytest
+
 from app.services.ocr_service import OCRService
 
 
 def test_real_ocr_with_rotation():
 
-    pdf_path = next(
+    pdf_files = list(
         Path("projects/ТП-103/input").glob("kyoScan*.pdf")
     )
+
+    if not pdf_files:
+        pytest.skip("Local OCR integration PDF is not available")
+
+    pdf_path = pdf_files[0]
 
     result = OCRService().recognize_pdf(
         str(pdf_path)

@@ -1,13 +1,20 @@
 ﻿from pathlib import Path
 
+import pytest
+
 from app.services.page_analysis_service import PageAnalysisService
 
 
 def test_page_analysis_uses_ocr_for_scanned_page():
 
-    pdf_path = next(
+    pdf_files = list(
         Path("projects/ТП-103/input").glob("kyoScan*.pdf")
     )
+
+    if not pdf_files:
+        pytest.skip("Local OCR integration PDF is not available")
+
+    pdf_path = pdf_files[0]
 
     result = PageAnalysisService().analyze_pdf(
         pdf_path

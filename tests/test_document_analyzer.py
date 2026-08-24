@@ -1,13 +1,20 @@
 ﻿from pathlib import Path
 
+import pytest
+
 from app.scanner.scanner import DocumentScanner
 from app.services.document_analyzer import DocumentAnalyzer
 
 
 def test_document_analyzer_extracts_equipment_data():
-    pdf_path = next(
+    pdf_files = list(
         Path("uploads").glob("*17.08.23 (1).pdf")
     )
+
+    if not pdf_files:
+        pytest.skip("Local integration PDF is not available")
+
+    pdf_path = pdf_files[0]
 
     document = DocumentScanner().scan(str(pdf_path))
     result = DocumentAnalyzer().analyze_text(document.text)
