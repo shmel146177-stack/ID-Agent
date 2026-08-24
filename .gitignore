@@ -12,3 +12,6 @@ checkpoints/
 **/*_before_*.py
 main_*.py
 patch_*.py
+.env
+.env.*
+!.env.example
