@@ -540,3 +540,30 @@ def test_quality_keyword_does_not_match_inside_compound_word():
         requirement,
         false_certificate,
     ) is False
+
+
+def test_real_cable_quality_requirement_rejects_generic_passage_word():
+    matcher = SupportingDocumentMatcher()
+
+    requirement = SupportingDocumentsRegistry.REQUIREMENTS[
+        "cable_entry"
+    ][2]
+
+    unrelated_certificate = {
+        "filename": "equipment_certificate.pdf",
+        "classification": "\u0421\u0435\u0440\u0442\u0438\u0444\u0438\u043a\u0430\u0442",
+        "text": (
+            "\u0421\u0435\u0440\u0442\u0438\u0444\u0438\u043a\u0430\u0442 "
+            "\u043d\u0430 \u0448\u043a\u0430\u0444 "
+            "\u0443\u043f\u0440\u0430\u0432\u043b\u0435\u043d\u0438\u044f. "
+            "\u0421\u0432\u043e\u0431\u043e\u0434\u043d\u044b\u0439 "
+            "\u043f\u0440\u043e\u0445\u043e\u0434 "
+            "\u0434\u043e\u043b\u0436\u0435\u043d "
+            "\u0441\u043e\u0445\u0440\u0430\u043d\u044f\u0442\u044c\u0441\u044f."
+        ),
+    }
+
+    assert matcher.matches(
+        requirement,
+        unrelated_certificate,
+    ) is False

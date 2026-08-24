@@ -140,7 +140,7 @@ class SupportingDocumentsRegistry:
                 "match_any_keywords": [
                     "\u043a\u0430\u0431\u0435\u043b",
                     "\u0442\u0440\u0443\u0431",
-                    "\u043f\u0440\u043e\u0445\u043e\u0434",
+                    "\u043f\u0440\u043e\u0445\u043e\u0434\u043a",
                 ],
                 "priority": "Высокий",
                 "reason": (
