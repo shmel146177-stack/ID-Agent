@@ -1,5 +1,4 @@
 import os
-import shutil
 from urllib.parse import quote
 
 from fastapi import (
@@ -37,6 +36,10 @@ router = APIRouter(
     prefix="/projects",
     tags=["Projects"]
 )
+
+
+PROJECT_UPLOAD_MAX_FILE_SIZE_BYTES = 512 * 1024 * 1024
+PROJECT_UPLOAD_COPY_CHUNK_SIZE = 1024 * 1024
 
 
 class ProjectCreate(BaseModel):
@@ -235,19 +238,63 @@ def upload_project_file(
         # 1. СОХРАНЯЕМ ФАЙЛ
         # ---------------------------------------------
 
-        with open(
-            file_path,
-            "wb"
-        ) as destination:
-
-            shutil.copyfileobj(
-                file.file,
-                destination
+        try:
+            destination = open(
+                file_path,
+                "xb"
             )
 
-        file_size = os.path.getsize(
-            file_path
-        )
+        except FileExistsError as error:
+            raise HTTPException(
+                status_code=409,
+                detail=f"Файл уже существует: {filename}"
+            ) from error
+
+        try:
+            file_size = 0
+
+            with destination:
+                while True:
+                    chunk = file.file.read(
+                        PROJECT_UPLOAD_COPY_CHUNK_SIZE
+                    )
+
+                    if not chunk:
+                        break
+
+                    file_size += len(chunk)
+
+                    if (
+                        file_size
+                        > PROJECT_UPLOAD_MAX_FILE_SIZE_BYTES
+                    ):
+                        raise HTTPException(
+                            status_code=413,
+                            detail=(
+                                "Файл превышает допустимый размер: "
+                                f"{PROJECT_UPLOAD_MAX_FILE_SIZE_BYTES} байт"
+                            )
+                        )
+
+                    destination.write(
+                        chunk
+                    )
+
+                if file_size == 0:
+                    raise HTTPException(
+                        status_code=400,
+                        detail="Пустой файл не может быть загружен"
+                    )
+
+        except Exception:
+            try:
+                os.remove(
+                    file_path
+                )
+            except FileNotFoundError:
+                pass
+
+            raise
 
         # ---------------------------------------------
         # 2. АВТОМАТИЧЕСКИ ОБРАБАТЫВАЕМ ПРОЕКТ
