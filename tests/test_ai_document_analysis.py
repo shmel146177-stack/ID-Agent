@@ -124,3 +124,15 @@ def test_ai_document_analysis_rejects_invalid_backend_result():
             "document.pdf",
             "Текст документа.",
         )
+
+def test_ai_document_analysis_with_openai_builds_backend():
+    ai_client = create_ai_client("test-key")
+
+    service = AIDocumentAnalysisService.with_openai(
+        ai_client=ai_client,
+        max_input_chars=1234,
+    )
+
+    assert service.ai_client is ai_client
+    assert service.analysis_backend.ai_client is ai_client
+    assert service.analysis_backend.max_input_chars == 1234

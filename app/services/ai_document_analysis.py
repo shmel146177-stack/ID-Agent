@@ -17,6 +17,26 @@ class AIDocumentAnalysisService:
         self.ai_client = ai_client or AIClient()
         self.analysis_backend = analysis_backend
 
+    @classmethod
+    def with_openai(
+        cls,
+        ai_client: AIClient | None = None,
+        max_input_chars: int = 40_000,
+    ) -> "AIDocumentAnalysisService":
+        from app.services.openai_analysis_backend import (
+            OpenAIResponsesBackend,
+        )
+
+        client = ai_client or AIClient()
+
+        return cls(
+            ai_client=client,
+            analysis_backend=OpenAIResponsesBackend(
+                ai_client=client,
+                max_input_chars=max_input_chars,
+            ),
+        )
+
     def analyze_text(
         self,
         filename: str,
