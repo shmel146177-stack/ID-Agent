@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 
 from app.core.agent import agent
+from app.api.ai import router as ai_router
 from app.api.documents import router as documents_router
 from app.api.generator import router as generator_router
 from app.api.project_processor import router as project_processor_router
@@ -12,6 +13,7 @@ app = FastAPI(
 )
 
 
+app.include_router(ai_router)
 app.include_router(documents_router)
 app.include_router(generator_router)
 app.include_router(project_processor_router)
