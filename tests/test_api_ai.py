@@ -1,5 +1,6 @@
 ﻿from fastapi.testclient import TestClient
 
+from app.models.ai_analysis import AIAnalysisResult
 from app.services.ai_settings import AISettings
 from main import app
 
@@ -47,3 +48,55 @@ def test_ai_analyze_without_api_key_is_safe(monkeypatch):
     assert data["engineering_confirmation"] is False
     assert data["facts"] == []
     assert "OpenAI API" in data["summary"]
+
+
+
+def test_ai_analyze_uses_openai_when_active(monkeypatch):
+    from app.services.ai_document_analysis import (
+        AIDocumentAnalysisService,
+    )
+
+    monkeypatch.setenv("OPENAI_API_KEY", "test-key")
+    monkeypatch.setenv("OPENAI_MODEL", "test-model")
+    monkeypatch.setenv("ID_AGENT_AI_ENABLED", "true")
+
+    calls = []
+
+    class ServiceStub:
+        def analyze_text(self, filename, text):
+            calls.append((filename, text))
+            return AIAnalysisResult(
+                summary="OpenAI backend selected.",
+            )
+
+    def fake_with_openai(
+        cls,
+        ai_client=None,
+        max_input_chars=40_000,
+    ):
+        assert ai_client is not None
+        assert ai_client.settings.active is True
+        return ServiceStub()
+
+    monkeypatch.setattr(
+        AIDocumentAnalysisService,
+        "with_openai",
+        classmethod(fake_with_openai),
+    )
+
+    response = client.post(
+        "/ai/analyze",
+        json={
+            "filename": "document.pdf",
+            "text": "????? ??????????? ?????????.",
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["summary"] == "OpenAI backend selected."
+    assert calls == [
+        (
+            "document.pdf",
+            "????? ??????????? ?????????.",
+        )
+    ]

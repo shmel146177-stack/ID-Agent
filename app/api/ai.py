@@ -20,7 +20,16 @@ def ai_status():
 
 @router.post("/analyze")
 def analyze_document(request: AIAnalysisRequest):
-    service = AIDocumentAnalysisService()
+    ai_client = AIClient()
+
+    if ai_client.settings.active:
+        service = AIDocumentAnalysisService.with_openai(
+            ai_client=ai_client,
+        )
+    else:
+        service = AIDocumentAnalysisService(
+            ai_client=ai_client,
+        )
 
     result = service.analyze_text(
         request.filename,
