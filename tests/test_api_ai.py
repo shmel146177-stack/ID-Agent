@@ -20,6 +20,8 @@ def test_ai_status_without_api_key(monkeypatch):
     assert data == {
         "provider": "openai",
         "configured": False,
+        "enabled": False,
+        "active": False,
         "model": AISettings.DEFAULT_MODEL,
         "client_initialized": False,
     }

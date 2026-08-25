@@ -13,6 +13,8 @@ def test_ai_settings_not_configured_without_api_key(monkeypatch):
     assert settings.public_status() == {
         "provider": "openai",
         "configured": False,
+        "enabled": False,
+        "active": False,
         "model": AISettings.DEFAULT_MODEL,
     }
 

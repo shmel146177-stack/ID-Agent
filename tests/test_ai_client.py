@@ -29,6 +29,8 @@ def test_ai_client_does_not_initialize_without_api_key():
     assert client.status() == {
         "provider": "openai",
         "configured": False,
+        "enabled": False,
+        "active": False,
         "model": "test-model",
         "client_initialized": False,
     }

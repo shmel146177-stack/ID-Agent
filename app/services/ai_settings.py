@@ -46,5 +46,7 @@ class AISettings:
         return {
             "provider": "openai",
             "configured": self.configured,
+            "enabled": self.enabled,
+            "active": self.active,
             "model": self.model,
         }
