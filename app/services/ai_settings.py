@@ -9,7 +9,7 @@ class AISettings:
     api_key: str | None
     model: str
 
-    DEFAULT_MODEL = "gpt-5-mini"
+    DEFAULT_MODEL = "gpt-5.6-luna"
 
     @classmethod
     def from_environment(cls) -> "AISettings":
