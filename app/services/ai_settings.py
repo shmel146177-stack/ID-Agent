@@ -8,6 +8,7 @@ class AISettings:
 
     api_key: str | None
     model: str
+    enabled: bool = False
 
     DEFAULT_MODEL = "gpt-5.6-luna"
 
@@ -18,11 +19,24 @@ class AISettings:
             os.getenv("OPENAI_MODEL")
             or cls.DEFAULT_MODEL
         ).strip()
+        enabled = (
+            os.getenv("ID_AGENT_AI_ENABLED") or ""
+        ).strip().lower() in {
+            "1",
+            "true",
+            "yes",
+            "on",
+        }
 
         return cls(
             api_key=api_key,
             model=model,
+            enabled=enabled,
         )
+
+    @property
+    def active(self) -> bool:
+        return self.enabled and self.configured
 
     @property
     def configured(self) -> bool:

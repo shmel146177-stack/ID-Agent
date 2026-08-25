@@ -47,6 +47,7 @@ def test_ai_client_initializes_with_configured_api_key():
     settings = AISettings(
         api_key="test-secret-key",
         model="test-model",
+        enabled=True,
     )
     client = AIClient(
         settings=settings,
@@ -69,6 +70,7 @@ def test_ai_client_reuses_initialized_client():
     settings = AISettings(
         api_key="test-secret-key",
         model="test-model",
+        enabled=True,
     )
     client = AIClient(
         settings=settings,
@@ -98,3 +100,26 @@ def test_ai_client_status_does_not_expose_api_key():
 
     assert "api_key" not in status
     assert "super-secret-api-key" not in str(status)
+
+
+def test_ai_client_does_not_initialize_when_ai_disabled():
+    factory = ClientFactoryStub()
+    settings = AISettings(
+        api_key="test-secret-key",
+        model="test-model",
+        enabled=False,
+    )
+    client = AIClient(
+        settings=settings,
+        client_factory=factory,
+    )
+
+    assert client.configured is True
+
+    with pytest.raises(
+        AIUnavailableError,
+        match="ID_AGENT_AI_ENABLED",
+    ):
+        client.get_client()
+
+    assert factory.calls == []

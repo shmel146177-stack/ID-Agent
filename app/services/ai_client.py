@@ -38,6 +38,11 @@ class AIClient:
                 "OpenAI API не настроен: отсутствует OPENAI_API_KEY"
             )
 
+        if not self.settings.enabled:
+            raise AIUnavailableError(
+                "AI calls are disabled: set ID_AGENT_AI_ENABLED=true"
+            )
+
         if self._client is None:
             self._client = self.client_factory(
                 api_key=self.settings.api_key,

@@ -48,6 +48,7 @@ def create_backend(
         settings=AISettings(
             api_key="test-key",
             model="test-model",
+            enabled=True,
         ),
         client_factory=factory,
     )

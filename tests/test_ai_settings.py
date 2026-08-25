@@ -46,3 +46,24 @@ def test_ai_settings_treats_blank_api_key_as_missing(monkeypatch):
 
     assert settings.api_key is None
     assert settings.configured is False
+
+
+def test_ai_settings_ai_disabled_by_default(monkeypatch):
+    monkeypatch.delenv("ID_AGENT_AI_ENABLED", raising=False)
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+
+    settings = AISettings.from_environment()
+
+    assert settings.enabled is False
+    assert settings.active is False
+
+
+def test_ai_settings_ai_active_only_with_flag_and_key(monkeypatch):
+    monkeypatch.setenv("ID_AGENT_AI_ENABLED", "true")
+    monkeypatch.setenv("OPENAI_API_KEY", "test-key")
+
+    settings = AISettings.from_environment()
+
+    assert settings.enabled is True
+    assert settings.configured is True
+    assert settings.active is True
