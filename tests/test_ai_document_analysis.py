@@ -1,7 +1,7 @@
 ﻿import pytest
 
 from app.models.ai_analysis import AIAnalysisResult, AIFactSuggestion
-from app.services.ai_client import AIClient
+from app.services.ai_client import AIClient, AIUnavailableError
 from app.services.ai_document_analysis import AIDocumentAnalysisService
 from app.services.ai_settings import AISettings
 
@@ -136,3 +136,27 @@ def test_ai_document_analysis_with_openai_builds_backend():
     assert service.ai_client is ai_client
     assert service.analysis_backend.ai_client is ai_client
     assert service.analysis_backend.max_input_chars == 1234
+
+
+
+def test_ai_document_analysis_falls_back_when_backend_unavailable():
+    def backend(filename, text):
+        raise AIUnavailableError("OpenAI временно недоступен")
+
+    service = AIDocumentAnalysisService(
+        ai_client=create_ai_client("test-key"),
+        analysis_backend=backend,
+    )
+
+    result = service.analyze_text(
+        "document.pdf",
+        "Текст инженерного документа.",
+    )
+
+    assert result.requires_human_review is True
+    assert result.engineering_confirmation is False
+    assert "AI-анализ" in result.summary
+    assert "временно недоступен" in result.summary
+    assert "Детерминированный анализ ID-Agent остается доступен." in (
+        result.warnings
+    )

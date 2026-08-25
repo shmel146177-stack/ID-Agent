@@ -1,7 +1,7 @@
 ﻿from collections.abc import Callable
 
 from app.models.ai_analysis import AIAnalysisResult
-from app.services.ai_client import AIClient
+from app.services.ai_client import AIClient, AIUnavailableError
 
 
 class AIDocumentAnalysisService:
@@ -79,10 +79,21 @@ class AIDocumentAnalysisService:
                 ],
             )
 
-        result = self.analysis_backend(
-            document_name,
-            document_text,
-        )
+        try:
+            result = self.analysis_backend(
+                document_name,
+                document_text,
+            )
+        except AIUnavailableError as exc:
+            return AIAnalysisResult(
+                summary=(
+                    f"AI-анализ документа {document_name} "
+                    f"временно недоступен: {exc}"
+                ),
+                warnings=[
+                    "Детерминированный анализ ID-Agent остается доступен.",
+                ],
+            )
 
         if not isinstance(result, AIAnalysisResult):
             raise TypeError(
