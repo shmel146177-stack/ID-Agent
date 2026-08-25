@@ -1,4 +1,6 @@
-﻿from app.models.ai_analysis import AIAnalysisResult
+﻿from openai import APIError
+
+from app.models.ai_analysis import AIAnalysisResult
 from app.services.ai_client import AIClient, AIUnavailableError
 
 
@@ -48,23 +50,28 @@ class OpenAIResponsesBackend:
 
         client = self.ai_client.get_client()
 
-        response = client.responses.parse(
-            model=self.ai_client.settings.model,
-            input=[
-                {
-                    "role": "system",
-                    "content": self.SYSTEM_PROMPT,
-                },
-                {
-                    "role": "user",
-                    "content": (
-                        f"Имя файла: {document_name}\n\n"
-                        f"Текст документа:\n{input_text}"
-                    ),
-                },
-            ],
-            text_format=AIAnalysisResult,
-        )
+        try:
+            response = client.responses.parse(
+                model=self.ai_client.settings.model,
+                input=[
+                    {
+                        "role": "system",
+                        "content": self.SYSTEM_PROMPT,
+                    },
+                    {
+                        "role": "user",
+                        "content": (
+                            f"Имя файла: {document_name}\n\n"
+                            f"Текст документа:\n{input_text}"
+                        ),
+                    },
+                ],
+                text_format=AIAnalysisResult,
+            )
+        except APIError as exc:
+            raise AIUnavailableError(
+                "OpenAI API временно недоступен"
+            ) from exc
 
         result = response.output_parsed
 

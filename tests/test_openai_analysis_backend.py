@@ -1,4 +1,5 @@
 ﻿import pytest
+from openai import APIConnectionError
 
 from app.models.ai_analysis import AIAnalysisResult
 from app.services.ai_client import AIClient, AIUnavailableError
@@ -178,3 +179,25 @@ def test_openai_backend_limits_input_and_adds_warning():
 
     assert result.requires_human_review is True
     assert result.engineering_confirmation is False
+
+
+
+def test_openai_backend_translates_sdk_connection_error():
+    expected = AIAnalysisResult(
+        summary="unused",
+    )
+    backend, openai_stub, _ = create_backend(expected)
+
+    def failing_parse(**kwargs):
+                raise APIConnectionError(request=object())
+
+    openai_stub.responses.parse = failing_parse
+
+    with pytest.raises(
+        AIUnavailableError,
+        match="OpenAI API временно недоступен",
+    ):
+        backend(
+            "document.pdf",
+            "Текст инженерного документа.",
+        )
