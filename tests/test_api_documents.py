@@ -326,3 +326,76 @@ def test_upload_document_http_with_explicit_ai(monkeypatch, tmp_path):
     )
     assert result["ai_analysis"]["requires_human_review"] is True
     assert result["ai_analysis"]["engineering_confirmation"] is False
+
+
+def test_upload_document_http_ai_unconfigured_falls_back(
+    monkeypatch,
+    tmp_path,
+):
+    upload_dir = tmp_path / "uploads"
+
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.delenv("ID_AGENT_AI_ENABLED", raising=False)
+
+    monkeypatch.setattr(
+        documents_module,
+        "UPLOAD_DIR",
+        str(upload_dir),
+    )
+
+    monkeypatch.setattr(
+        documents_module.document_service,
+        "analyze",
+        lambda file_path: {
+            "filename": "test.pdf",
+            "extension": ".pdf",
+            "size_bytes": 8,
+            "status": "Document detected",
+        },
+    )
+
+    monkeypatch.setattr(
+        documents_module.pdf_parser,
+        "extract_text",
+        lambda file_path: "PDF document text",
+    )
+
+    monkeypatch.setattr(
+        documents_module.document_analyzer,
+        "analyze_text",
+        lambda text: {
+            "document_type": "deterministic-drawing",
+            "drawing_number": "TEST-001",
+        },
+    )
+
+    monkeypatch.setattr(
+        documents_module.project_service,
+        "save_analysis",
+        lambda data: None,
+    )
+
+    response = client.post(
+        "/upload?use_ai=true",
+        files={
+            "file": (
+                "test.pdf",
+                b"PDF DATA",
+                "application/pdf",
+            )
+        },
+    )
+
+    assert response.status_code == 200
+
+    result = response.json()
+
+    assert result["document_type"] == "deterministic-drawing"
+    assert result["drawing_number"] == "TEST-001"
+
+    ai_analysis = result["ai_analysis"]
+
+    assert "OpenAI API" in ai_analysis["summary"]
+    assert "OPENAI_API_KEY" in ai_analysis["warnings"][0]
+    assert ai_analysis["requires_human_review"] is True
+    assert ai_analysis["engineering_confirmation"] is False
