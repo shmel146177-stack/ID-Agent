@@ -6,6 +6,8 @@ from app.services.document_service import document_service
 from app.parsers.pdf_parser import pdf_parser
 from app.services.document_analyzer import document_analyzer
 from app.services.project_service import project_service
+from app.services.ai_client import AIClient
+from app.services.ai_document_analysis import AIDocumentAnalysisService
 
 
 router = APIRouter()
@@ -14,7 +16,10 @@ UPLOAD_DIR = "uploads"
 
 
 @router.post("/upload")
-async def upload_document(file: UploadFile = File(...)):
+async def upload_document(
+    file: UploadFile = File(...),
+    use_ai: bool = False,
+):
 
     os.makedirs(UPLOAD_DIR, exist_ok=True)
 
@@ -44,5 +49,24 @@ async def upload_document(file: UploadFile = File(...)):
         project_service.save_analysis(analysis)
 
         result.update(analysis)
+
+        if use_ai:
+            ai_client = AIClient()
+
+            if ai_client.settings.active:
+                ai_service = AIDocumentAnalysisService.with_openai(
+                    ai_client=ai_client,
+                )
+            else:
+                ai_service = AIDocumentAnalysisService(
+                    ai_client=ai_client,
+                )
+
+            ai_analysis = ai_service.analyze_text(
+                filename,
+                text,
+            )
+
+            result["ai_analysis"] = ai_analysis.model_dump()
 
     return result
