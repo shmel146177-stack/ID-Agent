@@ -70,3 +70,55 @@ def test_upload_document_non_pdf_skips_pdf_analysis(
 
     assert result["filename"] == "test.docx"
     assert result["extension"] == ".docx"
+
+
+def test_upload_document_non_pdf_does_not_call_ai(
+    monkeypatch,
+    tmp_path,
+):
+    upload_dir = tmp_path / "uploads"
+
+    monkeypatch.setattr(
+        documents_module,
+        "UPLOAD_DIR",
+        str(upload_dir),
+    )
+
+    monkeypatch.setattr(
+        documents_module.document_service,
+        "analyze",
+        lambda file_path: {
+            "filename": "test.docx",
+            "extension": ".docx",
+            "size_bytes": 9,
+            "status": "Document detected",
+        },
+    )
+
+    class ForbiddenAIClient:
+        def __init__(self):
+            raise AssertionError("AI must not be called for non-PDF")
+
+    monkeypatch.setattr(
+        documents_module,
+        "AIClient",
+        ForbiddenAIClient,
+    )
+
+    upload = UploadFile(
+        filename="test.docx",
+        file=BytesIO(b"DOCX DATA"),
+    )
+
+    import asyncio
+
+    result = asyncio.run(
+        documents_module.upload_document(
+            upload,
+            use_ai=True,
+        )
+    )
+
+    assert result["filename"] == "test.docx"
+    assert result["extension"] == ".docx"
+    assert "ai_analysis" not in result
