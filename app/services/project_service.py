@@ -28,7 +28,7 @@ class ProjectService:
             )
 
         return {
-            "status": "?????? ????????",
+            "status": "Анализ сохранён",
             "document": data
         }
 
@@ -54,7 +54,7 @@ class ProjectService:
             )
 
         return {
-            "status": "AI-?????? ????????",
+            "status": "AI-анализ сохранен",
             "document": data,
         }
 
