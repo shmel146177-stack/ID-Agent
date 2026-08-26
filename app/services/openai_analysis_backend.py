@@ -1,4 +1,4 @@
-﻿from openai import APIError
+﻿from openai import APIError, RateLimitError
 
 from app.models.ai_analysis import AIAnalysisResult
 from app.services.ai_client import AIClient, AIUnavailableError
@@ -68,11 +68,20 @@ class OpenAIResponsesBackend:
                 ],
                 text_format=AIAnalysisResult,
             )
+        except RateLimitError as exc:
+            if getattr(exc, "code", None) == "credit_balance_exhausted":
+                raise AIUnavailableError(
+                    "OpenAI API недоступен: исчерпан баланс API"
+                ) from exc
+
+            raise AIUnavailableError(
+                "OpenAI API временно недоступен: превышен лимит запросов"
+            ) from exc
+
         except APIError as exc:
             raise AIUnavailableError(
                 "OpenAI API временно недоступен"
             ) from exc
-
         result = response.output_parsed
 
         if result is None:

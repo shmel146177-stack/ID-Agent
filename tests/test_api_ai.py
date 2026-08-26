@@ -11,6 +11,7 @@ client = TestClient(app)
 def test_ai_status_without_api_key(monkeypatch):
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
     monkeypatch.delenv("OPENAI_MODEL", raising=False)
+    monkeypatch.delenv("ID_AGENT_AI_ENABLED", raising=False)
 
     response = client.get("/ai/status")
 

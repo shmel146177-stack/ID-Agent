@@ -1,5 +1,5 @@
 ﻿import pytest
-from openai import APIConnectionError
+from openai import APIConnectionError, RateLimitError
 
 from app.models.ai_analysis import AIAnalysisResult
 from app.services.ai_client import AIClient, AIUnavailableError
@@ -201,4 +201,28 @@ def test_openai_backend_translates_sdk_connection_error():
         backend(
             "document.pdf",
             "Текст инженерного документа.",
+        )
+
+
+def test_openai_backend_reports_exhausted_api_balance():
+    expected = AIAnalysisResult(
+        summary="unused",
+    )
+    backend, openai_stub, _ = create_backend(expected)
+
+    def failing_parse(**kwargs):
+        exc = RateLimitError.__new__(RateLimitError)
+        Exception.__init__(exc, "API balance exhausted")
+        exc.code = "credit_balance_exhausted"
+        raise exc
+
+    openai_stub.responses.parse = failing_parse
+
+    with pytest.raises(
+        AIUnavailableError,
+        match="\u0438\u0441\u0447\u0435\u0440\u043f\u0430\u043d \u0431\u0430\u043b\u0430\u043d\u0441",
+    ):
+        backend(
+            "document.pdf",
+            "Engineering document text.",
         )
