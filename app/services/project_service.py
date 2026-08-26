@@ -6,7 +6,7 @@ class ProjectService:
 
     def __init__(self):
         self.file_path = "projects/data/current_analysis.json"
-
+        self.ai_file_path = "projects/data/current_ai_analysis.json"
 
     def save_analysis(self, data: dict):
 
@@ -28,10 +28,35 @@ class ProjectService:
             )
 
         return {
-            "status": "Анализ сохранён",
+            "status": "?????? ????????",
             "document": data
         }
 
+    def save_ai_analysis(self, data: dict):
+        directory = os.path.dirname(self.ai_file_path)
+
+        if directory:
+            os.makedirs(
+                directory,
+                exist_ok=True,
+            )
+
+        with open(
+            self.ai_file_path,
+            "w",
+            encoding="utf-8",
+        ) as file:
+            json.dump(
+                data,
+                file,
+                ensure_ascii=False,
+                indent=4,
+            )
+
+        return {
+            "status": "AI-?????? ????????",
+            "document": data,
+        }
 
     def get_analysis(self):
 
