@@ -3,9 +3,14 @@ from io import BytesIO
 from pathlib import Path
 
 from starlette.datastructures import UploadFile
+from fastapi.testclient import TestClient
 from app.models.ai_analysis import AIAnalysisResult
 
 import app.api.documents as documents_module
+from main import app
+
+
+client = TestClient(app)
 
 
 def test_upload_document_pdf_pipeline(monkeypatch, tmp_path):
@@ -212,6 +217,104 @@ def test_upload_document_pdf_with_explicit_ai(monkeypatch, tmp_path):
             use_ai=True,
         )
     )
+
+    assert result["document_type"] == "deterministic-drawing"
+    assert result["drawing_number"] == "TEST-001"
+
+    assert result["ai_analysis"]["summary"] == "AI analysis completed."
+    assert (
+        result["ai_analysis"]["document_type_suggestion"]
+        == "ai-passport"
+    )
+    assert result["ai_analysis"]["requires_human_review"] is True
+    assert result["ai_analysis"]["engineering_confirmation"] is False
+
+
+def test_upload_document_http_with_explicit_ai(monkeypatch, tmp_path):
+    upload_dir = tmp_path / "uploads"
+
+    monkeypatch.setattr(
+        documents_module,
+        "UPLOAD_DIR",
+        str(upload_dir),
+    )
+
+    monkeypatch.setattr(
+        documents_module.document_service,
+        "analyze",
+        lambda file_path: {
+            "filename": "test.pdf",
+            "extension": ".pdf",
+            "size_bytes": 8,
+            "status": "Document detected",
+        },
+    )
+
+    monkeypatch.setattr(
+        documents_module.pdf_parser,
+        "extract_text",
+        lambda file_path: "PDF document text",
+    )
+
+    monkeypatch.setattr(
+        documents_module.document_analyzer,
+        "analyze_text",
+        lambda text: {
+            "document_type": "deterministic-drawing",
+            "drawing_number": "TEST-001",
+        },
+    )
+
+    monkeypatch.setattr(
+        documents_module.project_service,
+        "save_analysis",
+        lambda data: None,
+    )
+
+    class AIClientStub:
+        class Settings:
+            active = True
+
+        def __init__(self):
+            self.settings = self.Settings()
+
+    class AIServiceStub:
+        @classmethod
+        def with_openai(cls, ai_client=None):
+            return cls()
+
+        def analyze_text(self, filename, text):
+            return AIAnalysisResult(
+                summary="AI analysis completed.",
+                document_type_suggestion="ai-passport",
+            )
+
+    monkeypatch.setattr(
+        documents_module,
+        "AIClient",
+        AIClientStub,
+    )
+
+    monkeypatch.setattr(
+        documents_module,
+        "AIDocumentAnalysisService",
+        AIServiceStub,
+    )
+
+    response = client.post(
+        "/upload?use_ai=true",
+        files={
+            "file": (
+                "test.pdf",
+                b"PDF DATA",
+                "application/pdf",
+            )
+        },
+    )
+
+    assert response.status_code == 200
+
+    result = response.json()
 
     assert result["document_type"] == "deterministic-drawing"
     assert result["drawing_number"] == "TEST-001"
