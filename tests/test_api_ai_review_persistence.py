@@ -463,3 +463,98 @@ def test_direct_ai_analysis_can_be_reviewed(
 
     assert saved_review == review_response.json()
 
+def test_direct_ai_reanalysis_invalidates_review(
+    monkeypatch,
+    tmp_path,
+):
+    import app.api.ai as ai_module
+    from app.models.ai_analysis import AIAnalysisResult
+
+    ai_file = tmp_path / "current_ai_analysis.json"
+    review_file = tmp_path / "current_ai_review.json"
+
+    monkeypatch.setattr(
+        project_service,
+        "ai_file_path",
+        str(ai_file),
+    )
+    monkeypatch.setattr(
+        project_service,
+        "ai_review_file_path",
+        str(review_file),
+    )
+
+    first = project_service.save_ai_analysis(
+        {
+            "summary": "First AI analysis",
+            "facts": [],
+            "warnings": [],
+            "requires_human_review": True,
+            "engineering_confirmation": False,
+        },
+        source_filename="drawing.pdf",
+    )["document"]
+
+    project_service.save_ai_review(
+        {
+            "source_filename": "drawing.pdf",
+            "analysis_id": first["analysis_id"],
+            "decision": "accepted",
+            "notes": "Checked by human.",
+        }
+    )
+
+    assert review_file.exists()
+
+    class AIClientStub:
+        class Settings:
+            active = True
+
+        def __init__(self):
+            self.settings = self.Settings()
+
+    class AIServiceStub:
+        @classmethod
+        def with_openai(cls, ai_client=None):
+            return cls()
+
+        def analyze_text(self, filename, text):
+            return AIAnalysisResult(
+                summary="Second AI analysis",
+            )
+
+    monkeypatch.setattr(
+        ai_module,
+        "AIClient",
+        AIClientStub,
+    )
+    monkeypatch.setattr(
+        ai_module,
+        "AIDocumentAnalysisService",
+        AIServiceStub,
+    )
+
+    response = client.post(
+        "/ai/analyze",
+        json={
+            "filename": "drawing.pdf",
+            "text": "Updated PDF document text",
+        },
+    )
+
+    assert response.status_code == 200
+
+    second = response.json()
+
+    assert second["analysis_id"] != first["analysis_id"]
+    assert second["source_filename"] == "drawing.pdf"
+
+    assert not review_file.exists()
+
+    review_response = client.get("/ai/review")
+
+    assert review_response.status_code == 404
+    assert review_response.json() == {
+        "detail": "AI review not found",
+    }
+
