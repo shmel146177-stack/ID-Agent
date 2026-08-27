@@ -173,3 +173,35 @@ def test_ai_comparison_treats_empty_value_as_suggestion():
         }
     ]
     assert result["requires_human_review"] is True
+
+def test_ai_comparison_treats_whitespace_value_as_suggestion():
+    deterministic = {
+        "drawing_number": "   ",
+    }
+
+    ai_analysis = AIAnalysisResult(
+        summary="AI suggestions",
+        facts=[
+            AIFactSuggestion(
+                field="drawing_number",
+                value="A-01",
+                confidence=0.90,
+            ),
+        ],
+    )
+
+    result = AIAnalysisComparisonService().compare(
+        deterministic,
+        ai_analysis,
+    )
+
+    assert result["matches"] == []
+    assert result["conflicts"] == []
+    assert result["suggestions"] == [
+        {
+            "field": "drawing_number",
+            "value": "A-01",
+            "confidence": 0.90,
+        }
+    ]
+    assert result["requires_human_review"] is True
