@@ -69,11 +69,11 @@ async def upload_document(
 
             ai_analysis_data = ai_analysis.model_dump()
 
-            project_service.save_ai_analysis(
+            saved_ai_analysis = project_service.save_ai_analysis(
                 ai_analysis_data,
                 source_filename=filename,
             )
 
-            result["ai_analysis"] = ai_analysis_data
+            result["ai_analysis"] = saved_ai_analysis["document"]
 
     return result

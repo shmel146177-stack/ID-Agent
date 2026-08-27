@@ -281,6 +281,15 @@ def test_upload_document_http_with_explicit_ai(monkeypatch, tmp_path):
         saved_ai_analysis.update(data)
         saved_source_filenames.append(source_filename)
 
+        saved_document = dict(data)
+        saved_document["analysis_id"] = "analysis-1"
+        saved_document["source_filename"] = source_filename
+
+        return {
+            "status": "AI analysis saved",
+            "document": saved_document,
+        }
+
     monkeypatch.setattr(
         documents_module.project_service,
         "save_ai_analysis",
@@ -342,7 +351,10 @@ def test_upload_document_http_with_explicit_ai(monkeypatch, tmp_path):
     )
     assert result["ai_analysis"]["requires_human_review"] is True
     assert result["ai_analysis"]["engineering_confirmation"] is False
-    assert saved_ai_analysis == result["ai_analysis"]
+    assert result["ai_analysis"]["analysis_id"] == "analysis-1"
+    assert result["ai_analysis"]["source_filename"] == "test.pdf"
+
+    assert saved_ai_analysis["summary"] == "AI analysis completed."
     assert saved_source_filenames == ["test.pdf"]
 
 
