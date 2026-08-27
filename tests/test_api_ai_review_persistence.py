@@ -379,3 +379,87 @@ def test_upload_analysis_id_can_be_used_for_review(
         == ai_analysis["analysis_id"]
     )
 
+def test_direct_ai_analysis_can_be_reviewed(
+    monkeypatch,
+    tmp_path,
+):
+    import app.api.ai as ai_module
+    from app.models.ai_analysis import AIAnalysisResult
+
+    ai_file = tmp_path / "current_ai_analysis.json"
+    review_file = tmp_path / "current_ai_review.json"
+
+    monkeypatch.setattr(
+        project_service,
+        "ai_file_path",
+        str(ai_file),
+    )
+    monkeypatch.setattr(
+        project_service,
+        "ai_review_file_path",
+        str(review_file),
+    )
+
+    class AIClientStub:
+        class Settings:
+            active = True
+
+        def __init__(self):
+            self.settings = self.Settings()
+
+    class AIServiceStub:
+        @classmethod
+        def with_openai(cls, ai_client=None):
+            return cls()
+
+        def analyze_text(self, filename, text):
+            return AIAnalysisResult(
+                summary="AI suggestion",
+            )
+
+    monkeypatch.setattr(
+        ai_module,
+        "AIClient",
+        AIClientStub,
+    )
+    monkeypatch.setattr(
+        ai_module,
+        "AIDocumentAnalysisService",
+        AIServiceStub,
+    )
+
+    analysis_response = client.post(
+        "/ai/analyze",
+        json={
+            "filename": "drawing.pdf",
+            "text": "PDF document text",
+        },
+    )
+
+    assert analysis_response.status_code == 200
+
+    ai_analysis = analysis_response.json()
+
+    assert ai_analysis["source_filename"] == "drawing.pdf"
+    assert ai_analysis["analysis_id"]
+
+    review_response = client.post(
+        "/ai/review",
+        json={
+            "source_filename": ai_analysis["source_filename"],
+            "analysis_id": ai_analysis["analysis_id"],
+            "decision": "accepted",
+            "notes": "Checked by human.",
+        },
+    )
+
+    assert review_response.status_code == 200
+    assert (
+        review_response.json()["analysis_id"]
+        == ai_analysis["analysis_id"]
+    )
+
+    saved_review = project_service.get_ai_review()
+
+    assert saved_review == review_response.json()
+
