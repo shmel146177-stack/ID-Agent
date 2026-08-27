@@ -123,12 +123,20 @@ def test_ai_latest_returns_saved_analysis(
         str(tmp_path / "current_ai_analysis.json"),
     )
 
-    project_service.save_ai_analysis(saved)
+    project_service.save_ai_analysis(
+        saved,
+        source_filename="document.pdf",
+    )
 
     response = client.get("/ai/latest")
 
     assert response.status_code == 200
-    assert response.json() == saved
+
+    result = response.json()
+
+    assert result["source_filename"] == "document.pdf"
+    assert result["summary"] == saved["summary"]
+    assert result["document_type_suggestion"] == "drawing"
 
 def test_ai_latest_returns_404_when_missing(monkeypatch):
     from app.services.project_service import project_service
