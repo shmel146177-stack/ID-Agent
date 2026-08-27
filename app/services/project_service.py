@@ -1,5 +1,6 @@
 import json
 import os
+from uuid import uuid4
 
 
 class ProjectService:
@@ -53,6 +54,7 @@ class ProjectService:
             )
 
         data_to_save = dict(data)
+        data_to_save["analysis_id"] = str(uuid4())
 
         if source_filename is not None:
             data_to_save["source_filename"] = source_filename

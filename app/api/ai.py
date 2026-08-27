@@ -71,6 +71,15 @@ def review_ai_analysis(review: AIReviewDecision):
             detail="AI analysis source filename mismatch",
         )
 
+    if (
+        latest_ai.get("analysis_id")
+        != review.analysis_id
+    ):
+        raise HTTPException(
+            status_code=409,
+            detail="AI analysis id mismatch",
+        )
+
     review_data = review.model_dump()
 
     project_service.save_ai_review(

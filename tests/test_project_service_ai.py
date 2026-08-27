@@ -60,7 +60,15 @@ def test_project_service_reads_ai_analysis(tmp_path):
 
     result = service.get_ai_analysis()
 
-    assert result == ai_analysis
+    assert result is not None
+    assert result["summary"] == ai_analysis["summary"]
+    assert (
+        result["document_type_suggestion"]
+        == ai_analysis["document_type_suggestion"]
+    )
+    assert result["requires_human_review"] is True
+    assert result["engineering_confirmation"] is False
+    assert result["analysis_id"]
 
 def test_new_deterministic_analysis_invalidates_old_ai(tmp_path):
     service = ProjectService()

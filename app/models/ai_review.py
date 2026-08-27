@@ -7,6 +7,7 @@ class AIReviewDecision(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     source_filename: str
+    analysis_id: str
     decision: Literal[
         "accepted",
         "rejected",

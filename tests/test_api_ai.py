@@ -154,12 +154,14 @@ def test_ai_latest_returns_404_when_missing(monkeypatch):
         "detail": "AI analysis not found",
     }
 
+
 def test_ai_review_saves_human_decision(monkeypatch):
     from app.services.project_service import project_service
 
     latest_ai = {
         "summary": "AI suggestion",
         "source_filename": "drawing.pdf",
+        "analysis_id": "analysis-1",
         "requires_human_review": True,
         "engineering_confirmation": False,
     }
@@ -185,6 +187,7 @@ def test_ai_review_saves_human_decision(monkeypatch):
         "/ai/review",
         json={
             "source_filename": "drawing.pdf",
+            "analysis_id": "analysis-1",
             "decision": "accepted",
             "notes": "Checked by human.",
         },
@@ -194,6 +197,7 @@ def test_ai_review_saves_human_decision(monkeypatch):
 
     expected = {
         "source_filename": "drawing.pdf",
+        "analysis_id": "analysis-1",
         "decision": "accepted",
         "notes": "Checked by human.",
     }
@@ -215,6 +219,7 @@ def test_ai_review_returns_404_without_ai_analysis(monkeypatch):
         "/ai/review",
         json={
             "source_filename": "drawing.pdf",
+            "analysis_id": "analysis-1",
             "decision": "accepted",
         },
     )
@@ -234,6 +239,7 @@ def test_ai_review_rejects_source_filename_mismatch(monkeypatch):
         lambda: {
             "summary": "AI suggestion",
             "source_filename": "drawing.pdf",
+            "analysis_id": "analysis-1",
             "requires_human_review": True,
             "engineering_confirmation": False,
         },
@@ -243,6 +249,7 @@ def test_ai_review_rejects_source_filename_mismatch(monkeypatch):
         "/ai/review",
         json={
             "source_filename": "other.pdf",
+            "analysis_id": "analysis-1",
             "decision": "accepted",
         },
     )
@@ -286,4 +293,33 @@ def test_ai_review_get_returns_404_when_missing(monkeypatch):
     assert response.status_code == 404
     assert response.json() == {
         "detail": "AI review not found",
+    }
+
+def test_ai_review_rejects_analysis_id_mismatch(monkeypatch):
+    from app.services.project_service import project_service
+
+    monkeypatch.setattr(
+        project_service,
+        "get_ai_analysis",
+        lambda: {
+            "summary": "AI suggestion",
+            "source_filename": "drawing.pdf",
+            "analysis_id": "analysis-current",
+            "requires_human_review": True,
+            "engineering_confirmation": False,
+        },
+    )
+
+    response = client.post(
+        "/ai/review",
+        json={
+            "source_filename": "drawing.pdf",
+            "analysis_id": "analysis-old",
+            "decision": "accepted",
+        },
+    )
+
+    assert response.status_code == 409
+    assert response.json() == {
+        "detail": "AI analysis id mismatch",
     }

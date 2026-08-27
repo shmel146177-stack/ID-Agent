@@ -32,7 +32,13 @@ def test_project_service_saves_ai_review_separately(tmp_path):
     saved_ai = service.get_ai_analysis()
     saved_review = service.get_ai_review()
 
-    assert saved_ai == ai_analysis
+    assert saved_ai is not None
+    assert saved_ai["summary"] == ai_analysis["summary"]
+    assert saved_ai["source_filename"] == ai_analysis["source_filename"]
+    assert saved_ai["requires_human_review"] is True
+    assert saved_ai["engineering_confirmation"] is False
+    assert saved_ai["analysis_id"]
+
     assert saved_review == review
 
     assert Path(service.ai_file_path).exists()
@@ -101,3 +107,36 @@ def test_new_deterministic_analysis_invalidates_old_review(tmp_path):
     )
 
     assert not Path(service.ai_review_file_path).exists()
+
+def test_ai_analysis_gets_new_id_for_each_save(tmp_path):
+    service = ProjectService()
+
+    service.ai_file_path = str(
+        tmp_path / "current_ai_analysis.json"
+    )
+    service.ai_review_file_path = str(
+        tmp_path / "current_ai_review.json"
+    )
+
+    analysis = {
+        "summary": "AI suggestion",
+        "requires_human_review": True,
+        "engineering_confirmation": False,
+    }
+
+    first = service.save_ai_analysis(
+        analysis,
+        source_filename="drawing.pdf",
+    )["document"]
+
+    second = service.save_ai_analysis(
+        analysis,
+        source_filename="drawing.pdf",
+    )["document"]
+
+    assert first["source_filename"] == "drawing.pdf"
+    assert second["source_filename"] == "drawing.pdf"
+
+    assert first["analysis_id"]
+    assert second["analysis_id"]
+    assert first["analysis_id"] != second["analysis_id"]
