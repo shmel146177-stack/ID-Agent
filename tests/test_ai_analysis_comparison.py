@@ -237,3 +237,36 @@ def test_ai_comparison_ignores_surrounding_string_whitespace():
     assert result["conflicts"] == []
     assert result["suggestions"] == []
     assert result["requires_human_review"] is True
+
+def test_ai_comparison_keeps_string_case_significant():
+    deterministic = {
+        "drawing_number": "A-01",
+    }
+
+    ai_analysis = AIAnalysisResult(
+        summary="AI suggestions",
+        facts=[
+            AIFactSuggestion(
+                field="drawing_number",
+                value="a-01",
+                confidence=0.95,
+            ),
+        ],
+    )
+
+    result = AIAnalysisComparisonService().compare(
+        deterministic,
+        ai_analysis,
+    )
+
+    assert result["matches"] == []
+    assert result["suggestions"] == []
+    assert result["conflicts"] == [
+        {
+            "field": "drawing_number",
+            "deterministic_value": "A-01",
+            "ai_value": "a-01",
+            "confidence": 0.95,
+        }
+    ]
+    assert result["requires_human_review"] is True
