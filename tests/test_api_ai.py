@@ -153,3 +153,101 @@ def test_ai_latest_returns_404_when_missing(monkeypatch):
     assert response.json() == {
         "detail": "AI analysis not found",
     }
+
+def test_ai_review_saves_human_decision(monkeypatch):
+    from app.services.project_service import project_service
+
+    latest_ai = {
+        "summary": "AI suggestion",
+        "source_filename": "drawing.pdf",
+        "requires_human_review": True,
+        "engineering_confirmation": False,
+    }
+
+    saved_review = {}
+
+    monkeypatch.setattr(
+        project_service,
+        "get_ai_analysis",
+        lambda: latest_ai,
+    )
+
+    def save_ai_review(data):
+        saved_review.update(data)
+
+    monkeypatch.setattr(
+        project_service,
+        "save_ai_review",
+        save_ai_review,
+    )
+
+    response = client.post(
+        "/ai/review",
+        json={
+            "source_filename": "drawing.pdf",
+            "decision": "accepted",
+            "notes": "Checked by human.",
+        },
+    )
+
+    assert response.status_code == 200
+
+    expected = {
+        "source_filename": "drawing.pdf",
+        "decision": "accepted",
+        "notes": "Checked by human.",
+    }
+
+    assert response.json() == expected
+    assert saved_review == expected
+
+
+def test_ai_review_returns_404_without_ai_analysis(monkeypatch):
+    from app.services.project_service import project_service
+
+    monkeypatch.setattr(
+        project_service,
+        "get_ai_analysis",
+        lambda: None,
+    )
+
+    response = client.post(
+        "/ai/review",
+        json={
+            "source_filename": "drawing.pdf",
+            "decision": "accepted",
+        },
+    )
+
+    assert response.status_code == 404
+    assert response.json() == {
+        "detail": "AI analysis not found",
+    }
+
+
+def test_ai_review_rejects_source_filename_mismatch(monkeypatch):
+    from app.services.project_service import project_service
+
+    monkeypatch.setattr(
+        project_service,
+        "get_ai_analysis",
+        lambda: {
+            "summary": "AI suggestion",
+            "source_filename": "drawing.pdf",
+            "requires_human_review": True,
+            "engineering_confirmation": False,
+        },
+    )
+
+    response = client.post(
+        "/ai/review",
+        json={
+            "source_filename": "other.pdf",
+            "decision": "accepted",
+        },
+    )
+
+    assert response.status_code == 409
+    assert response.json() == {
+        "detail": "AI analysis source filename mismatch",
+    }

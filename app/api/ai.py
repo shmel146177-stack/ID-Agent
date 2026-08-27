@@ -1,6 +1,7 @@
 ﻿from fastapi import APIRouter
 from pydantic import BaseModel
 
+from app.models.ai_review import AIReviewDecision
 from app.services.ai_client import AIClient
 from app.services.ai_document_analysis import AIDocumentAnalysisService
 from app.services.project_service import project_service
@@ -32,6 +33,36 @@ def latest_ai_analysis():
         )
 
     return result
+
+
+@router.post("/review")
+def review_ai_analysis(review: AIReviewDecision):
+    from fastapi import HTTPException
+
+    latest_ai = project_service.get_ai_analysis()
+
+    if latest_ai is None:
+        raise HTTPException(
+            status_code=404,
+            detail="AI analysis not found",
+        )
+
+    if (
+        latest_ai.get("source_filename")
+        != review.source_filename
+    ):
+        raise HTTPException(
+            status_code=409,
+            detail="AI analysis source filename mismatch",
+        )
+
+    review_data = review.model_dump()
+
+    project_service.save_ai_review(
+        review_data,
+    )
+
+    return review_data
 
 
 @router.post("/analyze")
