@@ -323,3 +323,67 @@ def test_ai_review_rejects_analysis_id_mismatch(monkeypatch):
     assert response.json() == {
         "detail": "AI analysis id mismatch",
     }
+
+def test_ai_analyze_persists_analysis_id(
+    monkeypatch,
+    tmp_path,
+):
+    from app.models.ai_analysis import AIAnalysisResult
+    from app.services.ai_document_analysis import (
+        AIDocumentAnalysisService,
+    )
+    from app.services.project_service import project_service
+
+    monkeypatch.setenv("OPENAI_API_KEY", "test-key")
+    monkeypatch.setenv("ID_AGENT_AI_ENABLED", "true")
+
+    monkeypatch.setattr(
+        project_service,
+        "ai_file_path",
+        str(tmp_path / "current_ai_analysis.json"),
+    )
+    monkeypatch.setattr(
+        project_service,
+        "ai_review_file_path",
+        str(tmp_path / "current_ai_review.json"),
+    )
+
+    class ServiceStub:
+        def analyze_text(self, filename, text):
+            return AIAnalysisResult(
+                summary="AI analysis completed.",
+            )
+
+    def fake_with_openai(
+        cls,
+        ai_client=None,
+        max_input_chars=40_000,
+    ):
+        return ServiceStub()
+
+    monkeypatch.setattr(
+        AIDocumentAnalysisService,
+        "with_openai",
+        classmethod(fake_with_openai),
+    )
+
+    response = client.post(
+        "/ai/analyze",
+        json={
+            "filename": "drawing.pdf",
+            "text": "PDF document text",
+        },
+    )
+
+    assert response.status_code == 200
+
+    result = response.json()
+
+    assert result["source_filename"] == "drawing.pdf"
+    assert result["analysis_id"]
+    assert result["requires_human_review"] is True
+    assert result["engineering_confirmation"] is False
+
+    saved = project_service.get_ai_analysis()
+
+    assert saved == result

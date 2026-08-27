@@ -107,4 +107,11 @@ def analyze_document(request: AIAnalysisRequest):
         request.text,
     )
 
-    return result.model_dump()
+    result_data = result.model_dump()
+
+    saved_ai_analysis = project_service.save_ai_analysis(
+        result_data,
+        source_filename=request.filename,
+    )
+
+    return saved_ai_analysis["document"]
