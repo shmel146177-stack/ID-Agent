@@ -40,7 +40,19 @@ class AIAnalysisComparisonService:
                 )
                 continue
 
-            if deterministic_value == fact.value:
+            comparison_deterministic_value = (
+                deterministic_value.strip()
+                if isinstance(deterministic_value, str)
+                else deterministic_value
+            )
+
+            comparison_ai_value = (
+                fact.value.strip()
+                if isinstance(fact.value, str)
+                else fact.value
+            )
+
+            if comparison_deterministic_value == comparison_ai_value:
                 matches.append(
                     {
                         "field": fact.field,
