@@ -35,7 +35,11 @@ class ProjectService:
             "document": data
         }
 
-    def save_ai_analysis(self, data: dict):
+    def save_ai_analysis(
+        self,
+        data: dict,
+        source_filename: str | None = None,
+    ):
         directory = os.path.dirname(self.ai_file_path)
 
         if directory:
@@ -44,13 +48,18 @@ class ProjectService:
                 exist_ok=True,
             )
 
+        data_to_save = dict(data)
+
+        if source_filename is not None:
+            data_to_save["source_filename"] = source_filename
+
         with open(
             self.ai_file_path,
             "w",
             encoding="utf-8",
         ) as file:
             json.dump(
-                data,
+                data_to_save,
                 file,
                 ensure_ascii=False,
                 indent=4,
@@ -58,7 +67,7 @@ class ProjectService:
 
         return {
             "status": "AI-анализ сохранен",
-            "document": data,
+            "document": data_to_save,
         }
 
     def get_ai_analysis(self):

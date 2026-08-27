@@ -89,3 +89,25 @@ def test_new_deterministic_analysis_invalidates_old_ai(tmp_path):
     )
 
     assert not Path(service.ai_file_path).exists()
+
+
+def test_ai_analysis_can_store_source_filename(tmp_path):
+    service = ProjectService()
+
+    service.ai_file_path = str(
+        tmp_path / "current_ai_analysis.json"
+    )
+
+    service.save_ai_analysis(
+        {
+            "summary": "AI analysis",
+            "requires_human_review": True,
+            "engineering_confirmation": False,
+        },
+        source_filename="drawing.pdf",
+    )
+
+    saved = service.get_ai_analysis()
+
+    assert saved["source_filename"] == "drawing.pdf"
+    assert saved["summary"] == "AI analysis"

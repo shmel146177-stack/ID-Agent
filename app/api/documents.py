@@ -71,6 +71,7 @@ async def upload_document(
 
             project_service.save_ai_analysis(
                 ai_analysis_data,
+                source_filename=filename,
             )
 
             result["ai_analysis"] = ai_analysis_data
