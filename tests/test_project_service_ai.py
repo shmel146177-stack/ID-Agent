@@ -61,3 +61,31 @@ def test_project_service_reads_ai_analysis(tmp_path):
     result = service.get_ai_analysis()
 
     assert result == ai_analysis
+
+def test_new_deterministic_analysis_invalidates_old_ai(tmp_path):
+    service = ProjectService()
+
+    service.file_path = str(
+        tmp_path / "current_analysis.json"
+    )
+    service.ai_file_path = str(
+        tmp_path / "current_ai_analysis.json"
+    )
+
+    service.save_ai_analysis(
+        {
+            "summary": "Old AI analysis",
+            "requires_human_review": True,
+            "engineering_confirmation": False,
+        }
+    )
+
+    assert Path(service.ai_file_path).exists()
+
+    service.save_analysis(
+        {
+            "document_type": "new-drawing",
+        }
+    )
+
+    assert not Path(service.ai_file_path).exists()

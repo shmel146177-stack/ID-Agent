@@ -27,6 +27,9 @@ class ProjectService:
                 indent=4
             )
 
+        if os.path.exists(self.ai_file_path):
+            os.remove(self.ai_file_path)
+
         return {
             "status": "Анализ сохранён",
             "document": data
