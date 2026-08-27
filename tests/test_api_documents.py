@@ -465,6 +465,13 @@ def test_upload_document_http_ai_unconfigured_falls_back(
     assert ai_analysis["requires_human_review"] is True
     assert ai_analysis["engineering_confirmation"] is False
 
+    assert result["ai_comparison"] == {
+        "matches": [],
+        "conflicts": [],
+        "suggestions": [],
+        "requires_human_review": True,
+    }
+
 
 def test_upload_document_http_does_not_call_ai_by_default(
     monkeypatch,
