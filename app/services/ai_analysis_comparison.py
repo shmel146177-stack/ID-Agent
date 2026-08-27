@@ -76,4 +76,5 @@ class AIAnalysisComparisonService:
             "conflicts": conflicts,
             "suggestions": suggestions,
             "requires_human_review": True,
+            "engineering_confirmation": False,
         }

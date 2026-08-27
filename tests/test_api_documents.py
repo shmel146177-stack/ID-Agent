@@ -470,6 +470,7 @@ def test_upload_document_http_ai_unconfigured_falls_back(
         "conflicts": [],
         "suggestions": [],
         "requires_human_review": True,
+        "engineering_confirmation": False,
     }
 
 

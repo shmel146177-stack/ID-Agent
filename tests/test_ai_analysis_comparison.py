@@ -108,6 +108,7 @@ def test_ai_comparison_handles_empty_facts():
         "conflicts": [],
         "suggestions": [],
         "requires_human_review": True,
+        "engineering_confirmation": False,
     }
 
 def test_ai_comparison_treats_missing_value_as_suggestion():
@@ -303,3 +304,21 @@ def test_ai_comparison_does_not_coerce_deterministic_types():
         }
     ]
     assert result["requires_human_review"] is True
+
+def test_ai_comparison_never_confirms_engineering_data():
+    deterministic = {
+        "drawing_number": "A-01",
+    }
+
+    ai_analysis = AIAnalysisResult(
+        summary="AI comparison",
+        facts=[],
+    )
+
+    result = AIAnalysisComparisonService().compare(
+        deterministic,
+        ai_analysis,
+    )
+
+    assert result["requires_human_review"] is True
+    assert result["engineering_confirmation"] is False
