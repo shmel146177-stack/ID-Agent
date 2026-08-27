@@ -24,7 +24,7 @@ class AIAnalysisComparisonService:
 
             deterministic_value = deterministic[fact.field]
 
-            if deterministic_value is None:
+            if deterministic_value in (None, ""):
                 suggestions.append(
                     {
                         "field": fact.field,
