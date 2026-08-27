@@ -259,3 +259,123 @@ def test_old_analysis_id_is_rejected_after_same_file_reanalysis(
 
     assert not review_file.exists()
 
+def test_upload_analysis_id_can_be_used_for_review(
+    monkeypatch,
+    tmp_path,
+):
+    import app.api.documents as documents_module
+    from app.models.ai_analysis import AIAnalysisResult
+
+    ai_file = tmp_path / "current_ai_analysis.json"
+    review_file = tmp_path / "current_ai_review.json"
+    upload_dir = tmp_path / "uploads"
+
+    monkeypatch.setattr(
+        project_service,
+        "ai_file_path",
+        str(ai_file),
+    )
+    monkeypatch.setattr(
+        project_service,
+        "ai_review_file_path",
+        str(review_file),
+    )
+    monkeypatch.setattr(
+        documents_module,
+        "UPLOAD_DIR",
+        str(upload_dir),
+    )
+
+    monkeypatch.setattr(
+        documents_module.document_service,
+        "analyze",
+        lambda file_path: {
+            "filename": "drawing.pdf",
+            "extension": ".pdf",
+            "size_bytes": 8,
+            "status": "Document detected",
+        },
+    )
+
+    monkeypatch.setattr(
+        documents_module.pdf_parser,
+        "extract_text",
+        lambda file_path: "PDF document text",
+    )
+
+    monkeypatch.setattr(
+        documents_module.document_analyzer,
+        "analyze_text",
+        lambda text: {
+            "document_type": "drawing",
+        },
+    )
+
+    monkeypatch.setattr(
+        documents_module.project_service,
+        "save_analysis",
+        lambda data: None,
+    )
+
+    class AIClientStub:
+        class Settings:
+            active = True
+
+        def __init__(self):
+            self.settings = self.Settings()
+
+    class AIServiceStub:
+        @classmethod
+        def with_openai(cls, ai_client=None):
+            return cls()
+
+        def analyze_text(self, filename, text):
+            return AIAnalysisResult(
+                summary="AI suggestion",
+            )
+
+    monkeypatch.setattr(
+        documents_module,
+        "AIClient",
+        AIClientStub,
+    )
+    monkeypatch.setattr(
+        documents_module,
+        "AIDocumentAnalysisService",
+        AIServiceStub,
+    )
+
+    upload_response = client.post(
+        "/upload?use_ai=true",
+        files={
+            "file": (
+                "drawing.pdf",
+                b"PDF DATA",
+                "application/pdf",
+            )
+        },
+    )
+
+    assert upload_response.status_code == 200
+
+    ai_analysis = upload_response.json()["ai_analysis"]
+
+    assert ai_analysis["source_filename"] == "drawing.pdf"
+    assert ai_analysis["analysis_id"]
+
+    review_response = client.post(
+        "/ai/review",
+        json={
+            "source_filename": ai_analysis["source_filename"],
+            "analysis_id": ai_analysis["analysis_id"],
+            "decision": "accepted",
+            "notes": "Checked by human.",
+        },
+    )
+
+    assert review_response.status_code == 200
+    assert (
+        review_response.json()["analysis_id"]
+        == ai_analysis["analysis_id"]
+    )
+
