@@ -102,7 +102,10 @@ def test_ai_analyze_uses_openai_when_active(monkeypatch):
         )
     ]
 
-def test_ai_latest_returns_saved_analysis(monkeypatch):
+def test_ai_latest_returns_saved_analysis(
+    monkeypatch,
+    tmp_path,
+):
     from app.services.project_service import project_service
 
     saved = {
@@ -116,9 +119,11 @@ def test_ai_latest_returns_saved_analysis(monkeypatch):
 
     monkeypatch.setattr(
         project_service,
-        "get_ai_analysis",
-        lambda: saved,
+        "ai_file_path",
+        str(tmp_path / "current_ai_analysis.json"),
     )
+
+    project_service.save_ai_analysis(saved)
 
     response = client.get("/ai/latest")
 
