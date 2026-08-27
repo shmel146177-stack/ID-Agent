@@ -251,3 +251,39 @@ def test_ai_review_rejects_source_filename_mismatch(monkeypatch):
     assert response.json() == {
         "detail": "AI analysis source filename mismatch",
     }
+
+def test_ai_review_get_returns_saved_review(monkeypatch):
+    from app.services.project_service import project_service
+
+    saved_review = {
+        "source_filename": "drawing.pdf",
+        "decision": "accepted",
+        "notes": "Checked by human.",
+    }
+
+    monkeypatch.setattr(
+        project_service,
+        "get_ai_review",
+        lambda: saved_review,
+    )
+
+    response = client.get("/ai/review")
+
+    assert response.status_code == 200
+    assert response.json() == saved_review
+
+def test_ai_review_get_returns_404_when_missing(monkeypatch):
+    from app.services.project_service import project_service
+
+    monkeypatch.setattr(
+        project_service,
+        "get_ai_review",
+        lambda: None,
+    )
+
+    response = client.get("/ai/review")
+
+    assert response.status_code == 404
+    assert response.json() == {
+        "detail": "AI review not found",
+    }

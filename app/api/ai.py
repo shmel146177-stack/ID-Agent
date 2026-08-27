@@ -35,6 +35,21 @@ def latest_ai_analysis():
     return result
 
 
+@router.get("/review")
+def get_ai_review():
+    from fastapi import HTTPException
+
+    review = project_service.get_ai_review()
+
+    if review is None:
+        raise HTTPException(
+            status_code=404,
+            detail="AI review not found",
+        )
+
+    return review
+
+
 @router.post("/review")
 def review_ai_analysis(review: AIReviewDecision):
     from fastapi import HTTPException
