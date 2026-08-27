@@ -58,6 +58,19 @@ class ProjectService:
             "document": data,
         }
 
+    def get_ai_analysis(self):
+
+        if not os.path.exists(self.ai_file_path):
+            return None
+
+        with open(
+            self.ai_file_path,
+            "r",
+            encoding="utf-8",
+        ) as file:
+            return json.load(file)
+
+
     def get_analysis(self):
 
         if not os.path.exists(self.file_path):

@@ -41,3 +41,23 @@ def test_project_service_saves_ai_analysis_separately(tmp_path):
 
     assert '"summary": "AI suggestion"' in ai_saved
     assert '"document_type": "drawing"' not in ai_saved
+
+def test_project_service_reads_ai_analysis(tmp_path):
+    service = ProjectService()
+
+    service.ai_file_path = str(
+        tmp_path / "current_ai_analysis.json"
+    )
+
+    ai_analysis = {
+        "summary": "Saved AI analysis",
+        "document_type_suggestion": "drawing",
+        "requires_human_review": True,
+        "engineering_confirmation": False,
+    }
+
+    service.save_ai_analysis(ai_analysis)
+
+    result = service.get_ai_analysis()
+
+    assert result == ai_analysis
