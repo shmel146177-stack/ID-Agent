@@ -270,3 +270,36 @@ def test_ai_comparison_keeps_string_case_significant():
         }
     ]
     assert result["requires_human_review"] is True
+
+def test_ai_comparison_does_not_coerce_deterministic_types():
+    deterministic = {
+        "sheet_number": 1,
+    }
+
+    ai_analysis = AIAnalysisResult(
+        summary="AI suggestions",
+        facts=[
+            AIFactSuggestion(
+                field="sheet_number",
+                value="1",
+                confidence=0.95,
+            ),
+        ],
+    )
+
+    result = AIAnalysisComparisonService().compare(
+        deterministic,
+        ai_analysis,
+    )
+
+    assert result["matches"] == []
+    assert result["suggestions"] == []
+    assert result["conflicts"] == [
+        {
+            "field": "sheet_number",
+            "deterministic_value": 1,
+            "ai_value": "1",
+            "confidence": 0.95,
+        }
+    ]
+    assert result["requires_human_review"] is True
