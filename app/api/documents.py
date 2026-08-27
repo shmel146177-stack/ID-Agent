@@ -67,6 +67,12 @@ async def upload_document(
                 text,
             )
 
-            result["ai_analysis"] = ai_analysis.model_dump()
+            ai_analysis_data = ai_analysis.model_dump()
+
+            project_service.save_ai_analysis(
+                ai_analysis_data,
+            )
+
+            result["ai_analysis"] = ai_analysis_data
 
     return result

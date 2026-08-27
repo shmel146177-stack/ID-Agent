@@ -271,6 +271,17 @@ def test_upload_document_http_with_explicit_ai(monkeypatch, tmp_path):
         lambda data: None,
     )
 
+    saved_ai_analysis = {}
+
+    def save_ai_analysis(data):
+        saved_ai_analysis.update(data)
+
+    monkeypatch.setattr(
+        documents_module.project_service,
+        "save_ai_analysis",
+        save_ai_analysis,
+    )
+
     class AIClientStub:
         class Settings:
             active = True
@@ -326,6 +337,7 @@ def test_upload_document_http_with_explicit_ai(monkeypatch, tmp_path):
     )
     assert result["ai_analysis"]["requires_human_review"] is True
     assert result["ai_analysis"]["engineering_confirmation"] is False
+    assert saved_ai_analysis == result["ai_analysis"]
 
 
 def test_upload_document_http_ai_unconfigured_falls_back(
