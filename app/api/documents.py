@@ -8,6 +8,9 @@ from app.services.document_analyzer import document_analyzer
 from app.services.project_service import project_service
 from app.services.ai_client import AIClient
 from app.services.ai_document_analysis import AIDocumentAnalysisService
+from app.services.ai_analysis_comparison import (
+    AIAnalysisComparisonService,
+)
 
 
 router = APIRouter()
@@ -75,5 +78,12 @@ async def upload_document(
             )
 
             result["ai_analysis"] = saved_ai_analysis["document"]
+
+            result["ai_comparison"] = (
+                AIAnalysisComparisonService().compare(
+                    analysis,
+                    ai_analysis,
+                )
+            )
 
     return result

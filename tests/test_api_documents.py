@@ -312,6 +312,18 @@ def test_upload_document_http_with_explicit_ai(monkeypatch, tmp_path):
             return AIAnalysisResult(
                 summary="AI analysis completed.",
                 document_type_suggestion="ai-passport",
+                facts=[
+                    {
+                        "field": "drawing_number",
+                        "value": "TEST-001",
+                        "confidence": 0.95,
+                    },
+                    {
+                        "field": "document_type",
+                        "value": "ai-passport",
+                        "confidence": 0.80,
+                    },
+                ],
             )
 
     monkeypatch.setattr(
@@ -356,6 +368,29 @@ def test_upload_document_http_with_explicit_ai(monkeypatch, tmp_path):
 
     assert saved_ai_analysis["summary"] == "AI analysis completed."
     assert saved_source_filenames == ["test.pdf"]
+
+    assert result["ai_comparison"]["matches"] == [
+        {
+            "field": "drawing_number",
+            "value": "TEST-001",
+            "confidence": 0.95,
+        }
+    ]
+
+    assert result["ai_comparison"]["conflicts"] == [
+        {
+            "field": "document_type",
+            "deterministic_value": "deterministic-drawing",
+            "ai_value": "ai-passport",
+            "confidence": 0.80,
+        }
+    ]
+
+    assert result["ai_comparison"]["suggestions"] == []
+    assert result["ai_comparison"]["requires_human_review"] is True
+
+    assert result["document_type"] == "deterministic-drawing"
+    assert result["drawing_number"] == "TEST-001"
 
 
 def test_upload_document_http_ai_unconfigured_falls_back(
