@@ -3,6 +3,7 @@ from pydantic import BaseModel
 
 from app.services.ai_client import AIClient
 from app.services.ai_document_analysis import AIDocumentAnalysisService
+from app.services.project_service import project_service
 
 
 router = APIRouter(prefix="/ai", tags=["AI"])
@@ -16,6 +17,21 @@ class AIAnalysisRequest(BaseModel):
 @router.get("/status")
 def ai_status():
     return AIClient().status()
+
+
+@router.get("/latest")
+def latest_ai_analysis():
+    result = project_service.get_ai_analysis()
+
+    if result is None:
+        from fastapi import HTTPException
+
+        raise HTTPException(
+            status_code=404,
+            detail="AI analysis not found",
+        )
+
+    return result
 
 
 @router.post("/analyze")

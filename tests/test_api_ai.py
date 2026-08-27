@@ -101,3 +101,42 @@ def test_ai_analyze_uses_openai_when_active(monkeypatch):
             "????? ??????????? ?????????.",
         )
     ]
+
+def test_ai_latest_returns_saved_analysis(monkeypatch):
+    from app.services.project_service import project_service
+
+    saved = {
+        "summary": "Saved AI analysis",
+        "document_type_suggestion": "drawing",
+        "facts": [],
+        "warnings": [],
+        "requires_human_review": True,
+        "engineering_confirmation": False,
+    }
+
+    monkeypatch.setattr(
+        project_service,
+        "get_ai_analysis",
+        lambda: saved,
+    )
+
+    response = client.get("/ai/latest")
+
+    assert response.status_code == 200
+    assert response.json() == saved
+
+def test_ai_latest_returns_404_when_missing(monkeypatch):
+    from app.services.project_service import project_service
+
+    monkeypatch.setattr(
+        project_service,
+        "get_ai_analysis",
+        lambda: None,
+    )
+
+    response = client.get("/ai/latest")
+
+    assert response.status_code == 404
+    assert response.json() == {
+        "detail": "AI analysis not found",
+    }
