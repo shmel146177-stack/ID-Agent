@@ -7,6 +7,7 @@ class ProjectService:
     def __init__(self):
         self.file_path = "projects/data/current_analysis.json"
         self.ai_file_path = "projects/data/current_ai_analysis.json"
+        self.ai_review_file_path = "projects/data/current_ai_review.json"
 
     def save_analysis(self, data: dict):
 
@@ -29,6 +30,9 @@ class ProjectService:
 
         if os.path.exists(self.ai_file_path):
             os.remove(self.ai_file_path)
+
+        if os.path.exists(self.ai_review_file_path):
+            os.remove(self.ai_review_file_path)
 
         return {
             "status": "Анализ сохранён",
@@ -65,10 +69,51 @@ class ProjectService:
                 indent=4,
             )
 
+        if os.path.exists(self.ai_review_file_path):
+            os.remove(self.ai_review_file_path)
+
         return {
             "status": "AI-анализ сохранен",
             "document": data_to_save,
         }
+
+    def save_ai_review(self, data: dict):
+        directory = os.path.dirname(self.ai_review_file_path)
+
+        if directory:
+            os.makedirs(
+                directory,
+                exist_ok=True,
+            )
+
+        with open(
+            self.ai_review_file_path,
+            "w",
+            encoding="utf-8",
+        ) as file:
+            json.dump(
+                data,
+                file,
+                ensure_ascii=False,
+                indent=4,
+            )
+
+        return {
+            "status": "AI-review saved",
+            "document": data,
+        }
+
+    def get_ai_review(self):
+
+        if not os.path.exists(self.ai_review_file_path):
+            return None
+
+        with open(
+            self.ai_review_file_path,
+            "r",
+            encoding="utf-8",
+        ) as file:
+            return json.load(file)
 
     def get_ai_analysis(self):
 
