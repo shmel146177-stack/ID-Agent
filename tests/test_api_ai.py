@@ -512,6 +512,64 @@ def test_ai_review_returns_404_without_ai_analysis(monkeypatch):
     }
 
 
+def test_ai_review_rejects_missing_current_analysis_id(monkeypatch):
+    from app.services.project_service import project_service
+
+    monkeypatch.setattr(
+        project_service,
+        "get_ai_analysis",
+        lambda: {
+            "summary": "AI suggestion",
+            "source_filename": "drawing.pdf",
+            "requires_human_review": True,
+            "engineering_confirmation": False,
+        },
+    )
+
+    response = client.post(
+        "/ai/review",
+        json={
+            "source_filename": "drawing.pdf",
+            "analysis_id": "analysis-1",
+            "decision": "accepted",
+        },
+    )
+
+    assert response.status_code == 409
+    assert response.json() == {
+        "detail": "AI analysis missing analysis id",
+    }
+
+
+def test_ai_review_rejects_missing_current_source_filename(monkeypatch):
+    from app.services.project_service import project_service
+
+    monkeypatch.setattr(
+        project_service,
+        "get_ai_analysis",
+        lambda: {
+            "summary": "AI suggestion",
+            "analysis_id": "analysis-1",
+            "requires_human_review": True,
+            "engineering_confirmation": False,
+        },
+    )
+
+    response = client.post(
+        "/ai/review",
+        json={
+            "source_filename": "drawing.pdf",
+            "analysis_id": "analysis-1",
+            "decision": "accepted",
+        },
+    )
+
+    assert response.status_code == 409
+    assert response.json() == {
+        "detail": "AI analysis missing source filename",
+    }
+
+
 def test_ai_review_rejects_source_filename_mismatch(monkeypatch):
     from app.services.project_service import project_service
 
