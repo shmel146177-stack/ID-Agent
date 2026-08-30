@@ -1,0 +1,15 @@
+[run]
+omit =
+    */document_classifier_before_text_priority.py
+    */document_classifier_v618_backup.py
+    */document_classifier_v619_backup.py
+    */document_classifier_v620_before_strong_markers.py
+    */document_classifier_v620_working.py
+    */document_classifier_v621_working.py
+    */document_classifier_v622_working.py
+
+[report]
+precision = 2
+show_missing = True
+skip_covered = True
+fail_under = 80
