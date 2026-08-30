@@ -180,6 +180,15 @@ def test_ai_comparison_returns_saved_comparison(monkeypatch):
         lambda: saved,
     )
 
+    monkeypatch.setattr(
+        project_service,
+        "get_ai_analysis",
+        lambda: {
+            "analysis_id": "analysis-123",
+            "source_filename": "drawing.pdf",
+        },
+    )
+
     response = client.get("/ai/comparison")
 
     assert response.status_code == 200
@@ -200,6 +209,115 @@ def test_ai_comparison_returns_404_when_missing(monkeypatch):
     assert response.status_code == 404
     assert response.json() == {
         "detail": "AI comparison not found",
+    }
+
+
+def test_ai_comparison_rejects_analysis_id_mismatch(monkeypatch):
+    from app.services.project_service import project_service
+
+    comparison = {
+        "matches": [],
+        "conflicts": [],
+        "suggestions": [],
+        "requires_human_review": True,
+        "engineering_confirmation": False,
+        "analysis_id": "old-analysis-id",
+        "source_filename": "drawing.pdf",
+    }
+
+    latest_ai = {
+        "analysis_id": "new-analysis-id",
+        "source_filename": "drawing.pdf",
+    }
+
+    monkeypatch.setattr(
+        project_service,
+        "get_ai_comparison",
+        lambda: comparison,
+    )
+
+    monkeypatch.setattr(
+        project_service,
+        "get_ai_analysis",
+        lambda: latest_ai,
+    )
+
+    response = client.get("/ai/comparison")
+
+    assert response.status_code == 409
+    assert response.json() == {
+        "detail": "AI comparison analysis id mismatch",
+    }
+
+
+def test_ai_comparison_rejects_source_filename_mismatch(monkeypatch):
+    from app.services.project_service import project_service
+
+    comparison = {
+        "matches": [],
+        "conflicts": [],
+        "suggestions": [],
+        "requires_human_review": True,
+        "engineering_confirmation": False,
+        "analysis_id": "analysis-123",
+        "source_filename": "old.pdf",
+    }
+
+    latest_ai = {
+        "analysis_id": "analysis-123",
+        "source_filename": "new.pdf",
+    }
+
+    monkeypatch.setattr(
+        project_service,
+        "get_ai_comparison",
+        lambda: comparison,
+    )
+
+    monkeypatch.setattr(
+        project_service,
+        "get_ai_analysis",
+        lambda: latest_ai,
+    )
+
+    response = client.get("/ai/comparison")
+
+    assert response.status_code == 409
+    assert response.json() == {
+        "detail": "AI comparison source filename mismatch",
+    }
+
+
+def test_ai_comparison_rejects_missing_current_ai_analysis(monkeypatch):
+    from app.services.project_service import project_service
+
+    comparison = {
+        "matches": [],
+        "conflicts": [],
+        "suggestions": [],
+        "requires_human_review": True,
+        "engineering_confirmation": False,
+        "analysis_id": "analysis-123",
+        "source_filename": "drawing.pdf",
+    }
+
+    monkeypatch.setattr(
+        project_service,
+        "get_ai_comparison",
+        lambda: comparison,
+    )
+
+    monkeypatch.setattr(
+        project_service,
+        "get_ai_analysis",
+        lambda: None,
+    )
+
+    response = client.get("/ai/comparison")
+
+    assert response.status_code == 409
+    assert response.json() == {
+        "detail": "AI comparison has no current AI analysis",
     }
 
 

@@ -47,6 +47,34 @@ def get_ai_comparison():
             detail="AI comparison not found",
         )
 
+    latest_ai = project_service.get_ai_analysis()
+
+    if latest_ai is None:
+        raise HTTPException(
+            status_code=409,
+            detail="AI comparison has no current AI analysis",
+        )
+
+    if (
+        latest_ai is not None
+        and comparison.get("analysis_id")
+        != latest_ai.get("analysis_id")
+    ):
+        raise HTTPException(
+            status_code=409,
+            detail="AI comparison analysis id mismatch",
+        )
+
+    if (
+        latest_ai is not None
+        and comparison.get("source_filename")
+        != latest_ai.get("source_filename")
+    ):
+        raise HTTPException(
+            status_code=409,
+            detail="AI comparison source filename mismatch",
+        )
+
     return comparison
 
 @router.get("/review")
