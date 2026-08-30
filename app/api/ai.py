@@ -101,6 +101,44 @@ def get_ai_review():
             detail="AI review not found",
         )
 
+    latest_ai = project_service.get_ai_analysis()
+
+    if latest_ai is None:
+        raise HTTPException(
+            status_code=409,
+            detail="AI review has no current AI analysis",
+        )
+
+    if not review.get("analysis_id"):
+        raise HTTPException(
+            status_code=409,
+            detail="AI review missing analysis id",
+        )
+
+    if (
+        review.get("analysis_id")
+        != latest_ai.get("analysis_id")
+    ):
+        raise HTTPException(
+            status_code=409,
+            detail="AI review analysis id mismatch",
+        )
+
+    if not review.get("source_filename"):
+        raise HTTPException(
+            status_code=409,
+            detail="AI review missing source filename",
+        )
+
+    if (
+        review.get("source_filename")
+        != latest_ai.get("source_filename")
+    ):
+        raise HTTPException(
+            status_code=409,
+            detail="AI review source filename mismatch",
+        )
+
     return review
 
 
