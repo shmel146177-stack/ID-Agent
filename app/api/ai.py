@@ -22,14 +22,26 @@ def ai_status():
 
 @router.get("/latest")
 def latest_ai_analysis():
+    from fastapi import HTTPException
+
     result = project_service.get_ai_analysis()
 
     if result is None:
-        from fastapi import HTTPException
-
         raise HTTPException(
             status_code=404,
             detail="AI analysis not found",
+        )
+
+    if not result.get("analysis_id"):
+        raise HTTPException(
+            status_code=409,
+            detail="AI analysis missing analysis id",
+        )
+
+    if not result.get("source_filename"):
+        raise HTTPException(
+            status_code=409,
+            detail="AI analysis missing source filename",
         )
 
     return result

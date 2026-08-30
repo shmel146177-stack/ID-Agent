@@ -155,6 +155,50 @@ def test_ai_latest_returns_404_when_missing(monkeypatch):
     }
 
 
+def test_ai_latest_rejects_missing_analysis_id(monkeypatch):
+    from app.services.project_service import project_service
+
+    monkeypatch.setattr(
+        project_service,
+        "get_ai_analysis",
+        lambda: {
+            "summary": "AI suggestion",
+            "source_filename": "drawing.pdf",
+            "requires_human_review": True,
+            "engineering_confirmation": False,
+        },
+    )
+
+    response = client.get("/ai/latest")
+
+    assert response.status_code == 409
+    assert response.json() == {
+        "detail": "AI analysis missing analysis id",
+    }
+
+
+def test_ai_latest_rejects_missing_source_filename(monkeypatch):
+    from app.services.project_service import project_service
+
+    monkeypatch.setattr(
+        project_service,
+        "get_ai_analysis",
+        lambda: {
+            "summary": "AI suggestion",
+            "analysis_id": "analysis-1",
+            "requires_human_review": True,
+            "engineering_confirmation": False,
+        },
+    )
+
+    response = client.get("/ai/latest")
+
+    assert response.status_code == 409
+    assert response.json() == {
+        "detail": "AI analysis missing source filename",
+    }
+
+
 def test_ai_comparison_returns_saved_comparison(monkeypatch):
     from app.services.project_service import project_service
 
