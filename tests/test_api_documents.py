@@ -1,6 +1,5 @@
 ﻿import asyncio
 from io import BytesIO
-from pathlib import Path
 
 from starlette.datastructures import UploadFile
 from fastapi.testclient import TestClient

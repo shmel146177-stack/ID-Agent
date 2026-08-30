@@ -1,5 +1,3 @@
-from pathlib import Path
-
 from app.generators.project_document_set import ProjectDocumentSet
 
 

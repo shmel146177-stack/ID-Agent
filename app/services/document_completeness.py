@@ -1,6 +1,5 @@
 from pathlib import Path
 import json
-from pathlib import Path
 from app.services.document_registry import document_registry
 from app.services.drawing_sheet_matcher import drawing_sheet_matcher
 

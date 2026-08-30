@@ -8,7 +8,6 @@ from openpyxl.styles import (
     PatternFill,
     Side,
 )
-from openpyxl.utils import get_column_letter
 
 from app.services.document_completeness import (
     document_completeness,

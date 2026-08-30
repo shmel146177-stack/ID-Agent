@@ -1,6 +1,4 @@
-﻿from pathlib import Path
-
-import app.services.project_package as package_module
+﻿import app.services.project_package as package_module
 from app.services.project_package import ProjectPackage
 
 

@@ -1,5 +1,4 @@
 ﻿import json
-from pathlib import Path
 
 from app.services.project_manager import ProjectManager
 

@@ -1,5 +1,4 @@
 from docx import Document
-from docx.shared import Pt
 import os
 
 
@@ -14,7 +13,7 @@ class ExecutiveDocumentGeneratorV2:
         doc = Document()
 
         # Заголовок
-        title = doc.add_heading(
+        doc.add_heading(
             "ИСПОЛНИТЕЛЬНАЯ ДОКУМЕНТАЦИЯ",
             level=1
         )

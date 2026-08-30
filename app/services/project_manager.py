@@ -87,10 +87,6 @@ class ProjectManager:
                 "Имя проекта не указано"
             )
 
-        project_path = self._project_path(
-            project_name
-        )
-
         project_file = self._project_file(
             project_name
         )

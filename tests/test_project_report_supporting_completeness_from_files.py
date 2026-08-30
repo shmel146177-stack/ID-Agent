@@ -1,5 +1,3 @@
-from pathlib import Path
-
 from app.generators.project_report_generator import ProjectReportGenerator
 
 

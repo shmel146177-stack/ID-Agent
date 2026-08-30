@@ -1,5 +1,3 @@
-from pathlib import Path
-
 from app.services.project_package import ProjectPackage
 
 

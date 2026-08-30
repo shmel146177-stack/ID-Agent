@@ -523,12 +523,10 @@ def create_hidden_works_act(
                 or ""
             )
 
-        save_result = (
-            hidden_works_act_generator.save_act_data(
-                project_name,
-                act_code,
-                act_data,
-            )
+        hidden_works_act_generator.save_act_data(
+            project_name,
+            act_code,
+            act_data,
         )
 
         file_path = hidden_works_act_generator.create(
