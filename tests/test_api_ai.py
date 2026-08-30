@@ -292,6 +292,43 @@ def test_ai_comparison_rejects_missing_analysis_id_binding(monkeypatch):
     }
 
 
+def test_ai_comparison_rejects_missing_current_analysis_id(monkeypatch):
+    from app.services.project_service import project_service
+
+    comparison = {
+        "matches": [],
+        "conflicts": [],
+        "suggestions": [],
+        "requires_human_review": True,
+        "engineering_confirmation": False,
+        "analysis_id": "analysis-123",
+        "source_filename": "drawing.pdf",
+    }
+
+    latest_ai = {
+        "source_filename": "drawing.pdf",
+    }
+
+    monkeypatch.setattr(
+        project_service,
+        "get_ai_comparison",
+        lambda: comparison,
+    )
+
+    monkeypatch.setattr(
+        project_service,
+        "get_ai_analysis",
+        lambda: latest_ai,
+    )
+
+    response = client.get("/ai/comparison")
+
+    assert response.status_code == 409
+    assert response.json() == {
+        "detail": "AI analysis missing analysis id",
+    }
+
+
 def test_ai_comparison_rejects_analysis_id_mismatch(monkeypatch):
     from app.services.project_service import project_service
 
@@ -363,6 +400,43 @@ def test_ai_comparison_rejects_missing_source_filename_binding(monkeypatch):
     assert response.status_code == 409
     assert response.json() == {
         "detail": "AI comparison missing source filename",
+    }
+
+
+def test_ai_comparison_rejects_missing_current_source_filename(monkeypatch):
+    from app.services.project_service import project_service
+
+    comparison = {
+        "matches": [],
+        "conflicts": [],
+        "suggestions": [],
+        "requires_human_review": True,
+        "engineering_confirmation": False,
+        "analysis_id": "analysis-123",
+        "source_filename": "drawing.pdf",
+    }
+
+    latest_ai = {
+        "analysis_id": "analysis-123",
+    }
+
+    monkeypatch.setattr(
+        project_service,
+        "get_ai_comparison",
+        lambda: comparison,
+    )
+
+    monkeypatch.setattr(
+        project_service,
+        "get_ai_analysis",
+        lambda: latest_ai,
+    )
+
+    response = client.get("/ai/comparison")
+
+    assert response.status_code == 409
+    assert response.json() == {
+        "detail": "AI analysis missing source filename",
     }
 
 
