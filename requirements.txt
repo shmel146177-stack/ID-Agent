@@ -1,4 +1,4 @@
-﻿annotated-doc==0.0.5
+annotated-doc==0.0.5
 annotated-types==0.8.0
 anyio==4.14.2
 click==8.4.2
@@ -10,7 +10,7 @@ httpcore2==2.10.0
 httpx2==2.10.0
 idna==3.18
 iniconfig==2.3.0
-lxml==6.1.1
+lxml==6.1.2
 numpy==2.5.1
 openpyxl==3.1.5
 packaging==26.3
