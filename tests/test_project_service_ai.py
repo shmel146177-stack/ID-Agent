@@ -119,3 +119,106 @@ def test_ai_analysis_can_store_source_filename(tmp_path):
 
     assert saved["source_filename"] == "drawing.pdf"
     assert saved["summary"] == "AI analysis"
+
+def test_project_service_saves_ai_comparison_with_source_binding(tmp_path):
+    service = ProjectService()
+
+    service.ai_comparison_file_path = str(
+        tmp_path / "current_ai_comparison.json"
+    )
+
+    comparison = {
+        "matches": [],
+        "conflicts": [],
+        "suggestions": [
+            {
+                "field": "drawing_number",
+                "value": "A-01",
+                "confidence": 0.95,
+            }
+        ],
+        "requires_human_review": True,
+        "engineering_confirmation": False,
+    }
+
+    service.save_ai_comparison(
+        comparison,
+        analysis_id="analysis-123",
+        source_filename="drawing.pdf",
+    )
+
+    saved = service.get_ai_comparison()
+
+    assert saved is not None
+    assert saved["analysis_id"] == "analysis-123"
+    assert saved["source_filename"] == "drawing.pdf"
+    assert saved["suggestions"] == comparison["suggestions"]
+    assert saved["requires_human_review"] is True
+    assert saved["engineering_confirmation"] is False
+
+def test_new_deterministic_analysis_invalidates_old_ai_comparison(tmp_path):
+    service = ProjectService()
+
+    service.file_path = str(
+        tmp_path / "current_analysis.json"
+    )
+    service.ai_comparison_file_path = str(
+        tmp_path / "current_ai_comparison.json"
+    )
+
+    service.save_ai_comparison(
+        {
+            "matches": [],
+            "conflicts": [],
+            "suggestions": [],
+            "requires_human_review": True,
+            "engineering_confirmation": False,
+        },
+        analysis_id="old-analysis-id",
+        source_filename="old.pdf",
+    )
+
+    assert Path(service.ai_comparison_file_path).exists()
+
+    service.save_analysis(
+        {
+            "document_type": "new-drawing",
+        }
+    )
+
+    assert not Path(service.ai_comparison_file_path).exists()
+
+def test_new_ai_analysis_invalidates_old_ai_comparison(tmp_path):
+    service = ProjectService()
+
+    service.ai_file_path = str(
+        tmp_path / "current_ai_analysis.json"
+    )
+    service.ai_comparison_file_path = str(
+        tmp_path / "current_ai_comparison.json"
+    )
+
+    service.save_ai_comparison(
+        {
+            "matches": [],
+            "conflicts": [],
+            "suggestions": [],
+            "requires_human_review": True,
+            "engineering_confirmation": False,
+        },
+        analysis_id="old-analysis-id",
+        source_filename="old.pdf",
+    )
+
+    assert Path(service.ai_comparison_file_path).exists()
+
+    service.save_ai_analysis(
+        {
+            "summary": "New AI analysis",
+            "requires_human_review": True,
+            "engineering_confirmation": False,
+        },
+        source_filename="new.pdf",
+    )
+
+    assert not Path(service.ai_comparison_file_path).exists()

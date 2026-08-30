@@ -77,13 +77,23 @@ async def upload_document(
                 source_filename=filename,
             )
 
-            result["ai_analysis"] = saved_ai_analysis["document"]
+            saved_ai_document = saved_ai_analysis["document"]
 
-            result["ai_comparison"] = (
+            result["ai_analysis"] = saved_ai_document
+
+            ai_comparison = (
                 AIAnalysisComparisonService().compare(
                     analysis,
                     ai_analysis,
                 )
             )
+
+            project_service.save_ai_comparison(
+                ai_comparison,
+                analysis_id=saved_ai_document["analysis_id"],
+                source_filename=filename,
+            )
+
+            result["ai_comparison"] = ai_comparison
 
     return result

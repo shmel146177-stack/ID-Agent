@@ -295,6 +295,32 @@ def test_upload_document_http_with_explicit_ai(monkeypatch, tmp_path):
         save_ai_analysis,
     )
 
+    saved_ai_comparisons = []
+
+    def save_ai_comparison(
+        data,
+        analysis_id,
+        source_filename,
+    ):
+        saved_ai_comparisons.append(
+            {
+                "data": data,
+                "analysis_id": analysis_id,
+                "source_filename": source_filename,
+            }
+        )
+
+        return {
+            "status": "AI comparison saved",
+            "document": data,
+        }
+
+    monkeypatch.setattr(
+        documents_module.project_service,
+        "save_ai_comparison",
+        save_ai_comparison,
+    )
+
     class AIClientStub:
         class Settings:
             active = True
@@ -367,6 +393,14 @@ def test_upload_document_http_with_explicit_ai(monkeypatch, tmp_path):
 
     assert saved_ai_analysis["summary"] == "AI analysis completed."
     assert saved_source_filenames == ["test.pdf"]
+
+    assert len(saved_ai_comparisons) == 1
+
+    saved_comparison = saved_ai_comparisons[0]
+
+    assert saved_comparison["analysis_id"] == "analysis-1"
+    assert saved_comparison["source_filename"] == "test.pdf"
+    assert saved_comparison["data"] == result["ai_comparison"]
 
     assert result["ai_comparison"]["matches"] == [
         {
