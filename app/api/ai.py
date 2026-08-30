@@ -55,6 +55,12 @@ def get_ai_comparison():
             detail="AI comparison has no current AI analysis",
         )
 
+    if not comparison.get("analysis_id"):
+        raise HTTPException(
+            status_code=409,
+            detail="AI comparison missing analysis id",
+        )
+
     if (
         latest_ai is not None
         and comparison.get("analysis_id")
@@ -63,6 +69,12 @@ def get_ai_comparison():
         raise HTTPException(
             status_code=409,
             detail="AI comparison analysis id mismatch",
+        )
+
+    if not comparison.get("source_filename"):
+        raise HTTPException(
+            status_code=409,
+            detail="AI comparison missing source filename",
         )
 
     if (
