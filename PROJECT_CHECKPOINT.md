@@ -1,14 +1,14 @@
 # ID-Agent - контрольная точка
 
-Дата проверки: 24.08.2026
+Дата проверки: 30.08.2026
 Ветка: `develop`
-Текущая контрольная точка: `bccd8d0` - `Tighten cable quality document matching`
+Текущая контрольная точка: `f1bd3bf` - `Prevent AI engineering confirmation`
 
 ## Состояние репозитория
 
 - Основная рабочая ветка: `develop`.
 - GitHub: `https://github.com/shmel146177-stack/ID-Agent.git`
-- Последний подтвержденный коммит: `bccd8d0`.
+- Последний подтвержденный коммит: `f1bd3bf7f2df05dcf2ed16bf0a0f883da4b55b94`.
 - Коммит отправлен в `origin/develop`.
 - Рабочее дерево после push было чистым.
 
@@ -16,7 +16,7 @@
 
 Полный набор тестов:
 
-`197 passed, 1 skipped`
+`275 passed, 1 skipped`
 
 Пропущенный тест связан с невозможностью создания симлинков в текущей Windows-среде и не является ошибкой ID-Agent.
 
@@ -224,3 +224,42 @@
 Отсутствующий лист №8 является предупреждением и не должен блокировать разработку.
 
 Документы проекта и результаты анализа хранятся локально в `projects/` и не отправляются в GitHub.
+
+## AI/OpenAI status - 30.08.2026
+
+Current stable checkpoint:
+
+`f1bd3bf` - `Prevent AI engineering confirmation`
+
+Regression:
+
+`275 passed, 1 skipped`
+
+Implemented AI foundation:
+
+- opt-in AI document analysis;
+- safe fallback when OpenAI API is unavailable;
+- AI results stored separately from deterministic analysis;
+- `source_filename` and unique `analysis_id`;
+- persisted human review bound to `analysis_id`;
+- stale review invalidation after re-analysis;
+- direct `/ai/analyze` persistence and review flow;
+- `AIAnalysisComparisonService`;
+- comparison groups: `matches`, `conflicts`, `suggestions`;
+- missing and whitespace-only deterministic values become suggestions;
+- surrounding whitespace is ignored only during string comparison;
+- string case remains significant;
+- deterministic types are not coerced automatically;
+- `requires_human_review = True`;
+- `engineering_confirmation = False`;
+- AI never overwrites or confirms engineering data automatically.
+
+Next environment-improvement plan:
+
+1. Install and configure Ruff.
+2. Add Ruff to GitHub Actions.
+3. Install `pytest-cov` and measure baseline coverage.
+4. Configure `pre-commit`.
+5. Configure Dependabot.
+6. Configure CodeQL.
+7. Continue development of ID-Agent AI logic.
