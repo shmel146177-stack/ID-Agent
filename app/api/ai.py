@@ -35,6 +35,20 @@ def latest_ai_analysis():
     return result
 
 
+@router.get("/comparison")
+def get_ai_comparison():
+    from fastapi import HTTPException
+
+    comparison = project_service.get_ai_comparison()
+
+    if comparison is None:
+        raise HTTPException(
+            status_code=404,
+            detail="AI comparison not found",
+        )
+
+    return comparison
+
 @router.get("/review")
 def get_ai_review():
     from fastapi import HTTPException

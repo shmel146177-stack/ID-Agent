@@ -155,6 +155,54 @@ def test_ai_latest_returns_404_when_missing(monkeypatch):
     }
 
 
+def test_ai_comparison_returns_saved_comparison(monkeypatch):
+    from app.services.project_service import project_service
+
+    saved = {
+        "matches": [],
+        "conflicts": [],
+        "suggestions": [
+            {
+                "field": "drawing_number",
+                "value": "A-01",
+                "confidence": 0.95,
+            }
+        ],
+        "requires_human_review": True,
+        "engineering_confirmation": False,
+        "analysis_id": "analysis-123",
+        "source_filename": "drawing.pdf",
+    }
+
+    monkeypatch.setattr(
+        project_service,
+        "get_ai_comparison",
+        lambda: saved,
+    )
+
+    response = client.get("/ai/comparison")
+
+    assert response.status_code == 200
+    assert response.json() == saved
+
+
+def test_ai_comparison_returns_404_when_missing(monkeypatch):
+    from app.services.project_service import project_service
+
+    monkeypatch.setattr(
+        project_service,
+        "get_ai_comparison",
+        lambda: None,
+    )
+
+    response = client.get("/ai/comparison")
+
+    assert response.status_code == 404
+    assert response.json() == {
+        "detail": "AI comparison not found",
+    }
+
+
 def test_ai_review_saves_human_decision(monkeypatch):
     from app.services.project_service import project_service
 
