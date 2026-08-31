@@ -11,7 +11,7 @@ class KnowledgeService:
         self.chunks.append(chunk)
 
     def search_results(self, query: str) -> list[KnowledgeSearchResult]:
-        terms = re.findall(r"\w+", (query or "").casefold())
+        terms = list(dict.fromkeys(re.findall(r"\w+", (query or "").casefold())))
 
         if not terms:
             return []

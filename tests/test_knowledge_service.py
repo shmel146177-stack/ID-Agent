@@ -138,3 +138,19 @@ def test_knowledge_service_search_uses_search_results(monkeypatch):
 
     assert service.search("grounding") == [chunk]
     assert calls == ["grounding"]
+
+
+def test_knowledge_service_deduplicates_query_terms():
+    chunk = KnowledgeChunk(
+        source_id="sp-grounding",
+        source_title="Grounding standard",
+        section="section-1",
+        page=10,
+        text="Grounding conductors must be installed according to design.",
+    )
+    service = KnowledgeService([chunk])
+
+    results = service.search_results("grounding grounding design")
+
+    assert len(results) == 1
+    assert results[0].matched_terms == ["grounding", "design"]
