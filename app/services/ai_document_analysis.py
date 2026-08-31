@@ -10,9 +10,7 @@ class AIDocumentAnalysisService:
     def __init__(
         self,
         ai_client: AIClient | None = None,
-        analysis_backend: (
-            Callable[[str, str], AIAnalysisResult] | None
-        ) = None,
+        analysis_backend: Callable[..., AIAnalysisResult] | None = None,
     ):
         self.ai_client = ai_client or AIClient()
         self.analysis_backend = analysis_backend
@@ -41,9 +39,11 @@ class AIDocumentAnalysisService:
         self,
         filename: str,
         text: str,
+        knowledge_context: str | None = None,
     ) -> AIAnalysisResult:
         document_name = (filename or "").strip() or "без имени"
         document_text = (text or "").strip()
+        knowledge_text = (knowledge_context or "").strip()
 
         if not document_text:
             return AIAnalysisResult(
@@ -80,10 +80,17 @@ class AIDocumentAnalysisService:
             )
 
         try:
-            result = self.analysis_backend(
-                document_name,
-                document_text,
-            )
+            if knowledge_text:
+                result = self.analysis_backend(
+                    document_name,
+                    document_text,
+                    knowledge_text,
+                )
+            else:
+                result = self.analysis_backend(
+                    document_name,
+                    document_text,
+                )
         except AIUnavailableError as exc:
             return AIAnalysisResult(
                 summary=(

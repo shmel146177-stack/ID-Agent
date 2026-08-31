@@ -160,3 +160,38 @@ def test_ai_document_analysis_falls_back_when_backend_unavailable():
     assert "Детерминированный анализ ID-Agent остается доступен." in (
         result.warnings
     )
+
+
+def test_ai_document_analysis_passes_knowledge_context_to_backend():
+    calls = []
+
+    def backend(filename, text, knowledge_context):
+        calls.append((filename, text, knowledge_context))
+        return AIAnalysisResult(
+            summary="Document analyzed with knowledge context.",
+        )
+
+    service = AIDocumentAnalysisService(
+        ai_client=create_ai_client("test-key"),
+        analysis_backend=backend,
+    )
+    knowledge_context = (
+        "[SOURCE 1]\n"
+        "source_id: sp-grounding\n"
+        "[/SOURCE]"
+    )
+
+    result = service.analyze_text(
+        "document.pdf",
+        "Document text.",
+        knowledge_context=knowledge_context,
+    )
+
+    assert result.summary == "Document analyzed with knowledge context."
+    assert calls == [
+        (
+            "document.pdf",
+            "Document text.",
+            knowledge_context,
+        )
+    ]

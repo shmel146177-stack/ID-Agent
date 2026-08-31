@@ -36,6 +36,7 @@ class OpenAIResponsesBackend:
         self,
         filename: str,
         text: str,
+        knowledge_context: str | None = None,
     ) -> AIAnalysisResult:
         document_name = (filename or "").strip() or "без имени"
         document_text = (text or "").strip()
@@ -47,6 +48,14 @@ class OpenAIResponsesBackend:
 
         was_truncated = len(document_text) > self.max_input_chars
         input_text = document_text[: self.max_input_chars]
+        knowledge_text = (knowledge_context or "").strip()
+
+        if knowledge_text:
+            input_text = (
+                f"{input_text}\n\n"
+                "Knowledge context (source-bound reference):\n"
+                f"{knowledge_text}"
+            )
 
         client = self.ai_client.get_client()
 

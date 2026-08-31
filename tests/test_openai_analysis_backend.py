@@ -226,3 +226,29 @@ def test_openai_backend_reports_exhausted_api_balance():
             "document.pdf",
             "Engineering document text.",
         )
+
+
+def test_openai_backend_includes_source_bound_knowledge_context():
+    expected = AIAnalysisResult(
+        summary="Document analyzed.",
+    )
+    backend, openai_stub, _ = create_backend(expected)
+    knowledge_context = (
+        "[SOURCE 1]\n"
+        "source_id: sp-grounding\n"
+        "text:\n"
+        "Grounding requirement.\n"
+        "[/SOURCE]"
+    )
+
+    result = backend(
+        "document.pdf",
+        "Document text.",
+        knowledge_context,
+    )
+
+    user_content = openai_stub.responses.calls[0]["input"][1]["content"]
+
+    assert result is expected
+    assert "Document text." in user_content
+    assert knowledge_context in user_content
