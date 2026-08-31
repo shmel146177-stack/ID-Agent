@@ -1,0 +1,39 @@
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+
+class KnowledgeChunk(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    source_id: str = Field(min_length=1)
+
+    @field_validator("source_id")
+    @classmethod
+    def validate_source_id(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("source_id must not be blank")
+        return value
+    source_title: str = Field(min_length=1)
+
+    @field_validator("source_title")
+    @classmethod
+    def validate_source_title(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("source_title must not be blank")
+        return value
+    section: str | None = None
+
+    @field_validator("section")
+    @classmethod
+    def validate_section(cls, value: str | None) -> str | None:
+        if value is not None and not value.strip():
+            raise ValueError("section must not be blank")
+        return value
+    page: int | None = Field(default=None, ge=1)
+    text: str = Field(min_length=1)
+
+    @field_validator("text")
+    @classmethod
+    def validate_text(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("text must not be blank")
+        return value
