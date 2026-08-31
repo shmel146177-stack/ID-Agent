@@ -183,3 +183,21 @@ def test_knowledge_service_rejects_nonpositive_max_results(max_results):
 
     with pytest.raises(ValueError, match="max_results must be positive"):
         service.search_results("standard", max_results=max_results)
+
+
+def test_knowledge_service_search_limits_chunks():
+    first = KnowledgeChunk(
+        source_id="sp-grounding",
+        source_title="Grounding standard",
+        text="Grounding requirements.",
+    )
+    second = KnowledgeChunk(
+        source_id="sp-concrete",
+        source_title="Concrete standard",
+        text="Concrete requirements.",
+    )
+    service = KnowledgeService([first, second])
+
+    chunks = service.search("standard", max_results=1)
+
+    assert chunks == [first]

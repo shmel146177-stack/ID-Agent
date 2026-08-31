@@ -52,5 +52,17 @@ class KnowledgeService:
 
         return results
 
-    def search(self, query: str) -> list[KnowledgeChunk]:
-        return [result.chunk for result in self.search_results(query)]
+    def search(
+        self,
+        query: str,
+        max_results: int | None = None,
+    ) -> list[KnowledgeChunk]:
+        if max_results is None:
+            results = self.search_results(query)
+        else:
+            results = self.search_results(
+                query,
+                max_results=max_results,
+            )
+
+        return [result.chunk for result in results]
