@@ -1039,3 +1039,76 @@ def test_ai_analyze_persists_analysis_id(
     saved = project_service.get_ai_analysis()
 
     assert saved == result
+
+
+def test_ai_analyze_passes_knowledge_context_when_active(monkeypatch):
+    from app.services.ai_document_analysis import (
+        AIDocumentAnalysisService,
+    )
+    from app.services.project_service import project_service
+
+    monkeypatch.setenv("OPENAI_API_KEY", "test-key")
+    monkeypatch.setenv("OPENAI_MODEL", "test-model")
+    monkeypatch.setenv("ID_AGENT_AI_ENABLED", "true")
+
+    calls = []
+
+    class ServiceStub:
+        def analyze_text(
+            self,
+            filename,
+            text,
+            knowledge_context=None,
+        ):
+            calls.append((filename, text, knowledge_context))
+            return AIAnalysisResult(
+                summary="AI backend selected.",
+            )
+
+    def fake_with_openai(
+        cls,
+        ai_client=None,
+        max_input_chars=40_000,
+    ):
+        return ServiceStub()
+
+    monkeypatch.setattr(
+        AIDocumentAnalysisService,
+        "with_openai",
+        classmethod(fake_with_openai),
+    )
+    monkeypatch.setattr(
+        project_service,
+        "save_ai_analysis",
+        lambda data, source_filename=None: {
+            "document": {
+                **data,
+                "analysis_id": "analysis-test",
+                "source_filename": source_filename,
+            }
+        },
+    )
+
+    knowledge_context = (
+        "[SOURCE 1]\n"
+        "source_id: sp-grounding\n"
+        "[/SOURCE]"
+    )
+
+    response = client.post(
+        "/ai/analyze",
+        json={
+            "filename": "document.pdf",
+            "text": "Document text.",
+            "knowledge_context": knowledge_context,
+        },
+    )
+
+    assert response.status_code == 200
+    assert calls == [
+        (
+            "document.pdf",
+            "Document text.",
+            knowledge_context,
+        )
+    ]

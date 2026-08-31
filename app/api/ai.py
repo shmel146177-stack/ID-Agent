@@ -13,6 +13,7 @@ router = APIRouter(prefix="/ai", tags=["AI"])
 class AIAnalysisRequest(BaseModel):
     filename: str
     text: str
+    knowledge_context: str | None = None
 
 
 @router.get("/status")
@@ -242,10 +243,17 @@ def analyze_document(request: AIAnalysisRequest):
             ai_client=ai_client,
         )
 
-    result = service.analyze_text(
-        request.filename,
-        request.text,
-    )
+    if request.knowledge_context:
+        result = service.analyze_text(
+            request.filename,
+            request.text,
+            knowledge_context=request.knowledge_context,
+        )
+    else:
+        result = service.analyze_text(
+            request.filename,
+            request.text,
+        )
 
     result_data = result.model_dump()
 
