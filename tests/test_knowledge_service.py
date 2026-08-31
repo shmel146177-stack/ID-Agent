@@ -1,4 +1,4 @@
-from app.models.knowledge import KnowledgeChunk
+from app.models.knowledge import KnowledgeChunk, KnowledgeSearchResult
 from app.services.knowledge_service import KnowledgeService
 
 
@@ -113,3 +113,28 @@ def test_knowledge_service_returns_source_bound_search_results():
     assert len(results) == 1
     assert results[0].chunk == chunk
     assert results[0].matched_terms == ["grounding", "design"]
+
+
+def test_knowledge_service_search_uses_search_results(monkeypatch):
+    chunk = KnowledgeChunk(
+        source_id="sp-grounding",
+        source_title="Grounding standard",
+        section="section-1",
+        page=10,
+        text="Grounding conductors must be installed according to design.",
+    )
+    result = KnowledgeSearchResult(
+        chunk=chunk,
+        matched_terms=["grounding"],
+    )
+    service = KnowledgeService()
+    calls = []
+
+    def fake_search_results(query):
+        calls.append(query)
+        return [result]
+
+    monkeypatch.setattr(service, "search_results", fake_search_results)
+
+    assert service.search("grounding") == [chunk]
+    assert calls == ["grounding"]

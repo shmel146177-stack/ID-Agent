@@ -43,28 +43,4 @@ class KnowledgeService:
         return results
 
     def search(self, query: str) -> list[KnowledgeChunk]:
-        terms = re.findall(r"\w+", (query or "").casefold())
-
-        if not terms:
-            return []
-
-        results = []
-
-        for chunk in self.chunks:
-            searchable_text = " ".join(
-                part
-                for part in (
-                    chunk.source_id,
-                    chunk.source_title,
-                    chunk.section,
-                    chunk.text,
-                )
-                if part is not None
-            ).casefold()
-
-            searchable_terms = set(re.findall(r"\w+", searchable_text))
-
-            if all(term in searchable_terms for term in terms):
-                results.append(chunk)
-
-        return results
+        return [result.chunk for result in self.search_results(query)]
