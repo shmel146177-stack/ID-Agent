@@ -1,3 +1,5 @@
+import pytest
+
 from app.models.knowledge import KnowledgeChunk, KnowledgeSearchResult
 from app.services.knowledge_service import KnowledgeService
 
@@ -154,3 +156,30 @@ def test_knowledge_service_deduplicates_query_terms():
 
     assert len(results) == 1
     assert results[0].matched_terms == ["grounding", "design"]
+
+
+def test_knowledge_service_limits_search_results():
+    first = KnowledgeChunk(
+        source_id="sp-grounding",
+        source_title="Grounding standard",
+        text="Grounding requirements.",
+    )
+    second = KnowledgeChunk(
+        source_id="sp-concrete",
+        source_title="Concrete standard",
+        text="Concrete requirements.",
+    )
+    service = KnowledgeService([first, second])
+
+    results = service.search_results("standard", max_results=1)
+
+    assert len(results) == 1
+    assert results[0].chunk == first
+
+
+@pytest.mark.parametrize("max_results", [0, -1])
+def test_knowledge_service_rejects_nonpositive_max_results(max_results):
+    service = KnowledgeService()
+
+    with pytest.raises(ValueError, match="max_results must be positive"):
+        service.search_results("standard", max_results=max_results)

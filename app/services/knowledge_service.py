@@ -10,7 +10,14 @@ class KnowledgeService:
     def add(self, chunk: KnowledgeChunk) -> None:
         self.chunks.append(chunk)
 
-    def search_results(self, query: str) -> list[KnowledgeSearchResult]:
+    def search_results(
+        self,
+        query: str,
+        max_results: int | None = None,
+    ) -> list[KnowledgeSearchResult]:
+        if max_results is not None and max_results <= 0:
+            raise ValueError("max_results must be positive")
+
         terms = list(dict.fromkeys(re.findall(r"\w+", (query or "").casefold())))
 
         if not terms:
@@ -39,6 +46,9 @@ class KnowledgeService:
                         matched_terms=terms,
                     )
                 )
+
+        if max_results is not None:
+            return results[:max_results]
 
         return results
 
