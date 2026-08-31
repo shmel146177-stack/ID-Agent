@@ -201,3 +201,42 @@ def test_knowledge_service_search_limits_chunks():
     chunks = service.search("standard", max_results=1)
 
     assert chunks == [first]
+
+
+def test_knowledge_service_builds_limited_source_context():
+    first = KnowledgeChunk(
+        source_id="sp-grounding",
+        source_title="Grounding standard",
+        text="Shared engineering requirement.",
+    )
+    second = KnowledgeChunk(
+        source_id="sp-concrete",
+        source_title="Concrete standard",
+        text="Shared engineering requirement.",
+    )
+    service = KnowledgeService([first, second])
+
+    context = service.build_context(
+        "engineering",
+        max_results=1,
+    )
+
+    assert "[SOURCE 1]" in context
+    assert "source_id: sp-grounding" in context
+    assert "sp-concrete" not in context
+
+
+def test_knowledge_service_build_context_respects_character_limit():
+    chunk = KnowledgeChunk(
+        source_id="sp-grounding",
+        source_title="Grounding standard",
+        text="Grounding requirement.",
+    )
+    service = KnowledgeService([chunk])
+
+    context = service.build_context(
+        "grounding",
+        max_chars=1,
+    )
+
+    assert context == ""

@@ -1,6 +1,7 @@
 import re
 
 from app.models.knowledge import KnowledgeChunk, KnowledgeSearchResult
+from app.services.knowledge_context import build_knowledge_context
 
 
 class KnowledgeService:
@@ -66,3 +67,19 @@ class KnowledgeService:
             )
 
         return [result.chunk for result in results]
+
+    def build_context(
+        self,
+        query: str,
+        max_results: int | None = None,
+        max_chars: int | None = None,
+    ) -> str:
+        results = self.search_results(
+            query,
+            max_results=max_results,
+        )
+
+        return build_knowledge_context(
+            results,
+            max_chars=max_chars,
+        )
