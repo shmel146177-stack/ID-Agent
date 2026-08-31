@@ -1,5 +1,5 @@
 ﻿from fastapi import APIRouter
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.models.ai_review import AIReviewDecision
 from app.services.ai_client import AIClient
@@ -10,10 +10,16 @@ from app.services.project_service import project_service
 router = APIRouter(prefix="/ai", tags=["AI"])
 
 
+MAX_KNOWLEDGE_CONTEXT_CHARS = 20_000
+
+
 class AIAnalysisRequest(BaseModel):
     filename: str
     text: str
-    knowledge_context: str | None = None
+    knowledge_context: str | None = Field(
+        default=None,
+        max_length=MAX_KNOWLEDGE_CONTEXT_CHARS,
+    )
 
 
 @router.get("/status")

@@ -1112,3 +1112,31 @@ def test_ai_analyze_passes_knowledge_context_when_active(monkeypatch):
             knowledge_context,
         )
     ]
+
+
+def test_ai_analyze_rejects_oversized_knowledge_context():
+    response = client.post(
+        "/ai/analyze",
+        json={
+            "filename": "document.pdf",
+            "text": "Document text.",
+            "knowledge_context": "x" * 20_001,
+        },
+    )
+
+    assert response.status_code == 422
+
+
+def test_ai_analysis_request_accepts_maximum_knowledge_context():
+    from app.api.ai import (
+        AIAnalysisRequest,
+        MAX_KNOWLEDGE_CONTEXT_CHARS,
+    )
+
+    request = AIAnalysisRequest(
+        filename="document.pdf",
+        text="Document text.",
+        knowledge_context="x" * MAX_KNOWLEDGE_CONTEXT_CHARS,
+    )
+
+    assert len(request.knowledge_context) == MAX_KNOWLEDGE_CONTEXT_CHARS
