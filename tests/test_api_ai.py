@@ -706,6 +706,39 @@ def test_ai_review_get_rejects_missing_analysis_id_binding(monkeypatch):
     }
 
 
+def test_ai_review_get_rejects_missing_current_analysis_id(monkeypatch):
+    from app.services.project_service import project_service
+
+    saved_review = {
+        "source_filename": "drawing.pdf",
+        "analysis_id": "analysis-1",
+        "decision": "accepted",
+    }
+
+    latest_ai = {
+        "source_filename": "drawing.pdf",
+    }
+
+    monkeypatch.setattr(
+        project_service,
+        "get_ai_review",
+        lambda: saved_review,
+    )
+
+    monkeypatch.setattr(
+        project_service,
+        "get_ai_analysis",
+        lambda: latest_ai,
+    )
+
+    response = client.get("/ai/review")
+
+    assert response.status_code == 409
+    assert response.json() == {
+        "detail": "AI analysis missing analysis id",
+    }
+
+
 def test_ai_review_get_rejects_analysis_id_mismatch(monkeypatch):
     from app.services.project_service import project_service
 
@@ -769,6 +802,39 @@ def test_ai_review_get_rejects_missing_source_filename_binding(monkeypatch):
     assert response.status_code == 409
     assert response.json() == {
         "detail": "AI review missing source filename",
+    }
+
+
+def test_ai_review_get_rejects_missing_current_source_filename(monkeypatch):
+    from app.services.project_service import project_service
+
+    saved_review = {
+        "source_filename": "drawing.pdf",
+        "analysis_id": "analysis-1",
+        "decision": "accepted",
+    }
+
+    latest_ai = {
+        "analysis_id": "analysis-1",
+    }
+
+    monkeypatch.setattr(
+        project_service,
+        "get_ai_review",
+        lambda: saved_review,
+    )
+
+    monkeypatch.setattr(
+        project_service,
+        "get_ai_analysis",
+        lambda: latest_ai,
+    )
+
+    response = client.get("/ai/review")
+
+    assert response.status_code == 409
+    assert response.json() == {
+        "detail": "AI analysis missing source filename",
     }
 
 

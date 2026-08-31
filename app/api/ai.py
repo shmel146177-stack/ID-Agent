@@ -139,6 +139,12 @@ def get_ai_review():
             detail="AI review missing analysis id",
         )
 
+    if not latest_ai.get("analysis_id"):
+        raise HTTPException(
+            status_code=409,
+            detail="AI analysis missing analysis id",
+        )
+
     if (
         review.get("analysis_id")
         != latest_ai.get("analysis_id")
@@ -152,6 +158,12 @@ def get_ai_review():
         raise HTTPException(
             status_code=409,
             detail="AI review missing source filename",
+        )
+
+    if not latest_ai.get("source_filename"):
+        raise HTTPException(
+            status_code=409,
+            detail="AI analysis missing source filename",
         )
 
     if (
