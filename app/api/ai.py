@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field
 from app.models.ai_review import AIReviewDecision
 from app.services.ai_client import AIClient
 from app.services.ai_document_analysis import AIDocumentAnalysisService
+from app.services.knowledge_context import extract_knowledge_source_ids
 from app.services.project_service import project_service
 
 
@@ -262,10 +263,19 @@ def analyze_document(request: AIAnalysisRequest):
         )
 
     result_data = result.model_dump()
+    save_options = {}
+
+    if request.knowledge_context:
+        save_options["knowledge_source_ids"] = (
+            extract_knowledge_source_ids(
+                request.knowledge_context
+            )
+        )
 
     saved_ai_analysis = project_service.save_ai_analysis(
         result_data,
         source_filename=request.filename,
+        **save_options,
     )
 
     return saved_ai_analysis["document"]

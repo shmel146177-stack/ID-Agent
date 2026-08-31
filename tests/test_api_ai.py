@@ -1080,11 +1080,12 @@ def test_ai_analyze_passes_knowledge_context_when_active(monkeypatch):
     monkeypatch.setattr(
         project_service,
         "save_ai_analysis",
-        lambda data, source_filename=None: {
+        lambda data, source_filename=None, knowledge_source_ids=None: {
             "document": {
                 **data,
                 "analysis_id": "analysis-test",
                 "source_filename": source_filename,
+                "knowledge_source_ids": knowledge_source_ids,
             }
         },
     )
@@ -1111,6 +1112,9 @@ def test_ai_analyze_passes_knowledge_context_when_active(monkeypatch):
             "Document text.",
             knowledge_context,
         )
+    ]
+    assert response.json()["knowledge_source_ids"] == [
+        "sp-grounding",
     ]
 
 

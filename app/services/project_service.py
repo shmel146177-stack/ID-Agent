@@ -50,6 +50,7 @@ class ProjectService:
         self,
         data: dict,
         source_filename: str | None = None,
+        knowledge_source_ids: list[str] | None = None,
     ):
         directory = os.path.dirname(self.ai_file_path)
 
@@ -64,6 +65,11 @@ class ProjectService:
 
         if source_filename is not None:
             data_to_save["source_filename"] = source_filename
+
+        if knowledge_source_ids is not None:
+            data_to_save["knowledge_source_ids"] = list(
+                knowledge_source_ids
+            )
 
         with open(
             self.ai_file_path,

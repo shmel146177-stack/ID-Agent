@@ -222,3 +222,30 @@ def test_new_ai_analysis_invalidates_old_ai_comparison(tmp_path):
     )
 
     assert not Path(service.ai_comparison_file_path).exists()
+
+
+def test_project_service_saves_ai_knowledge_source_ids(tmp_path):
+    service = ProjectService()
+    service.ai_file_path = str(
+        tmp_path / "current_ai_analysis.json"
+    )
+
+    service.save_ai_analysis(
+        {
+            "summary": "AI analysis with knowledge.",
+            "requires_human_review": True,
+            "engineering_confirmation": False,
+        },
+        source_filename="drawing.pdf",
+        knowledge_source_ids=[
+            "sp-grounding",
+            "sp-concrete",
+        ],
+    )
+
+    saved = service.get_ai_analysis()
+
+    assert saved["knowledge_source_ids"] == [
+        "sp-grounding",
+        "sp-concrete",
+    ]

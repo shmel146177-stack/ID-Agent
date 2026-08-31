@@ -1,3 +1,5 @@
+import re
+
 from app.models.knowledge import KnowledgeSearchResult
 
 
@@ -42,3 +44,26 @@ def build_knowledge_context(
         context_length += added_length
 
     return "\n\n".join(blocks)
+
+
+def extract_knowledge_source_ids(
+    context: str | None,
+) -> list[str]:
+    normalized = (context or "").replace("\r\n", "\n").replace("\r", "\n")
+    pattern = re.compile(
+        r"^\[SOURCE \d+\]\n"
+        r"source_id: (?P<source_id>[^\n]+)\n"
+        r".*?^\[/SOURCE\]$",
+        re.MULTILINE | re.DOTALL,
+    )
+    source_ids = []
+    seen = set()
+
+    for match in pattern.finditer(normalized):
+        source_id = match.group("source_id").strip()
+
+        if source_id and source_id not in seen:
+            source_ids.append(source_id)
+            seen.add(source_id)
+
+    return source_ids

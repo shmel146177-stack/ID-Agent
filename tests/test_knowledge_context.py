@@ -1,7 +1,10 @@
 import pytest
 
 from app.models.knowledge import KnowledgeChunk, KnowledgeSearchResult
-from app.services.knowledge_context import build_knowledge_context
+from app.services.knowledge_context import (
+    build_knowledge_context,
+    extract_knowledge_source_ids,
+)
 
 
 def test_build_knowledge_context_binds_text_to_source():
@@ -102,3 +105,27 @@ def test_build_knowledge_context_does_not_split_oversized_first_block():
     context = build_knowledge_context([result], max_chars=1)
 
     assert context == ""
+
+
+def test_extract_knowledge_source_ids_preserves_order_and_deduplicates():
+    context = (
+        "[SOURCE 1]\n"
+        "source_id: sp-grounding\n"
+        "text:\n"
+        "Grounding requirement.\n"
+        "[/SOURCE]\n\n"
+        "[SOURCE 2]\n"
+        "source_id: sp-concrete\n"
+        "text:\n"
+        "Concrete requirement.\n"
+        "[/SOURCE]\n\n"
+        "[SOURCE 3]\n"
+        "source_id: sp-grounding\n"
+        "text:\n"
+        "Additional grounding requirement.\n"
+        "[/SOURCE]"
+    )
+
+    source_ids = extract_knowledge_source_ids(context)
+
+    assert source_ids == ["sp-grounding", "sp-concrete"]
