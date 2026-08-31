@@ -37,3 +37,16 @@ class KnowledgeChunk(BaseModel):
         if not value.strip():
             raise ValueError("text must not be blank")
         return value
+
+class KnowledgeSearchResult(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    chunk: KnowledgeChunk
+    matched_terms: list[str] = Field(min_length=1)
+
+    @field_validator("matched_terms")
+    @classmethod
+    def validate_matched_terms(cls, value: list[str]) -> list[str]:
+        if any(not term.strip() for term in value):
+            raise ValueError("matched_terms must not contain blank values")
+        return value

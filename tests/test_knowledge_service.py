@@ -95,3 +95,21 @@ def test_knowledge_service_does_not_match_partial_words():
     service = KnowledgeService([chunk])
 
     assert service.search("sign") == []
+
+
+def test_knowledge_service_returns_source_bound_search_results():
+    chunk = KnowledgeChunk(
+        source_id="sp-grounding",
+        source_title="Grounding standard",
+        section="section-1",
+        page=10,
+        text="Grounding conductors must be installed according to design.",
+    )
+
+    service = KnowledgeService([chunk])
+
+    results = service.search_results("grounding design")
+
+    assert len(results) == 1
+    assert results[0].chunk == chunk
+    assert results[0].matched_terms == ["grounding", "design"]
