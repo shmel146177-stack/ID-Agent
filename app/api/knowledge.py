@@ -6,6 +6,8 @@ from app.models.knowledge import KnowledgeSearchResult
 from app.services.knowledge_repository import KnowledgeRepository
 from app.services.knowledge_service import KnowledgeService
 
+DEFAULT_KNOWLEDGE_SEARCH_RESULTS = 20
+
 
 router = APIRouter(prefix="/knowledge", tags=["Knowledge"])
 knowledge_repository = KnowledgeRepository()
@@ -17,7 +19,7 @@ knowledge_repository = KnowledgeRepository()
 )
 def search_knowledge(
     query: Annotated[str, Query(min_length=1)],
-    max_results: Annotated[int | None, Query(ge=1)] = None,
+    max_results: Annotated[int, Query(ge=1)] = DEFAULT_KNOWLEDGE_SEARCH_RESULTS,
 ):
     service = KnowledgeService.from_repository(
         knowledge_repository

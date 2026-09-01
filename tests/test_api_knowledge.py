@@ -34,3 +34,26 @@ def test_knowledge_search_reads_default_repository(
             "matched_terms": ["grounding"],
         }
     ]
+
+def test_knowledge_search_limits_default_results(
+    tmp_path,
+    monkeypatch,
+):
+    monkeypatch.chdir(tmp_path)
+    chunks = [
+        KnowledgeChunk(
+            source_id=f"sp-{index}",
+            source_title=f"Standard {index}",
+            text="Shared engineering requirement.",
+        )
+        for index in range(21)
+    ]
+    KnowledgeRepository().save(chunks)
+
+    response = client.get(
+        "/knowledge/search",
+        params={"query": "engineering"},
+    )
+
+    assert response.status_code == 200
+    assert len(response.json()) == 20
