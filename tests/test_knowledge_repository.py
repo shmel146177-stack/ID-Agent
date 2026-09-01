@@ -30,3 +30,26 @@ def test_knowledge_repository_loads_empty_list_when_file_is_missing(
     )
 
     assert repository.load() == []
+
+def test_knowledge_repository_uses_default_project_path(
+    tmp_path,
+    monkeypatch,
+):
+    monkeypatch.chdir(tmp_path)
+    repository = KnowledgeRepository()
+    chunk = KnowledgeChunk(
+        source_id="sp-grounding",
+        source_title="Grounding standard",
+        text="Grounding requirement.",
+    )
+
+    repository.save([chunk])
+
+    expected_path = (
+        tmp_path
+        / "projects"
+        / "data"
+        / "knowledge_chunks.json"
+    )
+    assert expected_path.is_file()
+    assert repository.load() == [chunk]

@@ -3,9 +3,11 @@ from pathlib import Path
 
 from app.models.knowledge import KnowledgeChunk
 
+DEFAULT_KNOWLEDGE_PATH = Path("projects/data/knowledge_chunks.json")
+
 
 class KnowledgeRepository:
-    def __init__(self, path: str | Path):
+    def __init__(self, path: str | Path = DEFAULT_KNOWLEDGE_PATH):
         self.path = Path(path)
 
     def save(self, chunks: list[KnowledgeChunk]) -> None:
