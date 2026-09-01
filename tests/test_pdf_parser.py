@@ -1,4 +1,4 @@
-﻿import app.parsers.pdf_parser as parser_module
+import app.parsers.pdf_parser as parser_module
 from app.parsers.pdf_parser import PDFParser
 
 
@@ -37,3 +37,33 @@ def test_pdf_parser_extracts_text_from_pages(monkeypatch):
         "Первая страница\n"
         "Третья страница\n"
     )
+
+def test_pdf_parser_extracts_pages_separately(monkeypatch):
+    class FakePage:
+        def __init__(self, text):
+            self.text = text
+
+        def extract_text(self):
+            return self.text
+
+    class FakeReader:
+        def __init__(self, file_path):
+            self.pages = [
+                FakePage("First page"),
+                FakePage(None),
+                FakePage("Third page"),
+            ]
+
+    monkeypatch.setattr(
+        parser_module,
+        "PdfReader",
+        FakeReader,
+    )
+
+    parser = PDFParser()
+
+    assert parser.extract_pages("test.pdf") == [
+        "First page",
+        "",
+        "Third page",
+    ]
