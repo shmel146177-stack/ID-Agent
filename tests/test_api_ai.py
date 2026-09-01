@@ -518,6 +518,7 @@ def test_ai_review_saves_human_decision(monkeypatch):
         "summary": "AI suggestion",
         "source_filename": "drawing.pdf",
         "analysis_id": "analysis-1",
+        "knowledge_source_ids": ["sp-grounding"],
         "requires_human_review": True,
         "engineering_confirmation": False,
     }
@@ -556,6 +557,7 @@ def test_ai_review_saves_human_decision(monkeypatch):
         "analysis_id": "analysis-1",
         "decision": "accepted",
         "notes": "Checked by human.",
+        "knowledge_source_ids": ["sp-grounding"],
     }
 
     assert response.json() == expected

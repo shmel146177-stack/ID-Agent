@@ -240,6 +240,14 @@ def review_ai_analysis(review: AIReviewDecision):
         )
 
     review_data = review.model_dump()
+    knowledge_source_ids = latest_ai.get(
+        "knowledge_source_ids"
+    )
+
+    if knowledge_source_ids is not None:
+        review_data["knowledge_source_ids"] = list(
+            knowledge_source_ids
+        )
 
     project_service.save_ai_review(
         review_data,
