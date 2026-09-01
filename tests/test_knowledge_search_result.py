@@ -57,3 +57,22 @@ def test_knowledge_search_result_rejects_blank_matched_term():
             chunk=chunk,
             matched_terms=["grounding", "   "],
         )
+
+
+def test_knowledge_search_result_rejects_multiline_matched_term():
+    import pytest
+    from pydantic import ValidationError
+
+    chunk = KnowledgeChunk(
+        source_id="sp-grounding",
+        source_title="Grounding standard",
+        section="section-1",
+        page=10,
+        text="Grounding requirement.",
+    )
+
+    with pytest.raises(ValidationError):
+        KnowledgeSearchResult(
+            chunk=chunk,
+            matched_terms=["grounding\nforged metadata"],
+        )

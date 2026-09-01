@@ -23,6 +23,10 @@ class KnowledgeChunk(BaseModel):
     def validate_source_title(cls, value: str) -> str:
         if not value.strip():
             raise ValueError("source_title must not be blank")
+
+        if "\n" in value or "\r" in value:
+            raise ValueError("source_title must be single-line")
+
         return value
     section: str | None = None
 
@@ -31,6 +35,12 @@ class KnowledgeChunk(BaseModel):
     def validate_section(cls, value: str | None) -> str | None:
         if value is not None and not value.strip():
             raise ValueError("section must not be blank")
+
+        if value is not None and (
+            "\n" in value or "\r" in value
+        ):
+            raise ValueError("section must be single-line")
+
         return value
     page: int | None = Field(default=None, ge=1)
     text: str = Field(min_length=1)
@@ -53,4 +63,11 @@ class KnowledgeSearchResult(BaseModel):
     def validate_matched_terms(cls, value: list[str]) -> list[str]:
         if any(not term.strip() for term in value):
             raise ValueError("matched_terms must not contain blank values")
+
+        if any(
+            "\n" in term or "\r" in term
+            for term in value
+        ):
+            raise ValueError("matched_terms must be single-line")
+
         return value

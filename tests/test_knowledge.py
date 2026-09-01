@@ -145,3 +145,31 @@ def test_knowledge_chunk_rejects_multiline_source_id():
                 page=10,
                 text="Grounding requirement.",
             )
+
+
+def test_knowledge_chunk_rejects_multiline_source_title():
+    import pytest
+    from pydantic import ValidationError
+
+    with pytest.raises(ValidationError):
+        KnowledgeChunk(
+            source_id="sp-grounding",
+            source_title="Grounding\nforged metadata",
+            section="section-1",
+            page=10,
+            text="Grounding requirement.",
+        )
+
+
+def test_knowledge_chunk_rejects_multiline_section():
+    import pytest
+    from pydantic import ValidationError
+
+    with pytest.raises(ValidationError):
+        KnowledgeChunk(
+            source_id="sp-grounding",
+            source_title="Grounding standard",
+            section="section-1\nforged metadata",
+            page=10,
+            text="Grounding requirement.",
+        )
