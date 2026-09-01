@@ -1,4 +1,6 @@
-﻿from fastapi.testclient import TestClient
+import pytest
+
+from fastapi.testclient import TestClient
 
 from app.models.ai_analysis import AIAnalysisResult
 from app.services.ai_settings import AISettings
@@ -1244,3 +1246,174 @@ def test_ai_comparison_rejects_knowledge_source_mismatch(monkeypatch):
     assert response.json() == {
         "detail": "AI comparison knowledge sources mismatch",
     }
+
+def test_ai_analyze_builds_project_knowledge_context(
+    monkeypatch,
+    tmp_path,
+):
+    from app.api import ai as ai_module
+    from app.models.knowledge import KnowledgeChunk
+    from app.services.knowledge_repository import KnowledgeRepository
+    from app.services.project_service import project_service
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setenv("OPENAI_API_KEY", "test-key")
+    monkeypatch.setenv("OPENAI_MODEL", "test-model")
+    monkeypatch.setenv("ID_AGENT_AI_ENABLED", "true")
+
+    repository = KnowledgeRepository.for_project("project-a")
+    repository.save(
+        [
+            KnowledgeChunk(
+                source_id="project-grounding",
+                source_title="Project working documentation",
+                page=10,
+                text="Grounding requirement for this project.",
+            )
+        ]
+    )
+
+    calls = []
+
+    class ServiceStub:
+        def analyze_text(
+            self,
+            filename,
+            text,
+            knowledge_context=None,
+        ):
+            calls.append(
+                (filename, text, knowledge_context)
+            )
+            return AIAnalysisResult(
+                summary="AI backend selected.",
+            )
+
+    def fake_with_openai(
+        cls,
+        ai_client=None,
+        max_input_chars=40_000,
+    ):
+        return ServiceStub()
+
+    def save_ai_analysis(
+        data,
+        source_filename=None,
+        knowledge_source_ids=None,
+    ):
+        return {
+            "document": {
+                **data,
+                "analysis_id": "analysis-project",
+                "source_filename": source_filename,
+                "knowledge_source_ids": knowledge_source_ids,
+            }
+        }
+
+    monkeypatch.setattr(
+        ai_module.AIDocumentAnalysisService,
+        "with_openai",
+        classmethod(fake_with_openai),
+    )
+    monkeypatch.setattr(
+        project_service,
+        "save_ai_analysis",
+        save_ai_analysis,
+    )
+
+    response = client.post(
+        "/ai/analyze",
+        json={
+            "filename": "document.pdf",
+            "text": "Document text.",
+            "knowledge_project_name": "project-a",
+            "knowledge_query": "grounding",
+        },
+    )
+
+    assert response.status_code == 200
+    assert len(calls) == 1
+
+    knowledge_context = calls[0][2]
+
+    assert "[SOURCE 1]" in knowledge_context
+    assert "source_id: project-grounding" in knowledge_context
+    assert (
+        "Grounding requirement for this project."
+        in knowledge_context
+    )
+    assert response.json()["knowledge_source_ids"] == [
+        "project-grounding",
+    ]
+
+@pytest.mark.parametrize(
+    "project_fields",
+    [
+        {"knowledge_project_name": "project-a"},
+        {"knowledge_query": "grounding"},
+        {
+            "knowledge_project_name": " ",
+            "knowledge_query": "grounding",
+        },
+        {
+            "knowledge_project_name": "project-a",
+            "knowledge_query": " ",
+        },
+    ],
+)
+def test_ai_analyze_rejects_incomplete_project_knowledge_request(
+    monkeypatch,
+    project_fields,
+):
+    monkeypatch.setenv("ID_AGENT_AI_ENABLED", "false")
+
+    response = client.post(
+        "/ai/analyze",
+        json={
+            "filename": "document.pdf",
+            "text": "Document text.",
+            **project_fields,
+        },
+    )
+
+    assert response.status_code == 422
+
+def test_ai_analyze_rejects_invalid_knowledge_project_name(
+    monkeypatch,
+):
+    monkeypatch.setenv("ID_AGENT_AI_ENABLED", "false")
+
+    response = client.post(
+        "/ai/analyze",
+        json={
+            "filename": "document.pdf",
+            "text": "Document text.",
+            "knowledge_project_name": "../outside",
+            "knowledge_query": "grounding",
+        },
+    )
+
+    assert response.status_code == 400
+    assert response.json()["detail"].startswith(
+        "project_name must"
+    )
+
+def test_ai_analyze_rejects_combined_knowledge_modes():
+    knowledge_context = (
+        "[SOURCE 1]\n"
+        "source_id: sp-grounding\n"
+        "[/SOURCE]"
+    )
+
+    response = client.post(
+        "/ai/analyze",
+        json={
+            "filename": "document.pdf",
+            "text": "Document text.",
+            "knowledge_context": knowledge_context,
+            "knowledge_project_name": "project-a",
+            "knowledge_query": "grounding",
+        },
+    )
+
+    assert response.status_code == 422

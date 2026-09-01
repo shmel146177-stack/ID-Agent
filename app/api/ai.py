@@ -1,4 +1,4 @@
-﻿from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field, model_validator
 
 from app.models.ai_review import AIReviewDecision
@@ -8,6 +8,8 @@ from app.services.knowledge_context import (
     MAX_KNOWLEDGE_CONTEXT_CHARS,
     extract_knowledge_source_ids,
 )
+from app.services.knowledge_repository import KnowledgeRepository
+from app.services.knowledge_service import KnowledgeService
 from app.services.project_service import project_service
 
 
@@ -24,14 +26,58 @@ class AIAnalysisRequest(BaseModel):
         max_length=MAX_KNOWLEDGE_CONTEXT_CHARS,
     )
 
+    knowledge_project_name: str | None = Field(
+        default=None,
+        min_length=1,
+        max_length=255,
+    )
+    knowledge_query: str | None = Field(
+        default=None,
+        min_length=1,
+        max_length=500,
+    )
+
     @model_validator(mode="after")
     def validate_knowledge_context_binding(self):
         context = (self.knowledge_context or "").strip()
+        project_name = (
+            self.knowledge_project_name or ""
+        ).strip()
+        query = (self.knowledge_query or "").strip()
 
         if context and not extract_knowledge_source_ids(context):
             raise ValueError(
                 "knowledge_context must contain source binding"
             )
+
+        if (
+            self.knowledge_project_name is not None
+            and not project_name
+        ):
+            raise ValueError(
+                "knowledge_project_name must not be blank"
+            )
+
+        if self.knowledge_query is not None and not query:
+            raise ValueError(
+                "knowledge_query must not be blank"
+            )
+
+        if bool(project_name) != bool(query):
+            raise ValueError(
+                "knowledge_project_name and knowledge_query "
+                "must be provided together"
+            )
+
+        if context and project_name:
+            raise ValueError(
+                "knowledge_context cannot be combined with "
+                "project knowledge search"
+            )
+
+        if project_name:
+            self.knowledge_project_name = project_name
+            self.knowledge_query = query
 
         return self
 
@@ -295,11 +341,35 @@ def analyze_document(request: AIAnalysisRequest):
             ai_client=ai_client,
         )
 
-    if request.knowledge_context:
+    knowledge_context = request.knowledge_context
+
+    if (
+        knowledge_context is None
+        and request.knowledge_project_name is not None
+    ):
+        try:
+            repository = KnowledgeRepository.for_project(
+                request.knowledge_project_name
+            )
+        except ValueError as error:
+            raise HTTPException(
+                status_code=400,
+                detail=str(error),
+            ) from error
+        knowledge_service = KnowledgeService.from_repository(
+            repository
+        )
+        knowledge_context = knowledge_service.build_context(
+            request.knowledge_query or "",
+            max_results=5,
+            max_chars=MAX_KNOWLEDGE_CONTEXT_CHARS,
+        ) or None
+
+    if knowledge_context:
         result = service.analyze_text(
             request.filename,
             request.text,
-            knowledge_context=request.knowledge_context,
+            knowledge_context=knowledge_context,
         )
     else:
         result = service.analyze_text(
@@ -310,10 +380,10 @@ def analyze_document(request: AIAnalysisRequest):
     result_data = result.model_dump()
     save_options = {}
 
-    if request.knowledge_context:
+    if knowledge_context:
         save_options["knowledge_source_ids"] = (
             extract_knowledge_source_ids(
-                request.knowledge_context
+                knowledge_context
             )
         )
 
