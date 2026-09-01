@@ -3,11 +3,17 @@ from pathlib import Path
 from app.models.knowledge import KnowledgeChunk
 from app.parsers.pdf_parser import PDFParser, pdf_parser
 from app.services.knowledge_service import KnowledgeService
+from app.services.ocr_service import OCRService
 
 
 class KnowledgePDFImporter:
-    def __init__(self, parser: PDFParser | None = None):
+    def __init__(
+        self,
+        parser: PDFParser | None = None,
+        ocr_service: OCRService | None = None,
+    ):
         self.parser = parser if parser is not None else pdf_parser
+        self.ocr_service = ocr_service
 
     def import_file(
         self,
@@ -15,6 +21,7 @@ class KnowledgePDFImporter:
         source_id: str,
         source_title: str,
         service: KnowledgeService,
+        ocr_empty_pages: bool = False,
     ) -> list[KnowledgeChunk]:
         page_texts = self.parser.extract_pages(str(file_path))
         chunks = []
@@ -24,6 +31,18 @@ class KnowledgePDFImporter:
             start=1,
         ):
             normalized_text = page_text.strip()
+
+            if not normalized_text and ocr_empty_pages:
+                if self.ocr_service is None:
+                    self.ocr_service = OCRService()
+
+                ocr_result = self.ocr_service.recognize_page(
+                    str(file_path),
+                    page_number,
+                )
+                normalized_text = (
+                    ocr_result.get("text") or ""
+                ).strip()
 
             if not normalized_text:
                 continue

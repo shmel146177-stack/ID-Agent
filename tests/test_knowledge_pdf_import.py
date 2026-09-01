@@ -46,3 +46,45 @@ def test_knowledge_pdf_import_saves_nonblank_pages(tmp_path):
         ),
     ]
     assert repository.load() == chunks
+
+class FakeOCRService:
+    def __init__(self):
+        self.calls = []
+
+    def recognize_page(self, file_path, page_number):
+        self.calls.append((file_path, page_number))
+
+        return {
+            "page": page_number,
+            "text": "OCR second page requirement.",
+            "ocr": True,
+        }
+
+
+def test_knowledge_pdf_import_uses_ocr_for_blank_pages(
+    tmp_path,
+):
+    repository = KnowledgeRepository(
+        tmp_path / "knowledge" / "chunks.json"
+    )
+    service = KnowledgeService.from_repository(repository)
+    ocr_service = FakeOCRService()
+    importer = KnowledgePDFImporter(
+        parser=FakePDFParser(),
+        ocr_service=ocr_service,
+    )
+
+    chunks = importer.import_file(
+        "source.pdf",
+        source_id="drawing-11240-24-as",
+        source_title="Working documentation",
+        service=service,
+        ocr_empty_pages=True,
+    )
+
+    assert [chunk.page for chunk in chunks] == [1, 2, 3]
+    assert chunks[1].text == "OCR second page requirement."
+    assert ocr_service.calls == [
+        ("source.pdf", 2),
+    ]
+    assert repository.load() == chunks
