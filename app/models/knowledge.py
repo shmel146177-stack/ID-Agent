@@ -15,7 +15,7 @@ class KnowledgeChunk(BaseModel):
         if "\n" in value or "\r" in value:
             raise ValueError("source_id must be single-line")
 
-        return value
+        return value.strip()
     source_title: str = Field(min_length=1)
 
     @field_validator("source_title")
@@ -27,7 +27,7 @@ class KnowledgeChunk(BaseModel):
         if "\n" in value or "\r" in value:
             raise ValueError("source_title must be single-line")
 
-        return value
+        return value.strip()
     section: str | None = None
 
     @field_validator("section")
@@ -41,7 +41,7 @@ class KnowledgeChunk(BaseModel):
         ):
             raise ValueError("section must be single-line")
 
-        return value
+        return value.strip() if value is not None else None
     page: int | None = Field(default=None, ge=1)
     text: str = Field(min_length=1)
 
@@ -70,4 +70,4 @@ class KnowledgeSearchResult(BaseModel):
         ):
             raise ValueError("matched_terms must be single-line")
 
-        return value
+        return [term.strip() for term in value]

@@ -76,3 +76,18 @@ def test_knowledge_search_result_rejects_multiline_matched_term():
             chunk=chunk,
             matched_terms=["grounding\nforged metadata"],
         )
+
+
+def test_knowledge_search_result_normalizes_matched_terms():
+    chunk = KnowledgeChunk(
+        source_id="sp-grounding",
+        source_title="Grounding standard",
+        text="Grounding requirement.",
+    )
+
+    result = KnowledgeSearchResult(
+        chunk=chunk,
+        matched_terms=["  grounding  ", "  requirement  "],
+    )
+
+    assert result.matched_terms == ["grounding", "requirement"]

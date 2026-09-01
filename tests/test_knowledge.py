@@ -173,3 +173,17 @@ def test_knowledge_chunk_rejects_multiline_section():
             page=10,
             text="Grounding requirement.",
         )
+
+
+def test_knowledge_chunk_normalizes_source_metadata_whitespace():
+    chunk = KnowledgeChunk(
+        source_id="  sp-grounding  ",
+        source_title="  Grounding standard  ",
+        section="  section-1  ",
+        page=10,
+        text="Grounding requirement.",
+    )
+
+    assert chunk.source_id == "sp-grounding"
+    assert chunk.source_title == "Grounding standard"
+    assert chunk.section == "section-1"
