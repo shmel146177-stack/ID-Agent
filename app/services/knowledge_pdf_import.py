@@ -22,7 +22,11 @@ class KnowledgePDFImporter:
         source_title: str,
         service: KnowledgeService,
         ocr_empty_pages: bool = False,
+        ocr_dpi: int = 150,
     ) -> list[KnowledgeChunk]:
+        if ocr_empty_pages and ocr_dpi <= 0:
+            raise ValueError("ocr_dpi must be positive")
+
         page_texts = self.parser.extract_pages(str(file_path))
         chunks = []
 
@@ -41,6 +45,7 @@ class KnowledgePDFImporter:
                 ocr_result = self.ocr_service.recognize_page(
                     str(file_path),
                     page_number,
+                    dpi=ocr_dpi,
                 )
                 normalized_text = (
                     ocr_result.get("text") or ""

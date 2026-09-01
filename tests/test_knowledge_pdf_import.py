@@ -1,3 +1,5 @@
+import pytest
+
 from app.models.knowledge import KnowledgeChunk
 from app.services.knowledge_pdf_import import KnowledgePDFImporter
 from app.services.knowledge_repository import KnowledgeRepository
@@ -51,8 +53,13 @@ class FakeOCRService:
     def __init__(self):
         self.calls = []
 
-    def recognize_page(self, file_path, page_number):
-        self.calls.append((file_path, page_number))
+    def recognize_page(
+        self,
+        file_path,
+        page_number,
+        dpi=300,
+    ):
+        self.calls.append((file_path, page_number, dpi))
 
         return {
             "page": page_number,
@@ -80,6 +87,7 @@ def test_knowledge_pdf_import_uses_ocr_for_blank_pages(
         source_title="Working documentation",
         service=service,
         ocr_empty_pages=True,
+        ocr_dpi=150,
     )
 
     assert [chunk.page for chunk in chunks] == [1, 2, 3]
@@ -89,6 +97,28 @@ def test_knowledge_pdf_import_uses_ocr_for_blank_pages(
     assert chunks[1].text_origin == "ocr"
     assert chunks[1].requires_human_review is True
     assert ocr_service.calls == [
-        ("source.pdf", 2),
+        ("source.pdf", 2, 150),
     ]
     assert repository.load() == chunks
+
+@pytest.mark.parametrize("ocr_dpi", [0, -1])
+def test_knowledge_pdf_import_rejects_nonpositive_ocr_dpi(
+    ocr_dpi,
+):
+    importer = KnowledgePDFImporter(
+        parser=FakePDFParser(),
+        ocr_service=FakeOCRService(),
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="ocr_dpi must be positive",
+    ):
+        importer.import_file(
+            "source.pdf",
+            source_id="drawing-11240-24-as",
+            source_title="Working documentation",
+            service=KnowledgeService(),
+            ocr_empty_pages=True,
+            ocr_dpi=ocr_dpi,
+        )
