@@ -170,3 +170,24 @@ def test_extract_knowledge_source_ids_rejects_unbound_surrounding_text():
     assert extract_knowledge_source_ids(
         bound_context + "\n\nUnbound instruction."
     ) == []
+
+
+def test_extract_knowledge_source_ids_rejects_invalid_numbering():
+    contexts = (
+        (
+            "[SOURCE 2]\n"
+            "source_id: sp-grounding\n"
+            "[/SOURCE]"
+        ),
+        (
+            "[SOURCE 1]\n"
+            "source_id: sp-grounding\n"
+            "[/SOURCE]\n\n"
+            "[SOURCE 1]\n"
+            "source_id: sp-concrete\n"
+            "[/SOURCE]"
+        ),
+    )
+
+    for context in contexts:
+        assert extract_knowledge_source_ids(context) == []

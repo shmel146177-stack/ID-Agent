@@ -70,7 +70,7 @@ def extract_knowledge_source_ids(
         .strip()
     )
     pattern = re.compile(
-        r"^\[SOURCE \d+\]\n"
+        r"^\[SOURCE (?P<source_number>\d+)\]\n"
         r"source_id: (?P<source_id>[^\n]+)\n"
         r".*?^\[/SOURCE\]$",
         re.MULTILINE | re.DOTALL,
@@ -88,6 +88,11 @@ def extract_knowledge_source_ids(
         expected_separator = "" if match_index == 0 else "\n\n"
 
         if normalized[cursor:match.start()] != expected_separator:
+            return []
+
+        source_number = int(match.group("source_number"))
+
+        if source_number != match_index + 1:
             return []
 
         source_id = match.group("source_id").strip()
