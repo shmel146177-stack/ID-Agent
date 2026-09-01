@@ -1172,3 +1172,75 @@ def test_ai_analyze_rejects_knowledge_context_without_source_binding():
     )
 
     assert response.status_code == 422
+
+
+def test_ai_review_get_rejects_knowledge_source_mismatch(monkeypatch):
+    from app.services.project_service import project_service
+
+    saved_review = {
+        "source_filename": "drawing.pdf",
+        "analysis_id": "analysis-1",
+        "decision": "accepted",
+        "knowledge_source_ids": ["sp-old"],
+    }
+    latest_ai = {
+        "source_filename": "drawing.pdf",
+        "analysis_id": "analysis-1",
+        "knowledge_source_ids": ["sp-current"],
+    }
+
+    monkeypatch.setattr(
+        project_service,
+        "get_ai_review",
+        lambda: saved_review,
+    )
+    monkeypatch.setattr(
+        project_service,
+        "get_ai_analysis",
+        lambda: latest_ai,
+    )
+
+    response = client.get("/ai/review")
+
+    assert response.status_code == 409
+    assert response.json() == {
+        "detail": "AI review knowledge sources mismatch",
+    }
+
+
+def test_ai_comparison_rejects_knowledge_source_mismatch(monkeypatch):
+    from app.services.project_service import project_service
+
+    comparison = {
+        "matches": [],
+        "conflicts": [],
+        "suggestions": [],
+        "requires_human_review": True,
+        "engineering_confirmation": False,
+        "analysis_id": "analysis-1",
+        "source_filename": "drawing.pdf",
+        "knowledge_source_ids": ["sp-old"],
+    }
+    latest_ai = {
+        "analysis_id": "analysis-1",
+        "source_filename": "drawing.pdf",
+        "knowledge_source_ids": ["sp-current"],
+    }
+
+    monkeypatch.setattr(
+        project_service,
+        "get_ai_comparison",
+        lambda: comparison,
+    )
+    monkeypatch.setattr(
+        project_service,
+        "get_ai_analysis",
+        lambda: latest_ai,
+    )
+
+    response = client.get("/ai/comparison")
+
+    assert response.status_code == 409
+    assert response.json() == {
+        "detail": "AI comparison knowledge sources mismatch",
+    }

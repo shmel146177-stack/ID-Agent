@@ -132,6 +132,18 @@ def get_ai_comparison():
             detail="AI comparison source filename mismatch",
         )
 
+    if comparison.get(
+        "knowledge_source_ids",
+        [],
+    ) != latest_ai.get(
+        "knowledge_source_ids",
+        [],
+    ):
+        raise HTTPException(
+            status_code=409,
+            detail="AI comparison knowledge sources mismatch",
+        )
+
     return comparison
 
 @router.get("/review")
@@ -194,6 +206,18 @@ def get_ai_review():
         raise HTTPException(
             status_code=409,
             detail="AI review source filename mismatch",
+        )
+
+    if review.get(
+        "knowledge_source_ids",
+        [],
+    ) != latest_ai.get(
+        "knowledge_source_ids",
+        [],
+    ):
+        raise HTTPException(
+            status_code=409,
+            detail="AI review knowledge sources mismatch",
         )
 
     return review
