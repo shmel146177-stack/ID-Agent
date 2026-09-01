@@ -1,3 +1,5 @@
+import pytest
+
 from app.models.knowledge import KnowledgeChunk
 from app.services.knowledge_repository import KnowledgeRepository
 
@@ -53,3 +55,50 @@ def test_knowledge_repository_uses_default_project_path(
     )
     assert expected_path.is_file()
     assert repository.load() == [chunk]
+
+def test_knowledge_repository_uses_project_specific_path(
+    tmp_path,
+):
+    projects_root = tmp_path / "projects"
+    repository = KnowledgeRepository.for_project(
+        "project-a",
+        projects_root=projects_root,
+    )
+    chunk = KnowledgeChunk(
+        source_id="drawing-11240-24-as",
+        source_title="Working documentation",
+        page=1,
+        text="Project-specific engineering information.",
+    )
+
+    repository.save([chunk])
+
+    expected_path = (
+        projects_root
+        / "project-a"
+        / "knowledge"
+        / "knowledge_chunks.json"
+    )
+    assert expected_path.is_file()
+    assert repository.load() == [chunk]
+
+@pytest.mark.parametrize(
+    "project_name",
+    [
+        "",
+        "../outside",
+        "nested/project",
+    ],
+)
+def test_knowledge_repository_rejects_invalid_project_name(
+    tmp_path,
+    project_name,
+):
+    with pytest.raises(
+        ValueError,
+        match="project_name must",
+    ):
+        KnowledgeRepository.for_project(
+            project_name,
+            projects_root=tmp_path / "projects",
+        )
