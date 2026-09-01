@@ -1,5 +1,5 @@
 ﻿from fastapi import APIRouter
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from app.models.ai_review import AIReviewDecision
 from app.services.ai_client import AIClient
@@ -21,6 +21,17 @@ class AIAnalysisRequest(BaseModel):
         default=None,
         max_length=MAX_KNOWLEDGE_CONTEXT_CHARS,
     )
+
+    @model_validator(mode="after")
+    def validate_knowledge_context_binding(self):
+        context = (self.knowledge_context or "").strip()
+
+        if context and not extract_knowledge_source_ids(context):
+            raise ValueError(
+                "knowledge_context must contain source binding"
+            )
+
+        return self
 
 
 @router.get("/status")

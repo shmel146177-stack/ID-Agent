@@ -1137,10 +1137,36 @@ def test_ai_analysis_request_accepts_maximum_knowledge_context():
         MAX_KNOWLEDGE_CONTEXT_CHARS,
     )
 
+    prefix = (
+        "[SOURCE 1]\n"
+        "source_id: sp-test\n"
+        "text:\n"
+    )
+    suffix = "\n[/SOURCE]"
+    content_length = (
+        MAX_KNOWLEDGE_CONTEXT_CHARS
+        - len(prefix)
+        - len(suffix)
+    )
+    knowledge_context = prefix + ("x" * content_length) + suffix
+
     request = AIAnalysisRequest(
         filename="document.pdf",
         text="Document text.",
-        knowledge_context="x" * MAX_KNOWLEDGE_CONTEXT_CHARS,
+        knowledge_context=knowledge_context,
     )
 
     assert len(request.knowledge_context) == MAX_KNOWLEDGE_CONTEXT_CHARS
+
+
+def test_ai_analyze_rejects_knowledge_context_without_source_binding():
+    response = client.post(
+        "/ai/analyze",
+        json={
+            "filename": "document.pdf",
+            "text": "Document text.",
+            "knowledge_context": "Unbound reference text.",
+        },
+    )
+
+    assert response.status_code == 422
