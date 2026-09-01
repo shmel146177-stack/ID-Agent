@@ -1,7 +1,9 @@
 ﻿import asyncio
+import pytest
 from io import BytesIO
 
 from starlette.datastructures import UploadFile
+from fastapi import HTTPException
 from fastapi.testclient import TestClient
 from app.models.ai_analysis import AIAnalysisResult
 
@@ -182,9 +184,14 @@ def test_upload_document_pdf_with_explicit_ai(monkeypatch, tmp_path):
             assert isinstance(ai_client, AIClientStub)
             return cls()
 
-        def analyze_text(self, filename, text):
+        def analyze_text(self, filename, text, knowledge_context=None):
             assert filename == "test.pdf"
             assert text == "PDF document text"
+            assert knowledge_context == (
+                "[SOURCE 1]\n"
+                "source_id: sp-grounding\n"
+                "[/SOURCE]"
+            )
 
             return AIAnalysisResult(
                 summary="AI analysis completed.",
@@ -210,10 +217,17 @@ def test_upload_document_pdf_with_explicit_ai(monkeypatch, tmp_path):
         file=BytesIO(b"PDF DATA"),
     )
 
+    knowledge_context = (
+        "[SOURCE 1]\n"
+        "source_id: sp-grounding\n"
+        "[/SOURCE]"
+    )
+
     result = asyncio.run(
         documents_module.upload_document(
             upload,
             use_ai=True,
+            knowledge_context=knowledge_context,
         )
     )
 
@@ -227,6 +241,16 @@ def test_upload_document_pdf_with_explicit_ai(monkeypatch, tmp_path):
     )
     assert result["ai_analysis"]["requires_human_review"] is True
     assert result["ai_analysis"]["engineering_confirmation"] is False
+    assert result["ai_analysis"]["knowledge_source_ids"] == [
+        "sp-grounding",
+    ]
+
+    saved_comparison = (
+        documents_module.project_service.get_ai_comparison()
+    )
+    assert saved_comparison["knowledge_source_ids"] == [
+        "sp-grounding",
+    ]
 
 
 def test_upload_document_http_with_explicit_ai(monkeypatch, tmp_path):
@@ -579,3 +603,39 @@ def test_upload_document_http_does_not_call_ai_by_default(
     assert result["document_type"] == "deterministic-drawing"
     assert result["drawing_number"] == "TEST-001"
     assert "ai_analysis" not in result
+
+
+def test_upload_document_rejects_unbound_knowledge_context():
+    upload = UploadFile(
+        filename="test.pdf",
+        file=BytesIO(b"PDF DATA"),
+    )
+
+    with pytest.raises(HTTPException) as exc_info:
+        asyncio.run(
+            documents_module.upload_document(
+                upload,
+                use_ai=True,
+                knowledge_context="Unbound reference text.",
+            )
+        )
+
+    assert exc_info.value.status_code == 422
+
+
+def test_upload_document_reads_knowledge_context_from_form():
+    response = client.post(
+        "/upload?use_ai=true",
+        files={
+            "file": (
+                "test.pdf",
+                b"PDF DATA",
+                "application/pdf",
+            )
+        },
+        data={
+            "knowledge_context": "Unbound reference text.",
+        },
+    )
+
+    assert response.status_code == 422

@@ -99,6 +99,7 @@ class ProjectService:
         data: dict,
         analysis_id: str,
         source_filename: str,
+        knowledge_source_ids: list[str] | None = None,
     ):
         directory = os.path.dirname(
             self.ai_comparison_file_path
@@ -113,6 +114,11 @@ class ProjectService:
         data_to_save = dict(data)
         data_to_save["analysis_id"] = analysis_id
         data_to_save["source_filename"] = source_filename
+
+        if knowledge_source_ids is not None:
+            data_to_save["knowledge_source_ids"] = list(
+                knowledge_source_ids
+            )
 
         with open(
             self.ai_comparison_file_path,

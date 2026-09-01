@@ -4,14 +4,16 @@ from pydantic import BaseModel, Field, model_validator
 from app.models.ai_review import AIReviewDecision
 from app.services.ai_client import AIClient
 from app.services.ai_document_analysis import AIDocumentAnalysisService
-from app.services.knowledge_context import extract_knowledge_source_ids
+from app.services.knowledge_context import (
+    MAX_KNOWLEDGE_CONTEXT_CHARS,
+    extract_knowledge_source_ids,
+)
 from app.services.project_service import project_service
 
 
 router = APIRouter(prefix="/ai", tags=["AI"])
 
 
-MAX_KNOWLEDGE_CONTEXT_CHARS = 20_000
 
 
 class AIAnalysisRequest(BaseModel):

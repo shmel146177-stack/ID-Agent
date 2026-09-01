@@ -145,6 +145,7 @@ def test_project_service_saves_ai_comparison_with_source_binding(tmp_path):
         comparison,
         analysis_id="analysis-123",
         source_filename="drawing.pdf",
+        knowledge_source_ids=["sp-grounding"],
     )
 
     saved = service.get_ai_comparison()
@@ -152,6 +153,7 @@ def test_project_service_saves_ai_comparison_with_source_binding(tmp_path):
     assert saved is not None
     assert saved["analysis_id"] == "analysis-123"
     assert saved["source_filename"] == "drawing.pdf"
+    assert saved["knowledge_source_ids"] == ["sp-grounding"]
     assert saved["suggestions"] == comparison["suggestions"]
     assert saved["requires_human_review"] is True
     assert saved["engineering_confirmation"] is False

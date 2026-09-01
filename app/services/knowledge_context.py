@@ -3,6 +3,9 @@ import re
 from app.models.knowledge import KnowledgeSearchResult
 
 
+MAX_KNOWLEDGE_CONTEXT_CHARS = 20_000
+
+
 def build_knowledge_context(
     results: list[KnowledgeSearchResult],
     max_chars: int | None = None,
