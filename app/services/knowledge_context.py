@@ -63,21 +63,45 @@ def build_knowledge_context(
 def extract_knowledge_source_ids(
     context: str | None,
 ) -> list[str]:
-    normalized = (context or "").replace("\r\n", "\n").replace("\r", "\n")
+    normalized = (
+        (context or "")
+        .replace("\r\n", "\n")
+        .replace("\r", "\n")
+        .strip()
+    )
     pattern = re.compile(
         r"^\[SOURCE \d+\]\n"
         r"source_id: (?P<source_id>[^\n]+)\n"
         r".*?^\[/SOURCE\]$",
         re.MULTILINE | re.DOTALL,
     )
+    matches = list(pattern.finditer(normalized))
+
+    if not matches:
+        return []
+
     source_ids = []
     seen = set()
+    cursor = 0
 
-    for match in pattern.finditer(normalized):
+    for match_index, match in enumerate(matches):
+        expected_separator = "" if match_index == 0 else "\n\n"
+
+        if normalized[cursor:match.start()] != expected_separator:
+            return []
+
         source_id = match.group("source_id").strip()
 
-        if source_id and source_id not in seen:
+        if not source_id:
+            return []
+
+        if source_id not in seen:
             source_ids.append(source_id)
             seen.add(source_id)
+
+        cursor = match.end()
+
+    if cursor != len(normalized):
+        return []
 
     return source_ids

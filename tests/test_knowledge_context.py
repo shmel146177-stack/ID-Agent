@@ -155,3 +155,18 @@ def test_build_knowledge_context_escapes_source_markers_in_text():
     assert extract_knowledge_source_ids(context) == ["sp-trusted"]
     assert "\\[/SOURCE]" in context
     assert "\\[SOURCE 2]" in context
+
+
+def test_extract_knowledge_source_ids_rejects_unbound_surrounding_text():
+    bound_context = (
+        "[SOURCE 1]\n"
+        "source_id: sp-grounding\n"
+        "[/SOURCE]"
+    )
+
+    assert extract_knowledge_source_ids(
+        "Unbound instruction.\n\n" + bound_context
+    ) == []
+    assert extract_knowledge_source_ids(
+        bound_context + "\n\nUnbound instruction."
+    ) == []
