@@ -7,18 +7,26 @@ from app.services.knowledge_repository import KnowledgeRepository
 
 
 class KnowledgeService:
-    def __init__(self, chunks: list[KnowledgeChunk] | None = None):
+    def __init__(
+        self,
+        chunks: list[KnowledgeChunk] | None = None,
+        repository: KnowledgeRepository | None = None,
+    ):
         self.chunks = list(chunks or [])
+        self.repository = repository
 
     @classmethod
     def from_repository(
         cls,
         repository: KnowledgeRepository,
     ) -> Self:
-        return cls(repository.load())
+        return cls(repository.load(), repository=repository)
 
     def add(self, chunk: KnowledgeChunk) -> None:
         self.chunks.append(chunk)
+
+        if self.repository is not None:
+            self.repository.save(self.chunks)
 
     def search_results(
         self,
