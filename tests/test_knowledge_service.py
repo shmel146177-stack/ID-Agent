@@ -1,7 +1,9 @@
 import pytest
 
 from app.models.knowledge import KnowledgeChunk, KnowledgeSearchResult
+from app.services.knowledge_repository import KnowledgeRepository
 from app.services.knowledge_service import KnowledgeService
+
 
 
 def test_knowledge_service_finds_chunk_by_text():
@@ -240,3 +242,20 @@ def test_knowledge_service_build_context_respects_character_limit():
     )
 
     assert context == ""
+
+def test_knowledge_service_loads_chunks_from_repository(tmp_path):
+    chunk = KnowledgeChunk(
+        source_id="sp-grounding",
+        source_title="Grounding standard",
+        section="section-1",
+        page=10,
+        text="Grounding conductors must follow the design.",
+    )
+    repository = KnowledgeRepository(
+        tmp_path / "knowledge" / "chunks.json"
+    )
+    repository.save([chunk])
+
+    service = KnowledgeService.from_repository(repository)
+
+    assert service.search("grounding") == [chunk]

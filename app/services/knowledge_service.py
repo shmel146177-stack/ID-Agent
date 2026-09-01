@@ -1,12 +1,21 @@
 import re
+from typing import Self
 
 from app.models.knowledge import KnowledgeChunk, KnowledgeSearchResult
 from app.services.knowledge_context import build_knowledge_context
+from app.services.knowledge_repository import KnowledgeRepository
 
 
 class KnowledgeService:
     def __init__(self, chunks: list[KnowledgeChunk] | None = None):
         self.chunks = list(chunks or [])
+
+    @classmethod
+    def from_repository(
+        cls,
+        repository: KnowledgeRepository,
+    ) -> Self:
+        return cls(repository.load())
 
     def add(self, chunk: KnowledgeChunk) -> None:
         self.chunks.append(chunk)
