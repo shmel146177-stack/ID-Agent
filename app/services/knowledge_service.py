@@ -23,6 +23,9 @@ class KnowledgeService:
         return cls(repository.load(), repository=repository)
 
     def add(self, chunk: KnowledgeChunk) -> None:
+        if chunk in self.chunks:
+            return
+
         self.chunks.append(chunk)
 
         if self.repository is not None:

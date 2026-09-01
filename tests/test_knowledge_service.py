@@ -278,3 +278,24 @@ def test_knowledge_service_persists_added_chunk_in_repository(
     service.add(chunk)
 
     assert repository.load() == [chunk]
+
+def test_knowledge_service_does_not_persist_duplicate_chunk(
+    tmp_path,
+):
+    repository = KnowledgeRepository(
+        tmp_path / "knowledge" / "chunks.json"
+    )
+    service = KnowledgeService.from_repository(repository)
+    chunk = KnowledgeChunk(
+        source_id="sp-grounding",
+        source_title="Grounding standard",
+        section="section-1",
+        page=10,
+        text="Grounding conductors must follow the design.",
+    )
+
+    service.add(chunk)
+    service.add(chunk)
+
+    assert service.chunks == [chunk]
+    assert repository.load() == [chunk]
