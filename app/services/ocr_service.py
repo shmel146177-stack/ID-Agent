@@ -103,6 +103,7 @@ class OCRService:
         page_number: int,
         language: str = "rus+eng",
         dpi: int = 300,
+        psm: int = 6,
     ) -> dict:
         """
         OCR одной страницы PDF.
@@ -159,7 +160,7 @@ class OCRService:
                     text = pytesseract.image_to_string(
                         corrected_image,
                         lang=language,
-                        config="--psm 6",
+                        config=f"--psm {psm}",
                     )
 
                 finally:

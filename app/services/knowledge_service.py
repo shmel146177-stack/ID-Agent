@@ -31,6 +31,35 @@ class KnowledgeService:
         if self.repository is not None:
             self.repository.save(self.chunks)
 
+    def upsert(self, chunk: KnowledgeChunk) -> None:
+        updated_chunks = []
+        replaced = False
+
+        for current_chunk in self.chunks:
+            same_source_page = (
+                current_chunk.source_id == chunk.source_id
+                and current_chunk.page == chunk.page
+            )
+
+            if same_source_page:
+                if not replaced:
+                    updated_chunks.append(chunk)
+                    replaced = True
+                continue
+
+            updated_chunks.append(current_chunk)
+
+        if not replaced:
+            updated_chunks.append(chunk)
+
+        if updated_chunks == self.chunks:
+            return
+
+        self.chunks = updated_chunks
+
+        if self.repository is not None:
+            self.repository.save(self.chunks)
+
     def search_results(
         self,
         query: str,

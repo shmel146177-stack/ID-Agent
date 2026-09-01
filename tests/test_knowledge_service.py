@@ -299,3 +299,35 @@ def test_knowledge_service_does_not_persist_duplicate_chunk(
 
     assert service.chunks == [chunk]
     assert repository.load() == [chunk]
+
+
+def test_knowledge_service_upserts_existing_source_page(
+    tmp_path,
+):
+    repository = KnowledgeRepository(
+        tmp_path / "knowledge" / "chunks.json"
+    )
+    original = KnowledgeChunk(
+        source_id="drawing-11240-24-as",
+        source_title="Working documentation",
+        page=18,
+        text="Old OCR text.",
+        text_origin="ocr",
+        requires_human_review=True,
+    )
+    repository.save([original])
+    service = KnowledgeService.from_repository(repository)
+
+    updated = KnowledgeChunk(
+        source_id="drawing-11240-24-as",
+        source_title="Working documentation",
+        page=18,
+        text="Updated OCR table text.",
+        text_origin="ocr",
+        requires_human_review=True,
+    )
+
+    service.upsert(updated)
+
+    assert service.chunks == [updated]
+    assert repository.load() == [updated]
