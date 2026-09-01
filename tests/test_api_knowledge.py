@@ -57,3 +57,49 @@ def test_knowledge_search_limits_default_results(
 
     assert response.status_code == 200
     assert len(response.json()) == 20
+
+def test_knowledge_search_reads_project_repository(
+    tmp_path,
+    monkeypatch,
+):
+    monkeypatch.chdir(tmp_path)
+    chunk = KnowledgeChunk(
+        source_id="project-drawing",
+        source_title="Project working documentation",
+        page=1,
+        text="Grounding requirement for this project.",
+    )
+    repository = KnowledgeRepository.for_project(
+        "project-a"
+    )
+    repository.save([chunk])
+
+    response = client.get(
+        "/knowledge/search",
+        params={
+            "query": "grounding",
+            "project_name": "project-a",
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json() == [
+        {
+            "chunk": chunk.model_dump(mode="json"),
+            "matched_terms": ["grounding"],
+        }
+    ]
+
+def test_knowledge_search_rejects_invalid_project_name():
+    response = client.get(
+        "/knowledge/search",
+        params={
+            "query": "grounding",
+            "project_name": "../outside",
+        },
+    )
+
+    assert response.status_code == 400
+    assert response.json()["detail"].startswith(
+        "project_name must"
+    )

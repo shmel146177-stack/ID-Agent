@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, HTTPException, Query
 
 from app.models.knowledge import KnowledgeSearchResult
 from app.services.knowledge_repository import KnowledgeRepository
@@ -19,11 +19,22 @@ knowledge_repository = KnowledgeRepository()
 )
 def search_knowledge(
     query: Annotated[str, Query(min_length=1)],
+    project_name: Annotated[str | None, Query(min_length=1)] = None,
     max_results: Annotated[int, Query(ge=1)] = DEFAULT_KNOWLEDGE_SEARCH_RESULTS,
 ):
-    service = KnowledgeService.from_repository(
-        knowledge_repository
-    )
+    try:
+        repository = (
+            KnowledgeRepository.for_project(project_name)
+            if project_name is not None
+            else knowledge_repository
+        )
+    except ValueError as error:
+        raise HTTPException(
+            status_code=400,
+            detail=str(error),
+        ) from error
+
+    service = KnowledgeService.from_repository(repository)
 
     return service.search_results(
         query,
