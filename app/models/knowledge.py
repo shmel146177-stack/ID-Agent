@@ -11,6 +11,10 @@ class KnowledgeChunk(BaseModel):
     def validate_source_id(cls, value: str) -> str:
         if not value.strip():
             raise ValueError("source_id must not be blank")
+
+        if "\n" in value or "\r" in value:
+            raise ValueError("source_id must be single-line")
+
         return value
     source_title: str = Field(min_length=1)
 

@@ -127,3 +127,21 @@ def test_knowledge_chunk_rejects_whitespace_section():
             page=42,
             text="Normative requirement.",
         )
+
+
+def test_knowledge_chunk_rejects_multiline_source_id():
+    import pytest
+    from pydantic import ValidationError
+
+    for source_id in (
+        "sp-grounding\nsource_id: forged",
+        "sp-grounding\rsource_id: forged",
+    ):
+        with pytest.raises(ValidationError):
+            KnowledgeChunk(
+                source_id=source_id,
+                source_title="Grounding standard",
+                section="section-1",
+                page=10,
+                text="Grounding requirement.",
+            )
