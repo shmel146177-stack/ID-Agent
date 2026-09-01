@@ -103,3 +103,46 @@ def test_knowledge_search_rejects_invalid_project_name():
     assert response.json()["detail"].startswith(
         "project_name must"
     )
+
+
+def test_knowledge_review_lists_pending_project_pages(
+    tmp_path,
+    monkeypatch,
+):
+    monkeypatch.chdir(tmp_path)
+    native = KnowledgeChunk(
+        source_id="project-drawing",
+        source_title="Project working documentation",
+        page=1,
+        text="Native page text.",
+    )
+    pending = KnowledgeChunk(
+        source_id="project-drawing",
+        source_title="Project working documentation",
+        page=2,
+        text="OCR page awaiting review.",
+        text_origin="ocr",
+        requires_human_review=True,
+    )
+    reviewed = KnowledgeChunk(
+        source_id="project-drawing",
+        source_title="Project working documentation",
+        page=3,
+        text="Reviewed OCR page.",
+        text_origin="ocr",
+        requires_human_review=False,
+    )
+    repository = KnowledgeRepository.for_project(
+        "project-a"
+    )
+    repository.save([native, pending, reviewed])
+
+    response = client.get(
+        "/knowledge/review/pending",
+        params={"project_name": "project-a"},
+    )
+
+    assert response.status_code == 200
+    assert response.json() == [
+        pending.model_dump(mode="json")
+    ]
