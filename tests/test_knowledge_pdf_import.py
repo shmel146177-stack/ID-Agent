@@ -84,6 +84,10 @@ def test_knowledge_pdf_import_uses_ocr_for_blank_pages(
 
     assert [chunk.page for chunk in chunks] == [1, 2, 3]
     assert chunks[1].text == "OCR second page requirement."
+    assert chunks[0].text_origin == "native"
+    assert chunks[0].requires_human_review is False
+    assert chunks[1].text_origin == "ocr"
+    assert chunks[1].requires_human_review is True
     assert ocr_service.calls == [
         ("source.pdf", 2),
     ]

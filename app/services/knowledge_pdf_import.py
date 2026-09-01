@@ -31,6 +31,8 @@ class KnowledgePDFImporter:
             start=1,
         ):
             normalized_text = page_text.strip()
+            text_origin = "native"
+            requires_human_review = False
 
             if not normalized_text and ocr_empty_pages:
                 if self.ocr_service is None:
@@ -44,6 +46,10 @@ class KnowledgePDFImporter:
                     ocr_result.get("text") or ""
                 ).strip()
 
+                if normalized_text:
+                    text_origin = "ocr"
+                    requires_human_review = True
+
             if not normalized_text:
                 continue
 
@@ -51,6 +57,8 @@ class KnowledgePDFImporter:
                 source_id=source_id,
                 source_title=source_title,
                 page=page_number,
+                text_origin=text_origin,
+                requires_human_review=requires_human_review,
                 text=normalized_text,
             )
             service.add(chunk)

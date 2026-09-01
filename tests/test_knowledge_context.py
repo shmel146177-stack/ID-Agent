@@ -28,6 +28,8 @@ def test_build_knowledge_context_binds_text_to_source():
         "source_title: Grounding standard\n"
         "section: section-1\n"
         "page: 10\n"
+        "text_origin: native\n"
+        "requires_human_review: false\n"
         "matched_terms: grounding, design\n"
         "text:\n"
         "Grounding conductors must be installed according to design.\n"
@@ -191,3 +193,22 @@ def test_extract_knowledge_source_ids_rejects_invalid_numbering():
 
     for context in contexts:
         assert extract_knowledge_source_ids(context) == []
+
+def test_build_knowledge_context_marks_ocr_chunks_for_review():
+    chunk = KnowledgeChunk(
+        source_id="project-drawing",
+        source_title="Project working documentation",
+        page=5,
+        text="OCR extracted requirement.",
+        text_origin="ocr",
+        requires_human_review=True,
+    )
+    result = KnowledgeSearchResult(
+        chunk=chunk,
+        matched_terms=["requirement"],
+    )
+
+    context = build_knowledge_context([result])
+
+    assert "text_origin: ocr" in context
+    assert "requires_human_review: true" in context

@@ -102,3 +102,30 @@ def test_knowledge_repository_rejects_invalid_project_name(
             project_name,
             projects_root=tmp_path / "projects",
         )
+
+def test_knowledge_repository_loads_legacy_quality_defaults(
+    tmp_path,
+):
+    path = tmp_path / "knowledge" / "chunks.json"
+    path.parent.mkdir(parents=True)
+    path.write_text(
+        (
+            "[\n"
+            "  {\n"
+            '    "source_id": "legacy-source",\n'
+            '    "source_title": "Legacy source",\n'
+            '    "section": null,\n'
+            '    "page": 1,\n'
+            '    "text": "Legacy requirement."\n'
+            "  }\n"
+            "]"
+        ),
+        encoding="utf-8",
+    )
+    repository = KnowledgeRepository(path)
+
+    chunks = repository.load()
+
+    assert len(chunks) == 1
+    assert chunks[0].text_origin == "native"
+    assert chunks[0].requires_human_review is False

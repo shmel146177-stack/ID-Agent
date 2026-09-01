@@ -39,6 +39,11 @@ def build_knowledge_context(
                 f"source_title: {chunk.source_title}",
                 f"section: {section}",
                 f"page: {page}",
+                f"text_origin: {chunk.text_origin}",
+                (
+                    "requires_human_review: "
+                    f"{str(chunk.requires_human_review).lower()}"
+                ),
                 f"matched_terms: {', '.join(result.matched_terms)}",
                 "text:",
                 safe_text,

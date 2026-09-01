@@ -1,3 +1,5 @@
+from typing import Literal
+
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
@@ -43,6 +45,8 @@ class KnowledgeChunk(BaseModel):
 
         return value.strip() if value is not None else None
     page: int | None = Field(default=None, ge=1)
+    text_origin: Literal["native", "ocr"] = "native"
+    requires_human_review: bool = False
     text: str = Field(min_length=1)
 
     @field_validator("text")
