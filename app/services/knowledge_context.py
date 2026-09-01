@@ -6,6 +6,16 @@ from app.models.knowledge import KnowledgeSearchResult
 MAX_KNOWLEDGE_CONTEXT_CHARS = 20_000
 
 
+def _escape_source_markers(text: str) -> str:
+    normalized = text.replace("\r\n", "\n").replace("\r", "\n")
+
+    return re.sub(
+        r"(?m)^(\[SOURCE \d+\]|\[/SOURCE\])$",
+        r"\\\1",
+        normalized,
+    )
+
+
 def build_knowledge_context(
     results: list[KnowledgeSearchResult],
     max_chars: int | None = None,
@@ -20,6 +30,7 @@ def build_knowledge_context(
         chunk = result.chunk
         section = chunk.section or "not specified"
         page = str(chunk.page) if chunk.page is not None else "not specified"
+        safe_text = _escape_source_markers(chunk.text)
 
         block = "\n".join(
             (
@@ -30,7 +41,7 @@ def build_knowledge_context(
                 f"page: {page}",
                 f"matched_terms: {', '.join(result.matched_terms)}",
                 "text:",
-                chunk.text,
+                safe_text,
                 "[/SOURCE]",
             )
         )
