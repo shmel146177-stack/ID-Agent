@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -47,6 +48,8 @@ class KnowledgeChunk(BaseModel):
     page: int | None = Field(default=None, ge=1)
     text_origin: Literal["native", "ocr"] = "native"
     requires_human_review: bool = False
+    reviewed_by: str | None = None
+    reviewed_at: datetime | None = None
     text: str = Field(min_length=1)
 
     @field_validator("text")

@@ -1,3 +1,5 @@
+import pytest
+
 from fastapi.testclient import TestClient
 
 from app.models.knowledge import KnowledgeChunk
@@ -146,3 +148,96 @@ def test_knowledge_review_lists_pending_project_pages(
     assert response.json() == [
         pending.model_dump(mode="json")
     ]
+
+
+def test_knowledge_review_corrects_ocr_page(
+    tmp_path,
+    monkeypatch,
+):
+    monkeypatch.chdir(tmp_path)
+    pending = KnowledgeChunk(
+        source_id="project-drawing",
+        source_title="Project working documentation",
+        page=2,
+        text="Incorrect OCR page text.",
+        text_origin="ocr",
+        requires_human_review=True,
+    )
+    repository = KnowledgeRepository.for_project(
+        "project-a"
+    )
+    repository.save([pending])
+
+    response = client.patch(
+        "/knowledge/review",
+        params={"project_name": "project-a"},
+        json={
+            "source_id": "project-drawing",
+            "page": 2,
+            "text": "Corrected OCR page text.",
+            "reviewed_by": "Test engineer",
+        },
+    )
+
+    assert response.status_code == 200
+
+    result = response.json()
+
+    assert result["text"] == "Corrected OCR page text."
+    assert result["text_origin"] == "ocr"
+    assert result["requires_human_review"] is False
+    assert result["reviewed_by"] == "Test engineer"
+    assert result["reviewed_at"] is not None
+
+    saved = repository.load()
+
+    assert len(saved) == 1
+    assert saved[0].text == "Corrected OCR page text."
+    assert saved[0].requires_human_review is False
+    assert saved[0].reviewed_by == "Test engineer"
+    assert saved[0].reviewed_at is not None
+
+
+@pytest.mark.parametrize(
+    ("field_name", "field_value"),
+    [
+        ("source_id", "   "),
+        ("text", "   "),
+        ("reviewed_by", "   "),
+    ],
+)
+def test_knowledge_review_rejects_blank_fields(
+    tmp_path,
+    monkeypatch,
+    field_name,
+    field_value,
+):
+    monkeypatch.chdir(tmp_path)
+    pending = KnowledgeChunk(
+        source_id="project-drawing",
+        source_title="Project working documentation",
+        page=2,
+        text="Incorrect OCR page text.",
+        text_origin="ocr",
+        requires_human_review=True,
+    )
+    repository = KnowledgeRepository.for_project(
+        "project-a"
+    )
+    repository.save([pending])
+    request_data = {
+        "source_id": "project-drawing",
+        "page": 2,
+        "text": "Corrected OCR page text.",
+        "reviewed_by": "Test engineer",
+    }
+    request_data[field_name] = field_value
+
+    response = client.patch(
+        "/knowledge/review",
+        params={"project_name": "project-a"},
+        json=request_data,
+    )
+
+    assert response.status_code == 422
+    assert repository.load() == [pending]
