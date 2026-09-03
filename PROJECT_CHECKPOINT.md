@@ -2,7 +2,7 @@
 
 Дата проверки: 03.09.2026
 Ветка: `develop`
-Текущая контрольная точка: `523981c` - `Report excluded unreviewed OCR pages`
+Текущая контрольная точка: `5010206` - `Report knowledge pages included in AI context`
 
 ## Состояние репозитория
 
@@ -16,7 +16,7 @@
 
 Полный набор тестов:
 
-`395 passed, 1 skipped`
+`396 passed, 1 skipped`
 
 Пропущенный тест связан с невозможностью создания симлинков в текущей Windows-среде и не является ошибкой ID-Agent.
 
@@ -365,11 +365,11 @@ Next environment-improvement plan:
 
 Текущая стабильная точка приложения:
 
-`523981c` - `Report excluded unreviewed OCR pages`
+`5010206` - `Report knowledge pages included in AI context`
 
 Регрессионная проверка:
 
-`395 passed, 1 skipped`
+`396 passed, 1 skipped`
 <!-- END PROJECT OCR REVIEW STATUS -->
 
 <!-- BEGIN AI OCR CONTEXT SAFETY STATUS -->
@@ -390,11 +390,11 @@ Next environment-improvement plan:
 - 3 теста фильтрации на уровне `KnowledgeService`;
 - 2 теста управления фильтрацией через `/ai/analyze`;
 - Ruff пройден без ошибок;
-- полная регрессия: `395 passed, 1 skipped`.
+- полная регрессия: `396 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`523981c` - `Report excluded unreviewed OCR pages`
+`5010206` - `Report knowledge pages included in AI context`
 <!-- END AI OCR CONTEXT SAFETY STATUS -->
 
 <!-- BEGIN AI OCR EXCLUSION DIAGNOSTICS STATUS -->
@@ -415,9 +415,34 @@ Next environment-improvement plan:
 
 - сервисный и API-тесты пройдены;
 - Ruff пройден без ошибок;
-- полная регрессия: `395 passed, 1 skipped`.
+- полная регрессия: `396 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`523981c` - `Report excluded unreviewed OCR pages`
+`5010206` - `Report knowledge pages included in AI context`
 <!-- END AI OCR EXCLUSION DIAGNOSTICS STATUS -->
+
+<!-- BEGIN AI INCLUDED KNOWLEDGE PAGES STATUS -->
+## Аудит страниц AI-контекста - 03.09.2026
+
+Реализовано:
+
+- поле `included_knowledge_pages` в результате AI-анализа;
+- каждый элемент содержит `source_id` и `page`;
+- перечень строится из фактически сформированного контекста;
+- учитываются фильтрация OCR, `max_results` и `max_chars`;
+- при отсутствии безопасного контекста возвращается пустой список;
+- сведения сохраняются вместе с результатом AI-анализа;
+- поле `excluded_unreviewed_ocr_pages` продолжает показывать исключенные страницы.
+
+Проверки:
+
+- тест извлечения страниц из контекста;
+- API-тесты проверенного и явно включенного OCR;
+- Ruff пройден без ошибок;
+- полная регрессия: `396 passed, 1 skipped`.
+
+Текущая стабильная точка:
+
+`5010206` - `Report knowledge pages included in AI context`
+<!-- END AI INCLUDED KNOWLEDGE PAGES STATUS -->
