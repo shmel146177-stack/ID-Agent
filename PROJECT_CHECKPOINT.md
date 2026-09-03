@@ -2,7 +2,7 @@
 
 Дата проверки: 03.09.2026
 Ветка: `develop`
-Текущая контрольная точка: `5010206` - `Report knowledge pages included in AI context`
+Текущая контрольная точка: `e4a7d44` - `Test autonomous AI mode`
 
 ## Состояние репозитория
 
@@ -16,7 +16,7 @@
 
 Полный набор тестов:
 
-`396 passed, 1 skipped`
+`397 passed, 1 skipped`
 
 Пропущенный тест связан с невозможностью создания симлинков в текущей Windows-среде и не является ошибкой ID-Agent.
 
@@ -365,11 +365,11 @@ Next environment-improvement plan:
 
 Текущая стабильная точка приложения:
 
-`5010206` - `Report knowledge pages included in AI context`
+`e4a7d44` - `Test autonomous AI mode`
 
 Регрессионная проверка:
 
-`396 passed, 1 skipped`
+`397 passed, 1 skipped`
 <!-- END PROJECT OCR REVIEW STATUS -->
 
 <!-- BEGIN AI OCR CONTEXT SAFETY STATUS -->
@@ -390,11 +390,11 @@ Next environment-improvement plan:
 - 3 теста фильтрации на уровне `KnowledgeService`;
 - 2 теста управления фильтрацией через `/ai/analyze`;
 - Ruff пройден без ошибок;
-- полная регрессия: `396 passed, 1 skipped`.
+- полная регрессия: `397 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`5010206` - `Report knowledge pages included in AI context`
+`e4a7d44` - `Test autonomous AI mode`
 <!-- END AI OCR CONTEXT SAFETY STATUS -->
 
 <!-- BEGIN AI OCR EXCLUSION DIAGNOSTICS STATUS -->
@@ -415,11 +415,11 @@ Next environment-improvement plan:
 
 - сервисный и API-тесты пройдены;
 - Ruff пройден без ошибок;
-- полная регрессия: `396 passed, 1 skipped`.
+- полная регрессия: `397 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`5010206` - `Report knowledge pages included in AI context`
+`e4a7d44` - `Test autonomous AI mode`
 <!-- END AI OCR EXCLUSION DIAGNOSTICS STATUS -->
 
 <!-- BEGIN AI INCLUDED KNOWLEDGE PAGES STATUS -->
@@ -440,9 +440,40 @@ Next environment-improvement plan:
 - тест извлечения страниц из контекста;
 - API-тесты проверенного и явно включенного OCR;
 - Ruff пройден без ошибок;
-- полная регрессия: `396 passed, 1 skipped`.
+- полная регрессия: `397 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`5010206` - `Report knowledge pages included in AI context`
+`e4a7d44` - `Test autonomous AI mode`
 <!-- END AI INCLUDED KNOWLEDGE PAGES STATUS -->
+
+<!-- BEGIN AUTONOMOUS AI MODE STATUS -->
+## Автономный режим AI - 03.09.2026
+
+Проверено:
+
+- при наличии API-ключа и `ID_AGENT_AI_ENABLED=false` внешний backend OpenAI не создается;
+- endpoint `/ai/status` возвращает `configured: true`, `enabled: false`, `active: false`;
+- endpoint `/ai/analyze` возвращает безопасный локальный результат;
+- данные теста сохраняются только во временной папке;
+- активный режим AI продолжает проходить отдельный тест.
+
+Проверка внешнего API:
+
+- API-ключ был временно загружен в переменную окружения;
+- сетевой запрос не дошел до OpenAI из-за ошибки DNS-разрешения `api.openai.com`;
+- в панели OpenAI подтвержден остаток API-кредита `0,00 долларов`;
+- API-ключ удален из текущего сеанса PowerShell и не сохранен в проекте;
+- для дальнейшей работы выбран автономный режим.
+
+Автоматические проверки:
+
+- тест автономного и активного режимов: `2 passed`;
+- API-тесты: `48 passed`;
+- Ruff пройден без ошибок;
+- полная регрессия: `397 passed, 1 skipped`.
+
+Текущая стабильная точка:
+
+`e4a7d44` - `Test autonomous AI mode`
+<!-- END AUTONOMOUS AI MODE STATUS -->
