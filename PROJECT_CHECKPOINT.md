@@ -2,7 +2,7 @@
 
 Дата проверки: 03.09.2026
 Ветка: `develop`
-Текущая контрольная точка: `6efd5eb` - `Review and correct project knowledge OCR`
+Текущая контрольная точка: `3797115` - `Exclude unreviewed OCR from AI context`
 
 ## Состояние репозитория
 
@@ -16,7 +16,7 @@
 
 Полный набор тестов:
 
-`389 passed, 1 skipped`
+`394 passed, 1 skipped`
 
 Пропущенный тест связан с невозможностью создания симлинков в текущей Windows-среде и не является ошибкой ID-Agent.
 
@@ -365,9 +365,34 @@ Next environment-improvement plan:
 
 Текущая стабильная точка приложения:
 
-`6efd5eb` - `Review and correct project knowledge OCR`
+`3797115` - `Exclude unreviewed OCR from AI context`
 
 Регрессионная проверка:
 
-`389 passed, 1 skipped`
+`394 passed, 1 skipped`
 <!-- END PROJECT OCR REVIEW STATUS -->
+
+<!-- BEGIN AI OCR CONTEXT SAFETY STATUS -->
+## Защита AI-контекста от непроверенного OCR - 03.09.2026
+
+Реализовано:
+
+- непроверенные OCR-фрагменты по умолчанию исключаются из AI-контекста;
+- исходный текстовый слой и проверенный OCR продолжают использоваться;
+- непроверенный OCR можно включить только явным параметром `include_unreviewed_ocr=true`;
+- явное разрешение допускается только совместно с проектным поиском;
+- ограничение `max_results` применяется после исключения непроверенного OCR;
+- обычный поиск по базе знаний и список ручной проверки не изменены;
+- происхождение включенного OCR и признак ручной проверки сохраняются в контексте.
+
+Проверки:
+
+- 3 теста фильтрации на уровне `KnowledgeService`;
+- 2 теста управления фильтрацией через `/ai/analyze`;
+- Ruff пройден без ошибок;
+- полная регрессия: `394 passed, 1 skipped`.
+
+Текущая стабильная точка:
+
+`3797115` - `Exclude unreviewed OCR from AI context`
+<!-- END AI OCR CONTEXT SAFETY STATUS -->
