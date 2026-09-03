@@ -2,7 +2,7 @@
 
 Дата проверки: 03.09.2026
 Ветка: `develop`
-Текущая контрольная точка: `3797115` - `Exclude unreviewed OCR from AI context`
+Текущая контрольная точка: `523981c` - `Report excluded unreviewed OCR pages`
 
 ## Состояние репозитория
 
@@ -16,7 +16,7 @@
 
 Полный набор тестов:
 
-`394 passed, 1 skipped`
+`395 passed, 1 skipped`
 
 Пропущенный тест связан с невозможностью создания симлинков в текущей Windows-среде и не является ошибкой ID-Agent.
 
@@ -365,11 +365,11 @@ Next environment-improvement plan:
 
 Текущая стабильная точка приложения:
 
-`3797115` - `Exclude unreviewed OCR from AI context`
+`523981c` - `Report excluded unreviewed OCR pages`
 
 Регрессионная проверка:
 
-`394 passed, 1 skipped`
+`395 passed, 1 skipped`
 <!-- END PROJECT OCR REVIEW STATUS -->
 
 <!-- BEGIN AI OCR CONTEXT SAFETY STATUS -->
@@ -390,9 +390,34 @@ Next environment-improvement plan:
 - 3 теста фильтрации на уровне `KnowledgeService`;
 - 2 теста управления фильтрацией через `/ai/analyze`;
 - Ruff пройден без ошибок;
-- полная регрессия: `394 passed, 1 skipped`.
+- полная регрессия: `395 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`3797115` - `Exclude unreviewed OCR from AI context`
+`523981c` - `Report excluded unreviewed OCR pages`
 <!-- END AI OCR CONTEXT SAFETY STATUS -->
+
+<!-- BEGIN AI OCR EXCLUSION DIAGNOSTICS STATUS -->
+## Диагностика исключенного OCR в AI-результате - 03.09.2026
+
+Реализовано:
+
+- поиск совпавших с запросом непроверенных OCR-фрагментов;
+- возврат исключенных страниц в поле `excluded_unreviewed_ocr_pages`;
+- привязка каждой страницы к `source_id`;
+- текст непроверенного OCR в диагностическое поле не передается;
+- при явном включении непроверенного OCR список исключений пуст;
+- диагностическое поле сохраняется с результатом AI-анализа.
+
+Формат элемента: `source_id` и `page`.
+
+Проверки:
+
+- сервисный и API-тесты пройдены;
+- Ruff пройден без ошибок;
+- полная регрессия: `395 passed, 1 skipped`.
+
+Текущая стабильная точка:
+
+`523981c` - `Report excluded unreviewed OCR pages`
+<!-- END AI OCR EXCLUSION DIAGNOSTICS STATUS -->
