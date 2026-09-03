@@ -115,3 +115,77 @@ def extract_knowledge_source_ids(
         return []
 
     return source_ids
+
+
+def extract_knowledge_source_pages(
+    context: str | None,
+) -> list[dict[str, str | int | None]]:
+    normalized = (
+        (context or "")
+        .replace("\r\n", "\n")
+        .replace("\r", "\n")
+        .strip()
+    )
+
+    if not normalized:
+        return []
+
+    if not extract_knowledge_source_ids(normalized):
+        return []
+
+    pattern = re.compile(
+        r"^\[SOURCE (?P<source_number>\d+)\]\n"
+        r"source_id: (?P<source_id>[^\n]+)\n"
+        r"source_title: [^\n]+\n"
+        r"section: [^\n]+\n"
+        r"page: (?P<page>[^\n]+)\n",
+        re.MULTILINE,
+    )
+    matches = list(pattern.finditer(normalized))
+    source_block_count = len(
+        re.findall(
+            r"(?m)^\[SOURCE \d+\]$",
+            normalized,
+        )
+    )
+
+    if len(matches) != source_block_count:
+        return []
+
+    source_pages = []
+
+    for expected_number, match in enumerate(
+        matches,
+        start=1,
+    ):
+        if (
+            int(match.group("source_number"))
+            != expected_number
+        ):
+            return []
+
+        source_id = match.group("source_id").strip()
+        page_value = match.group("page").strip()
+
+        if not source_id:
+            return []
+
+        if page_value == "not specified":
+            page = None
+        else:
+            try:
+                page = int(page_value)
+            except ValueError:
+                return []
+
+            if page <= 0:
+                return []
+
+        source_pages.append(
+            {
+                "source_id": source_id,
+                "page": page,
+            }
+        )
+
+    return source_pages

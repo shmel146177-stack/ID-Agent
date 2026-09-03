@@ -1342,6 +1342,14 @@ def test_ai_analyze_builds_project_knowledge_context(
         "Grounding requirement for this project."
         in knowledge_context
     )
+    assert response.json()[
+        "included_knowledge_pages"
+    ] == [
+        {
+            "source_id": "project-grounding",
+            "page": 10,
+        }
+    ]
     assert response.json()["knowledge_source_ids"] == [
         "project-grounding",
     ]
@@ -1518,6 +1526,17 @@ def test_ai_analyze_controls_unreviewed_project_ocr(
     assert default_response.status_code == 200
     assert opt_in_response.status_code == 200
     assert len(calls) == 2
+    assert default_response.json()[
+        "included_knowledge_pages"
+    ] == []
+    assert opt_in_response.json()[
+        "included_knowledge_pages"
+    ] == [
+        {
+            "source_id": "pending-ocr",
+            "page": 3,
+        }
+    ]
     assert default_response.json()[
         "excluded_unreviewed_ocr_pages"
     ] == [

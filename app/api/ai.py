@@ -7,6 +7,7 @@ from app.services.ai_document_analysis import AIDocumentAnalysisService
 from app.services.knowledge_context import (
     MAX_KNOWLEDGE_CONTEXT_CHARS,
     extract_knowledge_source_ids,
+    extract_knowledge_source_pages,
 )
 from app.services.knowledge_repository import KnowledgeRepository
 from app.services.knowledge_service import KnowledgeService
@@ -406,6 +407,21 @@ def analyze_document(request: AIAnalysisRequest):
         )
 
     result_data = result.model_dump()
+    included_knowledge_pages = None
+
+    if knowledge_context:
+        included_knowledge_pages = (
+            extract_knowledge_source_pages(
+                knowledge_context
+            )
+        )
+    elif request.knowledge_project_name is not None:
+        included_knowledge_pages = []
+
+    if included_knowledge_pages is not None:
+        result_data["included_knowledge_pages"] = (
+            included_knowledge_pages
+        )
 
     if excluded_unreviewed_ocr_pages is not None:
         result_data["excluded_unreviewed_ocr_pages"] = (

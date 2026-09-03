@@ -212,3 +212,48 @@ def test_build_knowledge_context_marks_ocr_chunks_for_review():
 
     assert "text_origin: ocr" in context
     assert "requires_human_review: true" in context
+
+
+def test_extract_knowledge_source_pages_preserves_source_binding():
+    from app.models.knowledge import (
+        KnowledgeChunk,
+        KnowledgeSearchResult,
+    )
+    from app.services.knowledge_context import (
+        build_knowledge_context,
+        extract_knowledge_source_pages,
+    )
+
+    first = KnowledgeSearchResult(
+        chunk=KnowledgeChunk(
+            source_id="project-drawing",
+            source_title="Project drawing",
+            page=3,
+            text="Shared engineering requirement.",
+        ),
+        matched_terms=["shared"],
+    )
+    second = KnowledgeSearchResult(
+        chunk=KnowledgeChunk(
+            source_id="project-attachment",
+            source_title="Project attachment",
+            page=None,
+            text="Shared attachment requirement.",
+        ),
+        matched_terms=["shared"],
+    )
+
+    context = build_knowledge_context(
+        [first, second]
+    )
+
+    assert extract_knowledge_source_pages(context) == [
+        {
+            "source_id": "project-drawing",
+            "page": 3,
+        },
+        {
+            "source_id": "project-attachment",
+            "page": None,
+        },
+    ]
