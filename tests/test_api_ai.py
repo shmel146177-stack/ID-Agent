@@ -54,6 +54,80 @@ def test_ai_analyze_without_api_key_is_safe(monkeypatch):
 
 
 
+
+def test_ai_analyze_does_not_use_openai_when_disabled(
+    monkeypatch,
+    tmp_path,
+):
+    from app.api import ai as ai_module
+    from app.services.project_service import project_service
+
+    monkeypatch.setenv("OPENAI_API_KEY", "test-key")
+    monkeypatch.setenv("OPENAI_MODEL", "test-model")
+    monkeypatch.setenv("ID_AGENT_AI_ENABLED", "false")
+
+    monkeypatch.setattr(
+        project_service,
+        "ai_file_path",
+        str(tmp_path / "ai_analysis.json"),
+    )
+    monkeypatch.setattr(
+        project_service,
+        "ai_review_file_path",
+        str(tmp_path / "ai_review.json"),
+    )
+    monkeypatch.setattr(
+        project_service,
+        "ai_comparison_file_path",
+        str(tmp_path / "ai_comparison.json"),
+    )
+
+    def fail_with_openai(
+        cls,
+        ai_client=None,
+        max_input_chars=40_000,
+    ):
+        raise AssertionError(
+            "OpenAI backend must not be initialized"
+        )
+
+    monkeypatch.setattr(
+        ai_module.AIDocumentAnalysisService,
+        "with_openai",
+        classmethod(fail_with_openai),
+    )
+
+    status_response = client.get("/ai/status")
+
+    assert status_response.status_code == 200
+    assert status_response.json() == {
+        "provider": "openai",
+        "configured": True,
+        "enabled": False,
+        "active": False,
+        "model": "test-model",
+        "client_initialized": False,
+    }
+
+    response = client.post(
+        "/ai/analyze",
+        json={
+            "filename": "document.pdf",
+            "text": "Engineering document text.",
+        },
+    )
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert data["requires_human_review"] is True
+    assert data["engineering_confirmation"] is False
+    assert data["facts"] == []
+    assert "document.pdf" in data["summary"]
+    assert "backend" in data["summary"]
+
+
 def test_ai_analyze_uses_openai_when_active(monkeypatch):
     from app.services.ai_document_analysis import (
         AIDocumentAnalysisService,
