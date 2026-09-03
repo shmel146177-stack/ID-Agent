@@ -1518,6 +1518,17 @@ def test_ai_analyze_controls_unreviewed_project_ocr(
     assert default_response.status_code == 200
     assert opt_in_response.status_code == 200
     assert len(calls) == 2
+    assert default_response.json()[
+        "excluded_unreviewed_ocr_pages"
+    ] == [
+        {
+            "source_id": "pending-ocr",
+            "page": 3,
+        }
+    ]
+    assert opt_in_response.json()[
+        "excluded_unreviewed_ocr_pages"
+    ] == []
     assert calls[0][2] is None
     assert "source_id: pending-ocr" in calls[1][2]
     assert "requires_human_review: true" in calls[1][2]

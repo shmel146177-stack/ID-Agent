@@ -411,3 +411,45 @@ def test_knowledge_service_build_context_limits_after_ocr_filtering():
 
     assert "source_id: native-source" in context
     assert "source_id: pending-ocr" not in context
+
+
+def test_knowledge_service_finds_matching_unreviewed_ocr_results():
+    pending_ocr = KnowledgeChunk(
+        source_id="pending-ocr",
+        source_title="Pending OCR",
+        page=3,
+        text_origin="ocr",
+        requires_human_review=True,
+        text="Shared safety requirement from pending OCR.",
+    )
+    reviewed_ocr = KnowledgeChunk(
+        source_id="reviewed-ocr",
+        source_title="Reviewed OCR",
+        page=4,
+        text_origin="ocr",
+        requires_human_review=False,
+        text="Shared safety requirement from reviewed OCR.",
+    )
+    unrelated_pending_ocr = KnowledgeChunk(
+        source_id="unrelated-ocr",
+        source_title="Unrelated OCR",
+        page=5,
+        text_origin="ocr",
+        requires_human_review=True,
+        text="Different cable requirement.",
+    )
+    service = KnowledgeService(
+        [
+            pending_ocr,
+            reviewed_ocr,
+            unrelated_pending_ocr,
+        ]
+    )
+
+    results = service.search_unreviewed_ocr_results(
+        "safety"
+    )
+
+    assert [result.chunk for result in results] == [
+        pending_ocr
+    ]

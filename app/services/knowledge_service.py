@@ -117,6 +117,19 @@ class KnowledgeService:
 
         return [result.chunk for result in results]
 
+    def search_unreviewed_ocr_results(
+        self,
+        query: str,
+    ) -> list[KnowledgeSearchResult]:
+        return [
+            result
+            for result in self.search_results(query)
+            if (
+                result.chunk.text_origin == "ocr"
+                and result.chunk.requires_human_review
+            )
+        ]
+
     def build_context(
         self,
         query: str,

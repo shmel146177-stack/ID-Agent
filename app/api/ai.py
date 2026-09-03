@@ -349,6 +349,7 @@ def analyze_document(request: AIAnalysisRequest):
         )
 
     knowledge_context = request.knowledge_context
+    excluded_unreviewed_ocr_pages = None
 
     if (
         knowledge_context is None
@@ -366,6 +367,23 @@ def analyze_document(request: AIAnalysisRequest):
         knowledge_service = KnowledgeService.from_repository(
             repository
         )
+
+        if request.include_unreviewed_ocr:
+            excluded_unreviewed_ocr_pages = []
+        else:
+            unreviewed_ocr_results = (
+                knowledge_service.search_unreviewed_ocr_results(
+                    request.knowledge_query or ""
+                )
+            )
+            excluded_unreviewed_ocr_pages = [
+                {
+                    "source_id": result.chunk.source_id,
+                    "page": result.chunk.page,
+                }
+                for result in unreviewed_ocr_results
+            ]
+
         knowledge_context = knowledge_service.build_context(
             request.knowledge_query or "",
             max_results=5,
@@ -388,6 +406,12 @@ def analyze_document(request: AIAnalysisRequest):
         )
 
     result_data = result.model_dump()
+
+    if excluded_unreviewed_ocr_pages is not None:
+        result_data["excluded_unreviewed_ocr_pages"] = (
+            excluded_unreviewed_ocr_pages
+        )
+
     save_options = {}
 
     if knowledge_context:
