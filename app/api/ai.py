@@ -36,6 +36,7 @@ class AIAnalysisRequest(BaseModel):
         min_length=1,
         max_length=500,
     )
+    include_unreviewed_ocr: bool = False
 
     @model_validator(mode="after")
     def validate_knowledge_context_binding(self):
@@ -67,6 +68,12 @@ class AIAnalysisRequest(BaseModel):
             raise ValueError(
                 "knowledge_project_name and knowledge_query "
                 "must be provided together"
+            )
+
+        if self.include_unreviewed_ocr and not project_name:
+            raise ValueError(
+                "include_unreviewed_ocr requires "
+                "project knowledge search"
             )
 
         if context and project_name:
@@ -363,6 +370,9 @@ def analyze_document(request: AIAnalysisRequest):
             request.knowledge_query or "",
             max_results=5,
             max_chars=MAX_KNOWLEDGE_CONTEXT_CHARS,
+            include_unreviewed_ocr=(
+                request.include_unreviewed_ocr
+            ),
         ) or None
 
     if knowledge_context:

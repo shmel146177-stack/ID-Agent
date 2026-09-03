@@ -122,11 +122,25 @@ class KnowledgeService:
         query: str,
         max_results: int | None = None,
         max_chars: int | None = None,
+        include_unreviewed_ocr: bool = False,
     ) -> str:
-        results = self.search_results(
-            query,
-            max_results=max_results,
-        )
+        if max_results is not None and max_results <= 0:
+            raise ValueError("max_results must be positive")
+
+        results = self.search_results(query)
+
+        if not include_unreviewed_ocr:
+            results = [
+                result
+                for result in results
+                if not (
+                    result.chunk.text_origin == "ocr"
+                    and result.chunk.requires_human_review
+                )
+            ]
+
+        if max_results is not None:
+            results = results[:max_results]
 
         return build_knowledge_context(
             results,

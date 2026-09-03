@@ -331,3 +331,83 @@ def test_knowledge_service_upserts_existing_source_page(
 
     assert service.chunks == [updated]
     assert repository.load() == [updated]
+
+
+def test_knowledge_service_build_context_excludes_unreviewed_ocr_by_default():
+    native = KnowledgeChunk(
+        source_id="native-source",
+        source_title="Native source",
+        page=1,
+        text="Shared safety requirement from native text.",
+    )
+    reviewed_ocr = KnowledgeChunk(
+        source_id="reviewed-ocr",
+        source_title="Reviewed OCR",
+        page=2,
+        text_origin="ocr",
+        requires_human_review=False,
+        text="Shared safety requirement from reviewed OCR.",
+    )
+    pending_ocr = KnowledgeChunk(
+        source_id="pending-ocr",
+        source_title="Pending OCR",
+        page=3,
+        text_origin="ocr",
+        requires_human_review=True,
+        text="Shared safety requirement from pending OCR.",
+    )
+    service = KnowledgeService(
+        [native, reviewed_ocr, pending_ocr]
+    )
+
+    context = service.build_context("safety")
+
+    assert "source_id: native-source" in context
+    assert "source_id: reviewed-ocr" in context
+    assert "source_id: pending-ocr" not in context
+
+
+def test_knowledge_service_build_context_can_include_unreviewed_ocr():
+    pending_ocr = KnowledgeChunk(
+        source_id="pending-ocr",
+        source_title="Pending OCR",
+        page=3,
+        text_origin="ocr",
+        requires_human_review=True,
+        text="Shared safety requirement from pending OCR.",
+    )
+    service = KnowledgeService([pending_ocr])
+
+    context = service.build_context(
+        "safety",
+        include_unreviewed_ocr=True,
+    )
+
+    assert "source_id: pending-ocr" in context
+    assert "requires_human_review: true" in context
+
+
+def test_knowledge_service_build_context_limits_after_ocr_filtering():
+    pending_ocr = KnowledgeChunk(
+        source_id="pending-ocr",
+        source_title="Pending OCR",
+        page=1,
+        text_origin="ocr",
+        requires_human_review=True,
+        text="Shared safety requirement from pending OCR.",
+    )
+    native = KnowledgeChunk(
+        source_id="native-source",
+        source_title="Native source",
+        page=2,
+        text="Shared safety requirement from native text.",
+    )
+    service = KnowledgeService([pending_ocr, native])
+
+    context = service.build_context(
+        "safety",
+        max_results=1,
+    )
+
+    assert "source_id: native-source" in context
+    assert "source_id: pending-ocr" not in context

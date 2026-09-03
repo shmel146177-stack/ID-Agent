@@ -1417,3 +1417,124 @@ def test_ai_analyze_rejects_combined_knowledge_modes():
     )
 
     assert response.status_code == 422
+
+
+def test_ai_analyze_controls_unreviewed_project_ocr(
+    monkeypatch,
+    tmp_path,
+):
+    from app.api import ai as ai_module
+    from app.models.knowledge import KnowledgeChunk
+    from app.services.knowledge_repository import KnowledgeRepository
+    from app.services.project_service import project_service
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setenv("OPENAI_API_KEY", "test-key")
+    monkeypatch.setenv("OPENAI_MODEL", "test-model")
+    monkeypatch.setenv("ID_AGENT_AI_ENABLED", "true")
+
+    repository = KnowledgeRepository.for_project("project-a")
+    repository.save(
+        [
+            KnowledgeChunk(
+                source_id="pending-ocr",
+                source_title="Pending OCR",
+                page=3,
+                text_origin="ocr",
+                requires_human_review=True,
+                text="Shared safety requirement from pending OCR.",
+            )
+        ]
+    )
+
+    calls = []
+
+    class ServiceStub:
+        def analyze_text(
+            self,
+            filename,
+            text,
+            knowledge_context=None,
+        ):
+            calls.append(
+                (filename, text, knowledge_context)
+            )
+            return AIAnalysisResult(
+                summary="AI backend selected.",
+            )
+
+    def fake_with_openai(
+        cls,
+        ai_client=None,
+        max_input_chars=40_000,
+    ):
+        return ServiceStub()
+
+    def save_ai_analysis(
+        data,
+        source_filename=None,
+        knowledge_source_ids=None,
+    ):
+        return {
+            "document": {
+                **data,
+                "analysis_id": "analysis-project-ocr",
+                "source_filename": source_filename,
+                "knowledge_source_ids": knowledge_source_ids,
+            }
+        }
+
+    monkeypatch.setattr(
+        ai_module.AIDocumentAnalysisService,
+        "with_openai",
+        classmethod(fake_with_openai),
+    )
+    monkeypatch.setattr(
+        project_service,
+        "save_ai_analysis",
+        save_ai_analysis,
+    )
+
+    default_response = client.post(
+        "/ai/analyze",
+        json={
+            "filename": "default.pdf",
+            "text": "Document text.",
+            "knowledge_project_name": "project-a",
+            "knowledge_query": "safety",
+        },
+    )
+    opt_in_response = client.post(
+        "/ai/analyze",
+        json={
+            "filename": "opt-in.pdf",
+            "text": "Document text.",
+            "knowledge_project_name": "project-a",
+            "knowledge_query": "safety",
+            "include_unreviewed_ocr": True,
+        },
+    )
+
+    assert default_response.status_code == 200
+    assert opt_in_response.status_code == 200
+    assert len(calls) == 2
+    assert calls[0][2] is None
+    assert "source_id: pending-ocr" in calls[1][2]
+    assert "requires_human_review: true" in calls[1][2]
+
+
+def test_ai_analysis_request_rejects_unreviewed_ocr_flag_without_project():
+    from app.api.ai import AIAnalysisRequest
+
+    with pytest.raises(
+        ValueError,
+        match=(
+            "include_unreviewed_ocr requires "
+            "project knowledge search"
+        ),
+    ):
+        AIAnalysisRequest(
+            filename="document.pdf",
+            text="Document text.",
+            include_unreviewed_ocr=True,
+        )
