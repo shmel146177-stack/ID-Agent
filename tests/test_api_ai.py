@@ -1642,3 +1642,51 @@ def test_ai_analysis_request_rejects_unreviewed_ocr_flag_without_project():
             text="Document text.",
             include_unreviewed_ocr=True,
         )
+
+
+def test_ai_analyze_saves_autonomous_execution_diagnostics(
+    monkeypatch,
+    tmp_path,
+):
+    from app.services.project_service import project_service
+
+    monkeypatch.setenv("OPENAI_API_KEY", "test-key")
+    monkeypatch.setenv("OPENAI_MODEL", "test-model")
+    monkeypatch.setenv("ID_AGENT_AI_ENABLED", "false")
+
+    file_paths = {
+        "ai_file_path": "ai_analysis.json",
+        "ai_review_file_path": "ai_review.json",
+        "ai_comparison_file_path": "ai_comparison.json",
+    }
+
+    for attribute, filename in file_paths.items():
+        monkeypatch.setattr(
+            project_service,
+            attribute,
+            str(tmp_path / filename),
+        )
+
+    response = client.post(
+        "/ai/analyze",
+        json={
+            "filename": "document.pdf",
+            "text": "Engineering document text.",
+        },
+    )
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert data["analysis_mode"] == "autonomous"
+    assert data["ai_provider"] == "openai"
+    assert data["ai_model"] == "test-model"
+    assert data["fallback_reason"] == "ai_disabled"
+
+    saved = project_service.get_ai_analysis()
+
+    assert saved["analysis_mode"] == "autonomous"
+    assert saved["ai_provider"] == "openai"
+    assert saved["ai_model"] == "test-model"
+    assert saved["fallback_reason"] == "ai_disabled"

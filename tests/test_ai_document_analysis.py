@@ -195,3 +195,75 @@ def test_ai_document_analysis_passes_knowledge_context_to_backend():
             knowledge_context,
         )
     ]
+
+
+def test_ai_document_analysis_reports_autonomous_execution_diagnostics():
+    service = AIDocumentAnalysisService(
+        ai_client=create_ai_client(),
+    )
+
+    result = service.analyze_text(
+        "document.pdf",
+        "Document text.",
+    )
+
+    assert result.analysis_mode == "autonomous"
+    assert result.ai_provider == "openai"
+    assert result.ai_model == "test-model"
+    assert result.fallback_reason == "api_not_configured"
+
+
+def test_ai_document_analysis_reports_openai_execution_diagnostics():
+    def backend(filename, text):
+        return AIAnalysisResult(
+            summary="OpenAI result.",
+        )
+
+    ai_client = AIClient(
+        settings=AISettings(
+            api_key="test-key",
+            model="test-model",
+            enabled=True,
+        )
+    )
+    service = AIDocumentAnalysisService(
+        ai_client=ai_client,
+        analysis_backend=backend,
+    )
+
+    result = service.analyze_text(
+        "document.pdf",
+        "Document text.",
+    )
+
+    assert result.analysis_mode == "openai"
+    assert result.ai_provider == "openai"
+    assert result.ai_model == "test-model"
+    assert result.fallback_reason is None
+
+
+def test_ai_document_analysis_reports_unavailable_provider_diagnostics():
+    def backend(filename, text):
+        raise AIUnavailableError("Provider unavailable")
+
+    ai_client = AIClient(
+        settings=AISettings(
+            api_key="test-key",
+            model="test-model",
+            enabled=True,
+        )
+    )
+    service = AIDocumentAnalysisService(
+        ai_client=ai_client,
+        analysis_backend=backend,
+    )
+
+    result = service.analyze_text(
+        "document.pdf",
+        "Document text.",
+    )
+
+    assert result.analysis_mode == "autonomous"
+    assert result.ai_provider == "openai"
+    assert result.ai_model == "test-model"
+    assert result.fallback_reason == "provider_unavailable"

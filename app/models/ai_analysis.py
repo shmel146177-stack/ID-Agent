@@ -26,3 +26,12 @@ class AIAnalysisResult(BaseModel):
 
     requires_human_review: Literal[True] = True
     engineering_confirmation: Literal[False] = False
+
+
+class AIAnalysisExecutionResult(AIAnalysisResult):
+    """Result with trusted runtime diagnostics."""
+
+    analysis_mode: Literal["openai", "autonomous"]
+    ai_provider: str
+    ai_model: str
+    fallback_reason: str | None = None
