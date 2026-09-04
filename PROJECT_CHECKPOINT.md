@@ -1,8 +1,8 @@
 # ID-Agent - контрольная точка
 
-Дата проверки: 03.09.2026
+Дата проверки: 04.09.2026
 Ветка: `develop`
-Текущая контрольная точка: `e4a7d44` - `Test autonomous AI mode`
+Текущая контрольная точка: `baa1158` - `Report AI execution mode diagnostics`
 
 ## Состояние репозитория
 
@@ -16,7 +16,7 @@
 
 Полный набор тестов:
 
-`397 passed, 1 skipped`
+`402 passed, 1 skipped`
 
 Пропущенный тест связан с невозможностью создания симлинков в текущей Windows-среде и не является ошибкой ID-Agent.
 
@@ -365,11 +365,11 @@ Next environment-improvement plan:
 
 Текущая стабильная точка приложения:
 
-`e4a7d44` - `Test autonomous AI mode`
+`baa1158` - `Report AI execution mode diagnostics`
 
 Регрессионная проверка:
 
-`397 passed, 1 skipped`
+`402 passed, 1 skipped`
 <!-- END PROJECT OCR REVIEW STATUS -->
 
 <!-- BEGIN AI OCR CONTEXT SAFETY STATUS -->
@@ -390,11 +390,11 @@ Next environment-improvement plan:
 - 3 теста фильтрации на уровне `KnowledgeService`;
 - 2 теста управления фильтрацией через `/ai/analyze`;
 - Ruff пройден без ошибок;
-- полная регрессия: `397 passed, 1 skipped`.
+- полная регрессия: `402 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`e4a7d44` - `Test autonomous AI mode`
+`baa1158` - `Report AI execution mode diagnostics`
 <!-- END AI OCR CONTEXT SAFETY STATUS -->
 
 <!-- BEGIN AI OCR EXCLUSION DIAGNOSTICS STATUS -->
@@ -415,11 +415,11 @@ Next environment-improvement plan:
 
 - сервисный и API-тесты пройдены;
 - Ruff пройден без ошибок;
-- полная регрессия: `397 passed, 1 skipped`.
+- полная регрессия: `402 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`e4a7d44` - `Test autonomous AI mode`
+`baa1158` - `Report AI execution mode diagnostics`
 <!-- END AI OCR EXCLUSION DIAGNOSTICS STATUS -->
 
 <!-- BEGIN AI INCLUDED KNOWLEDGE PAGES STATUS -->
@@ -440,11 +440,11 @@ Next environment-improvement plan:
 - тест извлечения страниц из контекста;
 - API-тесты проверенного и явно включенного OCR;
 - Ruff пройден без ошибок;
-- полная регрессия: `397 passed, 1 skipped`.
+- полная регрессия: `402 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`e4a7d44` - `Test autonomous AI mode`
+`baa1158` - `Report AI execution mode diagnostics`
 <!-- END AI INCLUDED KNOWLEDGE PAGES STATUS -->
 
 <!-- BEGIN AUTONOMOUS AI MODE STATUS -->
@@ -471,9 +471,50 @@ Next environment-improvement plan:
 - тест автономного и активного режимов: `2 passed`;
 - API-тесты: `48 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `397 passed, 1 skipped`.
+- полная регрессия: `402 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`e4a7d44` - `Test autonomous AI mode`
+`baa1158` - `Report AI execution mode diagnostics`
 <!-- END AUTONOMOUS AI MODE STATUS -->
+
+<!-- BEGIN AI EXECUTION MODE DIAGNOSTICS STATUS -->
+## Диагностика режима выполнения AI - 04.09.2026
+
+Реализовано:
+
+- добавлена отдельная итоговая модель `AIAnalysisExecutionResult`;
+- исходный `AIAnalysisResult` остался строгой схемой ответа OpenAI;
+- поле `analysis_mode` показывает фактический режим `openai` или `autonomous`;
+- поля `ai_provider` и `ai_model` показывают выбранного провайдера и модель;
+- фактическое использование внешней модели определяется полем `analysis_mode`;
+- поле `fallback_reason` объясняет переход в автономный режим;
+- диагностические поля возвращаются через `/ai/analyze`;
+- диагностические поля сохраняются в `ai_analysis.json`.
+
+Поддерживаемые причины автономного режима:
+
+- `empty_text`;
+- `api_not_configured`;
+- `ai_disabled`;
+- `backend_not_connected`;
+- `provider_unavailable`.
+
+Безопасность:
+
+- служебные поля не передаются внешней модели для заполнения;
+- инженерное подтверждение остается только за человеком;
+- при недоступности OpenAI детерминированные функции ID-Agent продолжают работать.
+
+Проверки:
+
+- тест модели результата выполнения;
+- тесты автономного, OpenAI и недоступного режимов;
+- API-тест возврата и сохранения диагностических полей;
+- Ruff пройден без ошибок;
+- полная регрессия: `402 passed, 1 skipped`.
+
+Текущая стабильная точка:
+
+`baa1158` - `Report AI execution mode diagnostics`
+<!-- END AI EXECUTION MODE DIAGNOSTICS STATUS -->
