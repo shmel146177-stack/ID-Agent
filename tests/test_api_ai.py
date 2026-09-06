@@ -1690,3 +1690,77 @@ def test_ai_analyze_saves_autonomous_execution_diagnostics(
     assert saved["ai_provider"] == "openai"
     assert saved["ai_model"] == "test-model"
     assert saved["fallback_reason"] == "ai_disabled"
+
+def test_ai_analyze_saves_credit_balance_fallback_reason(
+    monkeypatch,
+    tmp_path,
+):
+    from app.api import ai as ai_module
+    from app.services.ai_client import AIUnavailableError
+    from app.services.ai_document_analysis import (
+        AIDocumentAnalysisService,
+    )
+    from app.services.project_service import project_service
+
+    monkeypatch.setenv("OPENAI_API_KEY", "test-key")
+    monkeypatch.setenv("OPENAI_MODEL", "test-model")
+    monkeypatch.setenv("ID_AGENT_AI_ENABLED", "true")
+
+    file_paths = {
+        "ai_file_path": "ai_analysis.json",
+        "ai_review_file_path": "ai_review.json",
+        "ai_comparison_file_path": "ai_comparison.json",
+    }
+
+    for attribute, filename in file_paths.items():
+        monkeypatch.setattr(
+            project_service,
+            attribute,
+            str(tmp_path / filename),
+        )
+
+    def failing_backend(filename, text):
+        raise AIUnavailableError(
+            "API balance exhausted",
+            reason="credit_balance_exhausted",
+        )
+
+    def fake_with_openai(
+        cls,
+        ai_client=None,
+        max_input_chars=40_000,
+    ):
+        return AIDocumentAnalysisService(
+            ai_client=ai_client,
+            analysis_backend=failing_backend,
+        )
+
+    monkeypatch.setattr(
+        ai_module.AIDocumentAnalysisService,
+        "with_openai",
+        classmethod(fake_with_openai),
+    )
+
+    response = client.post(
+        "/ai/analyze",
+        json={
+            "filename": "document.pdf",
+            "text": "Engineering document text.",
+        },
+    )
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert data["analysis_mode"] == "autonomous"
+    assert data["ai_provider"] == "openai"
+    assert data["ai_model"] == "test-model"
+    assert data["fallback_reason"] == "credit_balance_exhausted"
+
+    saved = project_service.get_ai_analysis()
+
+    assert saved["analysis_mode"] == "autonomous"
+    assert saved["ai_provider"] == "openai"
+    assert saved["ai_model"] == "test-model"
+    assert saved["fallback_reason"] == "credit_balance_exhausted"
