@@ -2,13 +2,13 @@
 
 Дата проверки: 06.09.2026
 Ветка: `develop`
-Текущая контрольная точка: `aa97c63` - `Test API balance fallback diagnostics`
+Текущая контрольная точка: `ef4e0e4` - `Restrict AI fallback reason values`
 
 ## Состояние репозитория
 
 - Основная рабочая ветка: `develop`.
 - GitHub: `https://github.com/shmel146177-stack/ID-Agent.git`
-- Последний подтвержденный коммит: `aa97c6312b211b07141556962746f287074050b0`.
+- Последний подтвержденный коммит: `ef4e0e46c3159aff6d244e65eeeb5edb389d65a6`.
 - Коммит отправлен в `origin/develop`.
 - Рабочее дерево после push было чистым.
 
@@ -16,7 +16,7 @@
 
 Полный набор тестов:
 
-`407 passed, 1 skipped`
+`408 passed, 1 skipped`
 
 Пропущенный тест связан с невозможностью создания симлинков в текущей Windows-среде и не является ошибкой ID-Agent.
 
@@ -540,10 +540,37 @@ Next environment-improvement plan:
 - API-тест подтверждает возврат и сохранение `credit_balance_exhausted`;
 - API-тесты: `50 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `407 passed, 1 skipped`;
+- полная регрессия: `408 passed, 1 skipped`;
 - восстановленная среда проверена на Python `3.14.7`.
 
 Текущая стабильная точка:
 
-`aa97c63` - `Test API balance fallback diagnostics`
+`ef4e0e4` - `Restrict AI fallback reason values`
 <!-- END PRECISE AI FALLBACK REASONS STATUS -->
+
+<!-- BEGIN STRICT AI FALLBACK REASONS STATUS -->
+## Строгая схема причин автономного режима AI - 06.09.2026
+
+Реализовано:
+
+- добавлен тип `AIFallbackReason`;
+- поле `fallback_reason` принимает только известные причины;
+- поддерживаются `empty_text`, `api_not_configured` и `ai_disabled`;
+- поддерживаются `backend_not_connected` и `provider_unavailable`;
+- поддерживаются `credit_balance_exhausted` и `rate_limit_exceeded`;
+- поддерживается `invalid_provider_response`;
+- неизвестные значения отклоняются проверкой Pydantic;
+- строгая схема действует для API-ответа и сохраняемого результата.
+
+Проверки:
+
+- тест допустимой причины продолжает проходить;
+- неизвестная причина вызывает `ValidationError`;
+- связанный AI-контур прошел без ошибок;
+- Ruff пройден без ошибок;
+- полная регрессия: `408 passed, 1 skipped`.
+
+Текущая стабильная точка:
+
+`ef4e0e4` - `Restrict AI fallback reason values`
+<!-- END STRICT AI FALLBACK REASONS STATUS -->
