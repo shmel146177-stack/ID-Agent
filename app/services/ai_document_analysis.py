@@ -137,7 +137,7 @@ class AIDocumentAnalysisService:
                     ],
                 ),
                 analysis_mode="autonomous",
-                fallback_reason="provider_unavailable",
+                fallback_reason=exc.reason,
             )
 
         if not isinstance(result, AIAnalysisResult):

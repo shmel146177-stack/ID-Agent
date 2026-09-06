@@ -252,3 +252,44 @@ def test_openai_backend_includes_source_bound_knowledge_context():
     assert result is expected
     assert "Document text." in user_content
     assert knowledge_context in user_content
+
+def test_openai_backend_exposes_credit_balance_failure_reason():
+    expected = AIAnalysisResult(summary="unused")
+    backend, openai_stub, _ = create_backend(expected)
+
+    def failing_parse(**kwargs):
+        exc = RateLimitError.__new__(RateLimitError)
+        Exception.__init__(exc, "API balance exhausted")
+        exc.code = "credit_balance_exhausted"
+        raise exc
+
+    openai_stub.responses.parse = failing_parse
+
+    with pytest.raises(AIUnavailableError) as error:
+        backend(
+            "document.pdf",
+            "Engineering document text.",
+        )
+
+    assert error.value.reason == "credit_balance_exhausted"
+
+
+def test_openai_backend_exposes_rate_limit_failure_reason():
+    expected = AIAnalysisResult(summary="unused")
+    backend, openai_stub, _ = create_backend(expected)
+
+    def failing_parse(**kwargs):
+        exc = RateLimitError.__new__(RateLimitError)
+        Exception.__init__(exc, "Rate limit exceeded")
+        exc.code = "rate_limit_exceeded"
+        raise exc
+
+    openai_stub.responses.parse = failing_parse
+
+    with pytest.raises(AIUnavailableError) as error:
+        backend(
+            "document.pdf",
+            "Engineering document text.",
+        )
+
+    assert error.value.reason == "rate_limit_exceeded"

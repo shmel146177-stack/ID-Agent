@@ -10,6 +10,18 @@ class AIUnavailableError(RuntimeError):
     """AI-сервис не настроен или временно недоступен."""
 
 
+    DEFAULT_REASON = "provider_unavailable"
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        reason: str = DEFAULT_REASON,
+    ):
+        super().__init__(message)
+        self.reason = reason
+
+
 class AIClient:
     """Безопасная точка доступа к OpenAI для ID-Agent."""
 
@@ -35,12 +47,14 @@ class AIClient:
     def get_client(self):
         if not self.configured:
             raise AIUnavailableError(
-                "OpenAI API не настроен: отсутствует OPENAI_API_KEY"
+                "OpenAI API не настроен: отсутствует OPENAI_API_KEY",
+                reason="api_not_configured",
             )
 
         if not self.settings.enabled:
             raise AIUnavailableError(
-                "AI calls are disabled: set ID_AGENT_AI_ENABLED=true"
+                "AI calls are disabled: set ID_AGENT_AI_ENABLED=true",
+                reason="ai_disabled",
             )
 
         if self._client is None:

@@ -38,9 +38,10 @@ def test_ai_client_does_not_initialize_without_api_key():
     with pytest.raises(
         AIUnavailableError,
         match="OPENAI_API_KEY",
-    ):
+    ) as error:
         client.get_client()
 
+    assert error.value.reason == "api_not_configured"
     assert factory.calls == []
 
 
@@ -121,7 +122,17 @@ def test_ai_client_does_not_initialize_when_ai_disabled():
     with pytest.raises(
         AIUnavailableError,
         match="ID_AGENT_AI_ENABLED",
-    ):
+    ) as error:
         client.get_client()
 
+    assert error.value.reason == "ai_disabled"
     assert factory.calls == []
+
+def test_ai_unavailable_error_exposes_reason():
+    error = AIUnavailableError(
+        "Provider unavailable",
+        reason="credit_balance_exhausted",
+    )
+
+    assert str(error) == "Provider unavailable"
+    assert error.reason == "credit_balance_exhausted"

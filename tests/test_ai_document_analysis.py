@@ -267,3 +267,30 @@ def test_ai_document_analysis_reports_unavailable_provider_diagnostics():
     assert result.ai_provider == "openai"
     assert result.ai_model == "test-model"
     assert result.fallback_reason == "provider_unavailable"
+
+def test_ai_document_analysis_preserves_provider_failure_reason():
+    def backend(filename, text):
+        raise AIUnavailableError(
+            "API balance exhausted",
+            reason="credit_balance_exhausted",
+        )
+
+    ai_client = AIClient(
+        settings=AISettings(
+            api_key="test-key",
+            model="test-model",
+            enabled=True,
+        )
+    )
+    service = AIDocumentAnalysisService(
+        ai_client=ai_client,
+        analysis_backend=backend,
+    )
+
+    result = service.analyze_text(
+        "document.pdf",
+        "Document text.",
+    )
+
+    assert result.analysis_mode == "autonomous"
+    assert result.fallback_reason == "credit_balance_exhausted"
