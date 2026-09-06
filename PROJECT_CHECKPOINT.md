@@ -2,13 +2,13 @@
 
 Дата проверки: 06.09.2026
 Ветка: `develop`
-Текущая контрольная точка: `d58055a` - `Report precise AI fallback reasons`
+Текущая контрольная точка: `aa97c63` - `Test API balance fallback diagnostics`
 
 ## Состояние репозитория
 
 - Основная рабочая ветка: `develop`.
 - GitHub: `https://github.com/shmel146177-stack/ID-Agent.git`
-- Последний подтвержденный коммит: `d58055abddf3b1067467cf6507e737157bc339bd`.
+- Последний подтвержденный коммит: `aa97c6312b211b07141556962746f287074050b0`.
 - Коммит отправлен в `origin/develop`.
 - Рабочее дерево после push было чистым.
 
@@ -16,7 +16,7 @@
 
 Полный набор тестов:
 
-`406 passed, 1 skipped`
+`407 passed, 1 skipped`
 
 Пропущенный тест связан с невозможностью создания симлинков в текущей Windows-среде и не является ошибкой ID-Agent.
 
@@ -537,11 +537,13 @@ Next environment-improvement plan:
 Проверки:
 
 - профильные тесты сервисов: `29 passed`;
+- API-тест подтверждает возврат и сохранение `credit_balance_exhausted`;
+- API-тесты: `50 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `406 passed, 1 skipped`;
+- полная регрессия: `407 passed, 1 skipped`;
 - восстановленная среда проверена на Python `3.14.7`.
 
 Текущая стабильная точка:
 
-`d58055a` - `Report precise AI fallback reasons`
+`aa97c63` - `Test API balance fallback diagnostics`
 <!-- END PRECISE AI FALLBACK REASONS STATUS -->
