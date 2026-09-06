@@ -2,13 +2,13 @@
 
 Дата проверки: 06.09.2026
 Ветка: `develop`
-Текущая контрольная точка: `ef4e0e4` - `Restrict AI fallback reason values`
+Текущая контрольная точка: `a6be13a` - `Validate AI execution diagnostics consistency`
 
 ## Состояние репозитория
 
 - Основная рабочая ветка: `develop`.
 - GitHub: `https://github.com/shmel146177-stack/ID-Agent.git`
-- Последний подтвержденный коммит: `ef4e0e46c3159aff6d244e65eeeb5edb389d65a6`.
+- Последний подтвержденный коммит: `a6be13a3ba1f996f0244d26f255e0ac17d0ababf`.
 - Коммит отправлен в `origin/develop`.
 - Рабочее дерево после push было чистым.
 
@@ -16,7 +16,7 @@
 
 Полный набор тестов:
 
-`408 passed, 1 skipped`
+`410 passed, 1 skipped`
 
 Пропущенный тест связан с невозможностью создания симлинков в текущей Windows-среде и не является ошибкой ID-Agent.
 
@@ -540,12 +540,12 @@ Next environment-improvement plan:
 - API-тест подтверждает возврат и сохранение `credit_balance_exhausted`;
 - API-тесты: `50 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `408 passed, 1 skipped`;
+- полная регрессия: `410 passed, 1 skipped`;
 - восстановленная среда проверена на Python `3.14.7`.
 
 Текущая стабильная точка:
 
-`ef4e0e4` - `Restrict AI fallback reason values`
+`a6be13a` - `Validate AI execution diagnostics consistency`
 <!-- END PRECISE AI FALLBACK REASONS STATUS -->
 
 <!-- BEGIN STRICT AI FALLBACK REASONS STATUS -->
@@ -568,9 +568,33 @@ Next environment-improvement plan:
 - неизвестная причина вызывает `ValidationError`;
 - связанный AI-контур прошел без ошибок;
 - Ruff пройден без ошибок;
-- полная регрессия: `408 passed, 1 skipped`.
+- полная регрессия: `410 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`ef4e0e4` - `Restrict AI fallback reason values`
+`a6be13a` - `Validate AI execution diagnostics consistency`
 <!-- END STRICT AI FALLBACK REASONS STATUS -->
+
+<!-- BEGIN AI EXECUTION CONSISTENCY STATUS -->
+## Согласованность диагностики выполнения AI - 06.09.2026
+
+Реализовано:
+
+- режим `openai` допускается только без `fallback_reason`;
+- режим `autonomous` требует указания `fallback_reason`;
+- противоречивые сочетания полей отклоняются моделью Pydantic;
+- проверка выполняется до возврата API-ответа и сохранения результата;
+- существующие безопасные сценарии OpenAI и автономного режима продолжают работать.
+
+Проверки:
+
+- два теста отклонения противоречивых сочетаний;
+- тест корректной автономной диагностики;
+- связанный AI-контур: `92 passed`;
+- Ruff пройден без ошибок;
+- полная регрессия: `410 passed, 1 skipped`.
+
+Текущая стабильная точка:
+
+`a6be13a` - `Validate AI execution diagnostics consistency`
+<!-- END AI EXECUTION CONSISTENCY STATUS -->
