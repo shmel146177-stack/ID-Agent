@@ -1,6 +1,6 @@
 ﻿from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 AIFallbackReason = Literal[
     "empty_text",
@@ -46,3 +46,25 @@ class AIAnalysisExecutionResult(AIAnalysisResult):
     ai_provider: str
     ai_model: str
     fallback_reason: AIFallbackReason | None = None
+
+    @model_validator(mode="after")
+    def validate_execution_diagnostics(self):
+        if (
+            self.analysis_mode == "openai"
+            and self.fallback_reason is not None
+        ):
+            raise ValueError(
+                "fallback_reason must be empty "
+                "in openai mode"
+            )
+
+        if (
+            self.analysis_mode == "autonomous"
+            and self.fallback_reason is None
+        ):
+            raise ValueError(
+                "fallback_reason is required "
+                "in autonomous mode"
+            )
+
+        return self
