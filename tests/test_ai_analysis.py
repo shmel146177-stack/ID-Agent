@@ -76,3 +76,16 @@ def test_ai_execution_result_supports_runtime_diagnostics():
     assert result.fallback_reason == "api_not_configured"
     assert result.requires_human_review is True
     assert result.engineering_confirmation is False
+
+
+def test_ai_execution_result_rejects_unknown_fallback_reason():
+    from app.models.ai_analysis import AIAnalysisExecutionResult
+
+    with pytest.raises(ValidationError):
+        AIAnalysisExecutionResult(
+            summary="Autonomous result.",
+            analysis_mode="autonomous",
+            ai_provider="openai",
+            ai_model="test-model",
+            fallback_reason="unknown_reason",
+        )

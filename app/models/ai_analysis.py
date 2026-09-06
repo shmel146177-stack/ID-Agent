@@ -2,6 +2,17 @@
 
 from pydantic import BaseModel, ConfigDict, Field
 
+AIFallbackReason = Literal[
+    "empty_text",
+    "api_not_configured",
+    "ai_disabled",
+    "backend_not_connected",
+    "provider_unavailable",
+    "credit_balance_exhausted",
+    "rate_limit_exceeded",
+    "invalid_provider_response",
+]
+
 
 class AIFactSuggestion(BaseModel):
     """Факт, предложенный AI для последующей проверки."""
@@ -34,4 +45,4 @@ class AIAnalysisExecutionResult(AIAnalysisResult):
     analysis_mode: Literal["openai", "autonomous"]
     ai_provider: str
     ai_model: str
-    fallback_reason: str | None = None
+    fallback_reason: AIFallbackReason | None = None
