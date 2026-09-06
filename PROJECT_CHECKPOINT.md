@@ -1,14 +1,14 @@
 # ID-Agent - контрольная точка
 
-Дата проверки: 04.09.2026
+Дата проверки: 06.09.2026
 Ветка: `develop`
-Текущая контрольная точка: `baa1158` - `Report AI execution mode diagnostics`
+Текущая контрольная точка: `d58055a` - `Report precise AI fallback reasons`
 
 ## Состояние репозитория
 
 - Основная рабочая ветка: `develop`.
 - GitHub: `https://github.com/shmel146177-stack/ID-Agent.git`
-- Последний подтвержденный коммит: `f1bd3bf7f2df05dcf2ed16bf0a0f883da4b55b94`.
+- Последний подтвержденный коммит: `d58055abddf3b1067467cf6507e737157bc339bd`.
 - Коммит отправлен в `origin/develop`.
 - Рабочее дерево после push было чистым.
 
@@ -16,7 +16,7 @@
 
 Полный набор тестов:
 
-`402 passed, 1 skipped`
+`406 passed, 1 skipped`
 
 Пропущенный тест связан с невозможностью создания симлинков в текущей Windows-среде и не является ошибкой ID-Agent.
 
@@ -518,3 +518,30 @@ Next environment-improvement plan:
 
 `baa1158` - `Report AI execution mode diagnostics`
 <!-- END AI EXECUTION MODE DIAGNOSTICS STATUS -->
+
+<!-- BEGIN PRECISE AI FALLBACK REASONS STATUS -->
+## Точные причины перехода AI в автономный режим - 06.09.2026
+
+Реализовано:
+
+- `AIUnavailableError` хранит машиночитаемое поле `reason`;
+- `AIDocumentAnalysisService` переносит причину ошибки в `fallback_reason`;
+- отсутствие API-ключа обозначается как `api_not_configured`;
+- отключенный AI обозначается как `ai_disabled`;
+- исчерпанный баланс API обозначается как `credit_balance_exhausted`;
+- превышение лимита запросов обозначается как `rate_limit_exceeded`;
+- недоступность провайдера обозначается как `provider_unavailable`;
+- отсутствие структурированного ответа обозначается как `invalid_provider_response`;
+- детерминированные функции ID-Agent остаются доступны при любой ошибке провайдера.
+
+Проверки:
+
+- профильные тесты сервисов: `29 passed`;
+- Ruff пройден без ошибок;
+- полная регрессия: `406 passed, 1 skipped`;
+- восстановленная среда проверена на Python `3.14.7`.
+
+Текущая стабильная точка:
+
+`d58055a` - `Report precise AI fallback reasons`
+<!-- END PRECISE AI FALLBACK REASONS STATUS -->
