@@ -1,3 +1,5 @@
+import re
+
 from app.analyzer.document_classifier import DocumentClassifier
 from app.models.ai_analysis import AIAnalysisResult, AIFactSuggestion
 from app.services.document_analyzer import DocumentAnalyzer
@@ -7,6 +9,7 @@ class AutonomousAnalysisBackend:
     """Локальный анализ документа без внешнего AI-провайдера."""
 
     FACT_CONFIDENCE = 0.8
+    EVIDENCE_MAX_CHARS = 240
 
     def __init__(
         self,
@@ -15,6 +18,71 @@ class AutonomousAnalysisBackend:
     ):
         self.classifier = classifier or DocumentClassifier()
         self.analyzer = analyzer or DocumentAnalyzer()
+
+
+    @classmethod
+    def _limit_evidence(
+        cls,
+        evidence: str,
+        match_start: int,
+        match_end: int,
+    ) -> str:
+        if len(evidence) <= cls.EVIDENCE_MAX_CHARS:
+            return evidence
+
+        match_length = match_end - match_start
+        available_context = max(
+            0,
+            cls.EVIDENCE_MAX_CHARS - match_length,
+        )
+        fragment_start = max(
+            0,
+            match_start - available_context // 2,
+        )
+        fragment_end = min(
+            len(evidence),
+            fragment_start + cls.EVIDENCE_MAX_CHARS,
+        )
+        fragment_start = max(
+            0,
+            fragment_end - cls.EVIDENCE_MAX_CHARS,
+        )
+
+        return evidence[
+            fragment_start:fragment_end
+        ].strip()
+
+    @classmethod
+    def _find_evidence(
+        cls,
+        text: str,
+        value: str,
+    ) -> str:
+        flexible_value = r"\s*".join(
+            re.escape(character)
+            for character in value
+        )
+
+        for source_line in text.splitlines():
+            evidence = source_line.strip()
+
+            if not evidence:
+                continue
+
+            match = re.search(
+                flexible_value,
+                evidence,
+                flags=re.IGNORECASE,
+            )
+
+            if match:
+                return cls._limit_evidence(
+                    evidence,
+                    match.start(),
+                    match.end(),
+                )
+
+        return value
 
     def __call__(
         self,
@@ -42,7 +110,10 @@ class AutonomousAnalysisBackend:
                 AIFactSuggestion(
                     field=field,
                     value=value,
-                    evidence=value,
+                    evidence=self._find_evidence(
+                        text,
+                        value,
+                    ),
                     confidence=self.FACT_CONFIDENCE,
                 )
             )
