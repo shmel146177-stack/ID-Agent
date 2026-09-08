@@ -106,14 +106,19 @@ class AutonomousAnalysisBackend:
             if not value:
                 continue
 
+            evidence = self._find_evidence(
+                text,
+                value,
+            )
+
+            if evidence is None:
+                continue
+
             facts.append(
                 AIFactSuggestion(
                     field=field,
                     value=value,
-                    evidence=self._find_evidence(
-                        text,
-                        value,
-                    ),
+                    evidence=evidence,
                     confidence=self.FACT_CONFIDENCE,
                 )
             )
