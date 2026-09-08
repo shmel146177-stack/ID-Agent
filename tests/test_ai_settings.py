@@ -70,3 +70,11 @@ def test_ai_settings_ai_active_only_with_flag_and_key(monkeypatch):
     assert settings.enabled is True
     assert settings.configured is True
     assert settings.active is True
+
+
+def test_ai_settings_uses_default_model_for_blank_value(monkeypatch):
+    monkeypatch.setenv("OPENAI_MODEL", "   ")
+
+    settings = AISettings.from_environment()
+
+    assert settings.model == AISettings.DEFAULT_MODEL

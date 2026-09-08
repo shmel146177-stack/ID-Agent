@@ -16,9 +16,9 @@ class AISettings:
     def from_environment(cls) -> "AISettings":
         api_key = (os.getenv("OPENAI_API_KEY") or "").strip() or None
         model = (
-            os.getenv("OPENAI_MODEL")
+            (os.getenv("OPENAI_MODEL") or "").strip()
             or cls.DEFAULT_MODEL
-        ).strip()
+        )
         enabled = (
             os.getenv("ID_AGENT_AI_ENABLED") or ""
         ).strip().lower() in {
