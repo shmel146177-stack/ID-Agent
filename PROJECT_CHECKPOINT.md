@@ -2,13 +2,13 @@
 
 Дата проверки: 08.09.2026
 Ветка: `develop`
-Текущая контрольная точка: `59fe48e` - `Avoid unsupported autonomous evidence`
+Текущая контрольная точка: `5b22e6e` - `Exclude autonomous facts without evidence`
 
 ## Состояние репозитория
 
 - Основная рабочая ветка: `develop`.
 - GitHub: `https://github.com/shmel146177-stack/ID-Agent.git`
-- Последний подтвержденный коммит: `59fe48e4773c031b5b48f87f2c31d2251067eb21`.
+- Последний подтвержденный коммит: `5b22e6e7ffa0d7c7d4345c8e98987219e2b19dc7`.
 - Коммит отправлен в `origin/develop`.
 - Рабочее дерево после push было чистым.
 
@@ -545,7 +545,7 @@ Next environment-improvement plan:
 
 Текущая стабильная точка:
 
-`59fe48e` - `Avoid unsupported autonomous evidence`
+`5b22e6e` - `Exclude autonomous facts without evidence`
 <!-- END PRECISE AI FALLBACK REASONS STATUS -->
 
 <!-- BEGIN STRICT AI FALLBACK REASONS STATUS -->
@@ -572,7 +572,7 @@ Next environment-improvement plan:
 
 Текущая стабильная точка:
 
-`59fe48e` - `Avoid unsupported autonomous evidence`
+`5b22e6e` - `Exclude autonomous facts without evidence`
 <!-- END STRICT AI FALLBACK REASONS STATUS -->
 
 <!-- BEGIN AI EXECUTION CONSISTENCY STATUS -->
@@ -596,7 +596,7 @@ Next environment-improvement plan:
 
 Текущая стабильная точка:
 
-`59fe48e` - `Avoid unsupported autonomous evidence`
+`5b22e6e` - `Exclude autonomous facts without evidence`
 <!-- END AI EXECUTION CONSISTENCY STATUS -->
 
 <!-- BEGIN AI PROVIDER MODEL DIAGNOSTICS STATUS -->
@@ -620,7 +620,7 @@ Next environment-improvement plan:
 
 Текущая стабильная точка:
 
-`59fe48e` - `Avoid unsupported autonomous evidence`
+`5b22e6e` - `Exclude autonomous facts without evidence`
 <!-- END AI PROVIDER MODEL DIAGNOSTICS STATUS -->
 
 <!-- BEGIN BLANK AI MODEL FALLBACK STATUS -->
@@ -642,7 +642,7 @@ Next environment-improvement plan:
 
 Текущая стабильная точка:
 
-`59fe48e` - `Avoid unsupported autonomous evidence`
+`5b22e6e` - `Exclude autonomous facts without evidence`
 <!-- END BLANK AI MODEL FALLBACK STATUS -->
 
 <!-- BEGIN AUTONOMOUS DETERMINISTIC ANALYSIS STATUS -->
@@ -674,7 +674,7 @@ Next environment-improvement plan:
 
 Текущая стабильная точка:
 
-`59fe48e` - `Avoid unsupported autonomous evidence`
+`5b22e6e` - `Exclude autonomous facts without evidence`
 <!-- END AUTONOMOUS DETERMINISTIC ANALYSIS STATUS -->
 
 <!-- BEGIN AUTONOMOUS SOURCE EVIDENCE STATUS -->
@@ -687,7 +687,7 @@ Next environment-improvement plan:
 - поддерживаются различия в пробелах, например `IP54` и `IP 54`;
 - длинное доказательство ограничивается 240 символами;
 - найденное значение сохраняется внутри ограниченного фрагмента;
-- если исходная строка не найдена, поле `evidence` остается пустым;
+- если исходная строка не найдена, факт исключается из результата;
 - обязательная проверка человеком сохранена.
 
 Проверки:
@@ -699,5 +699,5 @@ Next environment-improvement plan:
 
 Текущая стабильная точка:
 
-`59fe48e` - `Avoid unsupported autonomous evidence`
+`5b22e6e` - `Exclude autonomous facts without evidence`
 <!-- END AUTONOMOUS SOURCE EVIDENCE STATUS -->
