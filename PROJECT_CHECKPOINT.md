@@ -2,13 +2,13 @@
 
 Дата проверки: 08.09.2026
 Ветка: `develop`
-Текущая контрольная точка: `fff0517` - `Use source context for autonomous evidence`
+Текущая контрольная точка: `59fe48e` - `Avoid unsupported autonomous evidence`
 
 ## Состояние репозитория
 
 - Основная рабочая ветка: `develop`.
 - GitHub: `https://github.com/shmel146177-stack/ID-Agent.git`
-- Последний подтвержденный коммит: `fff05172e3e7bf687cad4c8b4f70a887c10da738`.
+- Последний подтвержденный коммит: `59fe48e4773c031b5b48f87f2c31d2251067eb21`.
 - Коммит отправлен в `origin/develop`.
 - Рабочее дерево после push было чистым.
 
@@ -16,7 +16,7 @@
 
 Полный набор тестов:
 
-`422 passed, 1 skipped`
+`423 passed, 1 skipped`
 
 Пропущенный тест связан с невозможностью создания симлинков в текущей Windows-среде и не является ошибкой ID-Agent.
 
@@ -540,12 +540,12 @@ Next environment-improvement plan:
 - API-тест подтверждает возврат и сохранение `credit_balance_exhausted`;
 - API-тесты: `50 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `422 passed, 1 skipped`;
+- полная регрессия: `423 passed, 1 skipped`;
 - восстановленная среда проверена на Python `3.14.7`.
 
 Текущая стабильная точка:
 
-`fff0517` - `Use source context for autonomous evidence`
+`59fe48e` - `Avoid unsupported autonomous evidence`
 <!-- END PRECISE AI FALLBACK REASONS STATUS -->
 
 <!-- BEGIN STRICT AI FALLBACK REASONS STATUS -->
@@ -568,11 +568,11 @@ Next environment-improvement plan:
 - неизвестная причина вызывает `ValidationError`;
 - связанный AI-контур прошел без ошибок;
 - Ruff пройден без ошибок;
-- полная регрессия: `422 passed, 1 skipped`.
+- полная регрессия: `423 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`fff0517` - `Use source context for autonomous evidence`
+`59fe48e` - `Avoid unsupported autonomous evidence`
 <!-- END STRICT AI FALLBACK REASONS STATUS -->
 
 <!-- BEGIN AI EXECUTION CONSISTENCY STATUS -->
@@ -592,11 +592,11 @@ Next environment-improvement plan:
 - тест корректной автономной диагностики;
 - связанный AI-контур: `92 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `422 passed, 1 skipped`.
+- полная регрессия: `423 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`fff0517` - `Use source context for autonomous evidence`
+`59fe48e` - `Avoid unsupported autonomous evidence`
 <!-- END AI EXECUTION CONSISTENCY STATUS -->
 
 <!-- BEGIN AI PROVIDER MODEL DIAGNOSTICS STATUS -->
@@ -616,11 +616,11 @@ Next environment-improvement plan:
 - тест отклонения пустого имени модели;
 - связанный AI-контур: `94 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `422 passed, 1 skipped`.
+- полная регрессия: `423 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`fff0517` - `Use source context for autonomous evidence`
+`59fe48e` - `Avoid unsupported autonomous evidence`
 <!-- END AI PROVIDER MODEL DIAGNOSTICS STATUS -->
 
 <!-- BEGIN BLANK AI MODEL FALLBACK STATUS -->
@@ -638,11 +638,11 @@ Next environment-improvement plan:
 - добавлен тест пробельного значения `OPENAI_MODEL`;
 - тесты контура AI-настроек: `75 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `422 passed, 1 skipped`.
+- полная регрессия: `423 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`fff0517` - `Use source context for autonomous evidence`
+`59fe48e` - `Avoid unsupported autonomous evidence`
 <!-- END BLANK AI MODEL FALLBACK STATUS -->
 
 <!-- BEGIN AUTONOMOUS DETERMINISTIC ANALYSIS STATUS -->
@@ -670,11 +670,11 @@ Next environment-improvement plan:
 - API-тест подтверждает возврат и сохранение локальных фактов;
 - связанный AI-контур: `113 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `422 passed, 1 skipped`.
+- полная регрессия: `423 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`fff0517` - `Use source context for autonomous evidence`
+`59fe48e` - `Avoid unsupported autonomous evidence`
 <!-- END AUTONOMOUS DETERMINISTIC ANALYSIS STATUS -->
 
 <!-- BEGIN AUTONOMOUS SOURCE EVIDENCE STATUS -->
@@ -687,17 +687,17 @@ Next environment-improvement plan:
 - поддерживаются различия в пробелах, например `IP54` и `IP 54`;
 - длинное доказательство ограничивается 240 символами;
 - найденное значение сохраняется внутри ограниченного фрагмента;
-- если исходная строка не найдена, используется значение факта;
+- если исходная строка не найдена, поле `evidence` остается пустым;
 - обязательная проверка человеком сохранена.
 
 Проверки:
 
-- тесты автономного backend: `5 passed`;
-- связанный AI-контур: `116 passed`;
+- тесты автономного backend: `6 passed`;
+- связанный AI-контур: `117 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `422 passed, 1 skipped`.
+- полная регрессия: `423 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`fff0517` - `Use source context for autonomous evidence`
+`59fe48e` - `Avoid unsupported autonomous evidence`
 <!-- END AUTONOMOUS SOURCE EVIDENCE STATUS -->
