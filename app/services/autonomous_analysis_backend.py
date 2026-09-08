@@ -57,7 +57,7 @@ class AutonomousAnalysisBackend:
         cls,
         text: str,
         value: str,
-    ) -> str:
+    ) -> str | None:
         flexible_value = r"\s*".join(
             re.escape(character)
             for character in value
@@ -82,7 +82,7 @@ class AutonomousAnalysisBackend:
                     match.end(),
                 )
 
-        return value
+        return None
 
     def __call__(
         self,

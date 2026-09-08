@@ -168,3 +168,29 @@ def test_autonomous_backend_finds_evidence_with_spacing_difference():
 
     assert ip_fact.value == "IP54"
     assert ip_fact.evidence == "Степень защиты корпуса: IP 54."
+
+def test_autonomous_backend_does_not_invent_missing_evidence():
+    class MissingEvidenceAnalyzerStub:
+        def analyze_text(self, text):
+            return {
+                "document_type": "Не определён",
+                "serial_number": "ABC-123",
+            }
+
+    backend = AutonomousAnalysisBackend(
+        classifier=ClassifierStub(),
+        analyzer=MissingEvidenceAnalyzerStub(),
+    )
+
+    result = backend(
+        "document.pdf",
+        "Текст документа без серийного номера.",
+    )
+    serial_fact = next(
+        fact
+        for fact in result.facts
+        if fact.field == "serial_number"
+    )
+
+    assert serial_fact.value == "ABC-123"
+    assert serial_fact.evidence is None
