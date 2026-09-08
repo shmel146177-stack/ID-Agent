@@ -1,14 +1,14 @@
 # ID-Agent - контрольная точка
 
-Дата проверки: 06.09.2026
+Дата проверки: 08.09.2026
 Ветка: `develop`
-Текущая контрольная точка: `a6be13a` - `Validate AI execution diagnostics consistency`
+Текущая контрольная точка: `ad04dc1` - `Validate AI provider and model diagnostics`
 
 ## Состояние репозитория
 
 - Основная рабочая ветка: `develop`.
 - GitHub: `https://github.com/shmel146177-stack/ID-Agent.git`
-- Последний подтвержденный коммит: `a6be13a3ba1f996f0244d26f255e0ac17d0ababf`.
+- Последний подтвержденный коммит: `ad04dc107aefcd64cd82cbbde1d05839c0ec14c5`.
 - Коммит отправлен в `origin/develop`.
 - Рабочее дерево после push было чистым.
 
@@ -16,7 +16,7 @@
 
 Полный набор тестов:
 
-`410 passed, 1 skipped`
+`412 passed, 1 skipped`
 
 Пропущенный тест связан с невозможностью создания симлинков в текущей Windows-среде и не является ошибкой ID-Agent.
 
@@ -540,12 +540,12 @@ Next environment-improvement plan:
 - API-тест подтверждает возврат и сохранение `credit_balance_exhausted`;
 - API-тесты: `50 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `410 passed, 1 skipped`;
+- полная регрессия: `412 passed, 1 skipped`;
 - восстановленная среда проверена на Python `3.14.7`.
 
 Текущая стабильная точка:
 
-`a6be13a` - `Validate AI execution diagnostics consistency`
+`ad04dc1` - `Validate AI provider and model diagnostics`
 <!-- END PRECISE AI FALLBACK REASONS STATUS -->
 
 <!-- BEGIN STRICT AI FALLBACK REASONS STATUS -->
@@ -568,11 +568,11 @@ Next environment-improvement plan:
 - неизвестная причина вызывает `ValidationError`;
 - связанный AI-контур прошел без ошибок;
 - Ruff пройден без ошибок;
-- полная регрессия: `410 passed, 1 skipped`.
+- полная регрессия: `412 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`a6be13a` - `Validate AI execution diagnostics consistency`
+`ad04dc1` - `Validate AI provider and model diagnostics`
 <!-- END STRICT AI FALLBACK REASONS STATUS -->
 
 <!-- BEGIN AI EXECUTION CONSISTENCY STATUS -->
@@ -592,9 +592,33 @@ Next environment-improvement plan:
 - тест корректной автономной диагностики;
 - связанный AI-контур: `92 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `410 passed, 1 skipped`.
+- полная регрессия: `412 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`a6be13a` - `Validate AI execution diagnostics consistency`
+`ad04dc1` - `Validate AI provider and model diagnostics`
 <!-- END AI EXECUTION CONSISTENCY STATUS -->
+
+<!-- BEGIN AI PROVIDER MODEL DIAGNOSTICS STATUS -->
+## Проверка провайдера и модели AI - 08.09.2026
+
+Реализовано:
+
+- поле `ai_provider` принимает только значение `openai`;
+- неизвестные названия провайдера отклоняются моделью Pydantic;
+- поле `ai_model` не допускает пустую строку или строку из пробелов;
+- некорректная диагностика отклоняется до возврата API-ответа и сохранения результата;
+- существующие автономные и OpenAI-сценарии продолжают работать.
+
+Проверки:
+
+- тест отклонения неизвестного провайдера;
+- тест отклонения пустого имени модели;
+- связанный AI-контур: `94 passed`;
+- Ruff пройден без ошибок;
+- полная регрессия: `412 passed, 1 skipped`.
+
+Текущая стабильная точка:
+
+`ad04dc1` - `Validate AI provider and model diagnostics`
+<!-- END AI PROVIDER MODEL DIAGNOSTICS STATUS -->
