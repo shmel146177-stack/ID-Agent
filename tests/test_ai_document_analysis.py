@@ -431,3 +431,30 @@ def test_ai_document_analysis_uses_autonomous_backend_after_provider_failure():
     assert result.facts[0].field == "ip"
     assert result.facts[0].value == "IP54"
     assert "Local fallback analysis completed." in result.summary
+
+def test_ai_document_analysis_preserves_excluded_autonomous_fact_fields():
+    from app.models.ai_analysis import AutonomousAnalysisResult
+
+    def autonomous_backend(filename, text):
+        return AutonomousAnalysisResult(
+            summary="Local analysis completed.",
+            excluded_autonomous_fact_fields=[
+                "serial_number",
+            ],
+        )
+
+    service = AIDocumentAnalysisService(
+        ai_client=create_ai_client(),
+        autonomous_backend=autonomous_backend,
+    )
+
+    result = service.analyze_text(
+        "document.pdf",
+        "Document text.",
+    )
+
+    assert result.analysis_mode == "autonomous"
+    assert result.fallback_reason == "api_not_configured"
+    assert result.excluded_autonomous_fact_fields == [
+        "serial_number",
+    ]

@@ -141,3 +141,24 @@ def test_ai_execution_result_rejects_blank_model():
             ai_model="   ",
             fallback_reason="provider_unavailable",
         )
+
+
+def test_ai_execution_result_tracks_excluded_autonomous_fact_fields():
+    from app.models.ai_analysis import AIAnalysisExecutionResult
+
+    result = AIAnalysisExecutionResult(
+        summary="Autonomous analysis completed.",
+        analysis_mode="autonomous",
+        ai_provider="openai",
+        ai_model="test-model",
+        fallback_reason="ai_disabled",
+        excluded_autonomous_fact_fields=[
+            "serial_number",
+            "manufacturer",
+        ],
+    )
+
+    assert result.excluded_autonomous_fact_fields == [
+        "serial_number",
+        "manufacturer",
+    ]

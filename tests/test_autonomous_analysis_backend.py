@@ -187,6 +187,9 @@ def test_autonomous_backend_excludes_fact_without_source_evidence():
         "Текст документа без серийного номера.",
     )
     assert result.facts == []
+    assert result.excluded_autonomous_fact_fields == [
+        "serial_number",
+    ]
     assert any(
         "1" in warning
         and "исключ" in warning.lower()

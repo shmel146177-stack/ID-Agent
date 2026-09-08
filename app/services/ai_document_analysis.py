@@ -1,4 +1,4 @@
-﻿from collections.abc import Callable
+from collections.abc import Callable
 
 from app.models.ai_analysis import (
     AIAnalysisExecutionResult,
@@ -52,6 +52,7 @@ class AIDocumentAnalysisService:
         *,
         analysis_mode: str,
         fallback_reason: str | None = None,
+        excluded_autonomous_fact_fields: list[str] | None = None,
     ) -> AIAnalysisExecutionResult:
         return AIAnalysisExecutionResult(
             **result.model_dump(),
@@ -59,6 +60,9 @@ class AIDocumentAnalysisService:
             ai_provider="openai",
             ai_model=self.ai_client.settings.model,
             fallback_reason=fallback_reason,
+            excluded_autonomous_fact_fields=(
+                excluded_autonomous_fact_fields or []
+            ),
         )
 
 
@@ -80,7 +84,19 @@ class AIDocumentAnalysisService:
                 "Autonomous backend must return AIAnalysisResult"
             )
 
+        excluded_fact_fields = list(
+            getattr(
+                result,
+                "excluded_autonomous_fact_fields",
+                [],
+            )
+        )
+
         result_data = result.model_dump()
+        result_data.pop(
+            "excluded_autonomous_fact_fields",
+            None,
+        )
         result_data["summary"] = (
             f"{fallback_result.summary} {result.summary}"
         )
@@ -93,6 +109,9 @@ class AIDocumentAnalysisService:
             AIAnalysisResult(**result_data),
             analysis_mode="autonomous",
             fallback_reason=fallback_reason,
+            excluded_autonomous_fact_fields=(
+                excluded_fact_fields
+            ),
         )
 
     def analyze_text(

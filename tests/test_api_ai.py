@@ -1825,3 +1825,68 @@ def test_ai_analyze_returns_and_saves_autonomous_facts(
     assert saved["analysis_mode"] == "autonomous"
     assert saved["fallback_reason"] == "ai_disabled"
     assert saved["facts"] == data["facts"]
+
+def test_ai_analyze_returns_and_saves_excluded_autonomous_fact_fields(
+    monkeypatch,
+    tmp_path,
+):
+    from app.models.ai_analysis import AutonomousAnalysisResult
+    from app.services.autonomous_analysis_backend import (
+        AutonomousAnalysisBackend,
+    )
+    from app.services.project_service import project_service
+
+    monkeypatch.setenv("OPENAI_API_KEY", "test-key")
+    monkeypatch.setenv("OPENAI_MODEL", "test-model")
+    monkeypatch.setenv("ID_AGENT_AI_ENABLED", "false")
+
+    file_paths = {
+        "ai_file_path": "ai_analysis.json",
+        "ai_review_file_path": "ai_review.json",
+        "ai_comparison_file_path": "ai_comparison.json",
+    }
+
+    for attribute, filename in file_paths.items():
+        monkeypatch.setattr(
+            project_service,
+            attribute,
+            str(tmp_path / filename),
+        )
+
+    def autonomous_backend(self, filename, text):
+        return AutonomousAnalysisResult(
+            summary="Local analysis completed.",
+            excluded_autonomous_fact_fields=[
+                "serial_number",
+            ],
+        )
+
+    monkeypatch.setattr(
+        AutonomousAnalysisBackend,
+        "__call__",
+        autonomous_backend,
+    )
+
+    response = client.post(
+        "/ai/analyze",
+        json={
+            "filename": "document.pdf",
+            "text": "Document text without a serial number.",
+        },
+    )
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert data["analysis_mode"] == "autonomous"
+    assert data["fallback_reason"] == "ai_disabled"
+    assert data["excluded_autonomous_fact_fields"] == [
+        "serial_number",
+    ]
+
+    saved = project_service.get_ai_analysis()
+
+    assert saved["excluded_autonomous_fact_fields"] == [
+        "serial_number",
+    ]

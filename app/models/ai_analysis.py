@@ -39,6 +39,14 @@ class AIAnalysisResult(BaseModel):
     engineering_confirmation: Literal[False] = False
 
 
+class AutonomousAnalysisResult(AIAnalysisResult):
+    """Autonomous result with trusted exclusion diagnostics."""
+
+    excluded_autonomous_fact_fields: list[str] = Field(
+        default_factory=list
+    )
+
+
 class AIAnalysisExecutionResult(AIAnalysisResult):
     """Result with trusted runtime diagnostics."""
 
@@ -46,6 +54,7 @@ class AIAnalysisExecutionResult(AIAnalysisResult):
     ai_provider: Literal["openai"]
     ai_model: str
     fallback_reason: AIFallbackReason | None = None
+    excluded_autonomous_fact_fields: list[str] = Field(default_factory=list)
 
     @model_validator(mode="after")
     def validate_execution_diagnostics(self):

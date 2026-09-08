@@ -1,7 +1,10 @@
 import re
 
 from app.analyzer.document_classifier import DocumentClassifier
-from app.models.ai_analysis import AIAnalysisResult, AIFactSuggestion
+from app.models.ai_analysis import (
+    AutonomousAnalysisResult,
+    AIFactSuggestion,
+)
 from app.services.document_analyzer import DocumentAnalyzer
 
 
@@ -88,7 +91,7 @@ class AutonomousAnalysisBackend:
         self,
         filename: str,
         text: str,
-    ) -> AIAnalysisResult:
+    ) -> AutonomousAnalysisResult:
         document_type = self.classifier.classify(
             filename,
             text,
@@ -96,7 +99,7 @@ class AutonomousAnalysisBackend:
         extracted_data = self.analyzer.analyze_text(text)
 
         facts = []
-        excluded_fact_count = 0
+        excluded_fact_fields = []
 
         for field, raw_value in extracted_data.items():
             if field == "document_type" or raw_value is None:
@@ -113,7 +116,7 @@ class AutonomousAnalysisBackend:
             )
 
             if evidence is None:
-                excluded_fact_count += 1
+                excluded_fact_fields.append(field)
                 continue
 
             facts.append(
@@ -128,13 +131,16 @@ class AutonomousAnalysisBackend:
         if document_type == "Не определён":
             document_type = None
 
-        result = AIAnalysisResult(
+        result = AutonomousAnalysisResult(
             summary=(
                 f"Автономный анализ документа {filename}: "
                 f"найдено фактов - {len(facts)}."
             ),
             document_type_suggestion=document_type,
             facts=facts,
+            excluded_autonomous_fact_fields=(
+                excluded_fact_fields
+            ),
             warnings=[
                 (
                     "Результат получен автономными "
@@ -144,12 +150,12 @@ class AutonomousAnalysisBackend:
             ],
         )
 
-        if excluded_fact_count:
+        if excluded_fact_fields:
             result.warnings.append(
                 (
                     "Из автономного результата исключено фактов "
                     "без доказательства: "
-                    f"{excluded_fact_count}."
+                    f"{len(excluded_fact_fields)}."
                 )
             )
 
