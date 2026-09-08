@@ -187,3 +187,9 @@ def test_autonomous_backend_excludes_fact_without_source_evidence():
         "Текст документа без серийного номера.",
     )
     assert result.facts == []
+    assert any(
+        "1" in warning
+        and "исключ" in warning.lower()
+        and "доказатель" in warning.lower()
+        for warning in result.warnings
+    )

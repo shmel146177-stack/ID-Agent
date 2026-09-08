@@ -96,6 +96,7 @@ class AutonomousAnalysisBackend:
         extracted_data = self.analyzer.analyze_text(text)
 
         facts = []
+        excluded_fact_count = 0
 
         for field, raw_value in extracted_data.items():
             if field == "document_type" or raw_value is None:
@@ -112,6 +113,7 @@ class AutonomousAnalysisBackend:
             )
 
             if evidence is None:
+                excluded_fact_count += 1
                 continue
 
             facts.append(
@@ -126,7 +128,7 @@ class AutonomousAnalysisBackend:
         if document_type == "Не определён":
             document_type = None
 
-        return AIAnalysisResult(
+        result = AIAnalysisResult(
             summary=(
                 f"Автономный анализ документа {filename}: "
                 f"найдено фактов - {len(facts)}."
@@ -141,3 +143,14 @@ class AutonomousAnalysisBackend:
                 "Все найденные факты требуют проверки человеком.",
             ],
         )
+
+        if excluded_fact_count:
+            result.warnings.append(
+                (
+                    "Из автономного результата исключено фактов "
+                    "без доказательства: "
+                    f"{excluded_fact_count}."
+                )
+            )
+
+        return result
