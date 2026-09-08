@@ -115,3 +115,29 @@ def test_ai_execution_result_rejects_autonomous_mode_without_reason():
             ai_model="test-model",
             fallback_reason=None,
         )
+
+
+def test_ai_execution_result_rejects_unknown_provider():
+    from app.models.ai_analysis import AIAnalysisExecutionResult
+
+    with pytest.raises(ValidationError):
+        AIAnalysisExecutionResult(
+            summary="Autonomous result.",
+            analysis_mode="autonomous",
+            ai_provider="unknown-provider",
+            ai_model="test-model",
+            fallback_reason="provider_unavailable",
+        )
+
+
+def test_ai_execution_result_rejects_blank_model():
+    from app.models.ai_analysis import AIAnalysisExecutionResult
+
+    with pytest.raises(ValidationError):
+        AIAnalysisExecutionResult(
+            summary="Autonomous result.",
+            analysis_mode="autonomous",
+            ai_provider="openai",
+            ai_model="   ",
+            fallback_reason="provider_unavailable",
+        )

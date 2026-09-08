@@ -43,12 +43,17 @@ class AIAnalysisExecutionResult(AIAnalysisResult):
     """Result with trusted runtime diagnostics."""
 
     analysis_mode: Literal["openai", "autonomous"]
-    ai_provider: str
+    ai_provider: Literal["openai"]
     ai_model: str
     fallback_reason: AIFallbackReason | None = None
 
     @model_validator(mode="after")
     def validate_execution_diagnostics(self):
+        if not self.ai_model.strip():
+            raise ValueError(
+                "ai_model must not be blank"
+            )
+
         if (
             self.analysis_mode == "openai"
             and self.fallback_reason is not None
