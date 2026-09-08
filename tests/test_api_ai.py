@@ -1764,3 +1764,64 @@ def test_ai_analyze_saves_credit_balance_fallback_reason(
     assert saved["ai_provider"] == "openai"
     assert saved["ai_model"] == "test-model"
     assert saved["fallback_reason"] == "credit_balance_exhausted"
+
+
+def test_ai_analyze_returns_and_saves_autonomous_facts(
+    monkeypatch,
+    tmp_path,
+):
+    from app.services.project_service import project_service
+
+    monkeypatch.setenv("OPENAI_API_KEY", "test-key")
+    monkeypatch.setenv("OPENAI_MODEL", "test-model")
+    monkeypatch.setenv("ID_AGENT_AI_ENABLED", "false")
+
+    file_paths = {
+        "ai_file_path": "ai_analysis.json",
+        "ai_review_file_path": "ai_review.json",
+        "ai_comparison_file_path": "ai_comparison.json",
+    }
+
+    for attribute, filename in file_paths.items():
+        monkeypatch.setattr(
+            project_service,
+            attribute,
+            str(tmp_path / filename),
+        )
+
+    response = client.post(
+        "/ai/analyze",
+        json={
+            "filename": "паспорт.pdf",
+            "text": (
+                "Паспорт оборудования\n"
+                'ООО "Тест"\n'
+                "Шкаф управления ШУ-1, 7,5 кВт\n"
+                "IP54"
+            ),
+        },
+    )
+
+    assert response.status_code == 200
+
+    data = response.json()
+    facts = {
+        fact["field"]: fact["value"]
+        for fact in data["facts"]
+    }
+
+    assert data["analysis_mode"] == "autonomous"
+    assert data["fallback_reason"] == "ai_disabled"
+    assert data["document_type_suggestion"] == "Паспорт оборудования"
+    assert facts["manufacturer"] == 'ООО "Тест"'
+    assert facts["equipment"] == "Шкаф управления ШУ-1, 7,5 кВт"
+    assert facts["power"] == "7,5 кВт"
+    assert facts["ip"] == "IP54"
+    assert data["requires_human_review"] is True
+    assert data["engineering_confirmation"] is False
+
+    saved = project_service.get_ai_analysis()
+
+    assert saved["analysis_mode"] == "autonomous"
+    assert saved["fallback_reason"] == "ai_disabled"
+    assert saved["facts"] == data["facts"]

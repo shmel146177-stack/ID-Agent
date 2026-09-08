@@ -59,7 +59,7 @@ def test_ai_document_analysis_does_not_call_missing_backend():
     )
 
     assert "backend модели еще не подключен" in result.summary
-    assert result.warnings == [
+    assert result.warnings[:1] == [
         "OpenAI настроен, но вызов модели пока отключен.",
     ]
 
@@ -294,3 +294,140 @@ def test_ai_document_analysis_preserves_provider_failure_reason():
 
     assert result.analysis_mode == "autonomous"
     assert result.fallback_reason == "credit_balance_exhausted"
+
+
+def test_ai_document_analysis_uses_autonomous_backend_without_api_key():
+    calls = []
+
+    def autonomous_backend(filename, text):
+        calls.append((filename, text))
+        return AIAnalysisResult(
+            summary="Autonomous analysis completed.",
+            document_type_suggestion="Паспорт оборудования",
+            facts=[
+                AIFactSuggestion(
+                    field="power",
+                    value="7,5 кВт",
+                    evidence="7,5 кВт",
+                    confidence=0.8,
+                )
+            ],
+            warnings=[
+                "Autonomous deterministic rules used.",
+            ],
+        )
+
+    service = AIDocumentAnalysisService(
+        ai_client=create_ai_client(),
+        autonomous_backend=autonomous_backend,
+    )
+
+    result = service.analyze_text(
+        "passport.pdf",
+        "Паспорт оборудования. Мощность 7,5 кВт.",
+    )
+
+    assert calls == [
+        (
+            "passport.pdf",
+            "Паспорт оборудования. Мощность 7,5 кВт.",
+        )
+    ]
+    assert result.analysis_mode == "autonomous"
+    assert result.fallback_reason == "api_not_configured"
+    assert result.document_type_suggestion == "Паспорт оборудования"
+    assert result.facts[0].field == "power"
+    assert result.facts[0].value == "7,5 кВт"
+    assert "Autonomous analysis completed." in result.summary
+    assert "Autonomous deterministic rules used." in result.warnings
+
+def test_ai_document_analysis_uses_autonomous_backend_when_disabled():
+    calls = []
+
+    def autonomous_backend(filename, text):
+        calls.append((filename, text))
+        return AIAnalysisResult(
+            summary="Local deterministic analysis completed.",
+            facts=[
+                AIFactSuggestion(
+                    field="voltage",
+                    value="400 В",
+                    evidence="400 В",
+                    confidence=0.8,
+                )
+            ],
+            warnings=[
+                "Autonomous deterministic rules used.",
+            ],
+        )
+
+    service = AIDocumentAnalysisService(
+        ai_client=create_ai_client("test-key"),
+        autonomous_backend=autonomous_backend,
+    )
+
+    result = service.analyze_text(
+        "scheme.pdf",
+        "Рабочее напряжение 400 В.",
+    )
+
+    assert calls == [
+        (
+            "scheme.pdf",
+            "Рабочее напряжение 400 В.",
+        )
+    ]
+    assert result.analysis_mode == "autonomous"
+    assert result.fallback_reason == "ai_disabled"
+    assert result.facts[0].field == "voltage"
+    assert result.facts[0].value == "400 В"
+    assert "Local deterministic analysis completed." in result.summary
+
+def test_ai_document_analysis_uses_autonomous_backend_after_provider_failure():
+    autonomous_calls = []
+
+    def failing_openai_backend(filename, text):
+        raise AIUnavailableError(
+            "Rate limit exceeded",
+            reason="rate_limit_exceeded",
+        )
+
+    def autonomous_backend(filename, text):
+        autonomous_calls.append((filename, text))
+        return AIAnalysisResult(
+            summary="Local fallback analysis completed.",
+            facts=[
+                AIFactSuggestion(
+                    field="ip",
+                    value="IP54",
+                    evidence="IP54",
+                    confidence=0.8,
+                )
+            ],
+            warnings=[
+                "Autonomous deterministic rules used.",
+            ],
+        )
+
+    service = AIDocumentAnalysisService(
+        ai_client=create_ai_client("test-key"),
+        analysis_backend=failing_openai_backend,
+        autonomous_backend=autonomous_backend,
+    )
+
+    result = service.analyze_text(
+        "equipment.pdf",
+        "Степень защиты IP54.",
+    )
+
+    assert autonomous_calls == [
+        (
+            "equipment.pdf",
+            "Степень защиты IP54.",
+        )
+    ]
+    assert result.analysis_mode == "autonomous"
+    assert result.fallback_reason == "rate_limit_exceeded"
+    assert result.facts[0].field == "ip"
+    assert result.facts[0].value == "IP54"
+    assert "Local fallback analysis completed." in result.summary

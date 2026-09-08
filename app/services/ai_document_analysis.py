@@ -5,6 +5,9 @@ from app.models.ai_analysis import (
     AIAnalysisResult,
 )
 from app.services.ai_client import AIClient, AIUnavailableError
+from app.services.autonomous_analysis_backend import (
+    AutonomousAnalysisBackend,
+)
 
 
 class AIDocumentAnalysisService:
@@ -14,9 +17,14 @@ class AIDocumentAnalysisService:
         self,
         ai_client: AIClient | None = None,
         analysis_backend: Callable[..., AIAnalysisResult] | None = None,
+        autonomous_backend: Callable[..., AIAnalysisResult] | None = None,
     ):
         self.ai_client = ai_client or AIClient()
         self.analysis_backend = analysis_backend
+        self.autonomous_backend = (
+            autonomous_backend
+            or AutonomousAnalysisBackend()
+        )
 
     @classmethod
     def with_openai(
@@ -53,6 +61,40 @@ class AIDocumentAnalysisService:
             fallback_reason=fallback_reason,
         )
 
+
+    def _build_autonomous_result(
+        self,
+        document_name: str,
+        document_text: str,
+        *,
+        fallback_result: AIAnalysisResult,
+        fallback_reason: str,
+    ) -> AIAnalysisExecutionResult:
+        result = self.autonomous_backend(
+            document_name,
+            document_text,
+        )
+
+        if not isinstance(result, AIAnalysisResult):
+            raise TypeError(
+                "Autonomous backend must return AIAnalysisResult"
+            )
+
+        result_data = result.model_dump()
+        result_data["summary"] = (
+            f"{fallback_result.summary} {result.summary}"
+        )
+        result_data["warnings"] = [
+            *fallback_result.warnings,
+            *result.warnings,
+        ]
+
+        return self._build_execution_result(
+            AIAnalysisResult(**result_data),
+            analysis_mode="autonomous",
+            fallback_reason=fallback_reason,
+        )
+
     def analyze_text(
         self,
         filename: str,
@@ -79,8 +121,10 @@ class AIDocumentAnalysisService:
             )
 
         if not self.ai_client.configured:
-            return self._build_execution_result(
-                AIAnalysisResult(
+            return self._build_autonomous_result(
+                document_name,
+                document_text,
+                fallback_result=AIAnalysisResult(
                     summary=(
                         f"AI-анализ документа {document_name} "
                         "не выполнен: OpenAI API не настроен."
@@ -90,13 +134,14 @@ class AIDocumentAnalysisService:
                         "Детерминированный анализ ID-Agent остается доступен.",
                     ],
                 ),
-                analysis_mode="autonomous",
                 fallback_reason="api_not_configured",
             )
 
         if self.analysis_backend is None:
-            return self._build_execution_result(
-                AIAnalysisResult(
+            return self._build_autonomous_result(
+                document_name,
+                document_text,
+                fallback_result=AIAnalysisResult(
                     summary=(
                         f"AI-анализ документа {document_name} "
                         "не выполнен: backend модели еще не подключен."
@@ -105,7 +150,6 @@ class AIDocumentAnalysisService:
                         "OpenAI настроен, но вызов модели пока отключен.",
                     ],
                 ),
-                analysis_mode="autonomous",
                 fallback_reason=(
                     "ai_disabled"
                     if not self.ai_client.settings.enabled
@@ -126,8 +170,10 @@ class AIDocumentAnalysisService:
                     document_text,
                 )
         except AIUnavailableError as exc:
-            return self._build_execution_result(
-                AIAnalysisResult(
+            return self._build_autonomous_result(
+                document_name,
+                document_text,
+                fallback_result=AIAnalysisResult(
                     summary=(
                         f"AI-анализ документа {document_name} "
                         f"временно недоступен: {exc}"
@@ -136,7 +182,6 @@ class AIDocumentAnalysisService:
                         "Детерминированный анализ ID-Agent остается доступен.",
                     ],
                 ),
-                analysis_mode="autonomous",
                 fallback_reason=exc.reason,
             )
 

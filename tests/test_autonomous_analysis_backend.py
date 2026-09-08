@@ -1,0 +1,93 @@
+from app.services.autonomous_analysis_backend import (
+    AutonomousAnalysisBackend,
+)
+
+
+class ClassifierStub:
+    def __init__(self):
+        self.calls = []
+
+    def classify(self, filename, text):
+        self.calls.append((filename, text))
+        return "Паспорт оборудования"
+
+
+class AnalyzerStub:
+    def __init__(self):
+        self.calls = []
+
+    def analyze_text(self, text):
+        self.calls.append(text)
+        return {
+            "document_type": "Документация оборудования",
+            "manufacturer": 'ООО "Тест"',
+            "power": "7,5 кВт",
+            "serial_number": None,
+        }
+
+
+def test_autonomous_backend_builds_reviewable_analysis():
+    classifier = ClassifierStub()
+    analyzer = AnalyzerStub()
+    backend = AutonomousAnalysisBackend(
+        classifier=classifier,
+        analyzer=analyzer,
+    )
+
+    result = backend(
+        "passport.pdf",
+        'Паспорт. Изготовитель ООО "Тест". Мощность 7,5 кВт.',
+    )
+
+    assert classifier.calls == [
+        (
+            "passport.pdf",
+            'Паспорт. Изготовитель ООО "Тест". Мощность 7,5 кВт.',
+        )
+    ]
+    assert analyzer.calls == [
+        'Паспорт. Изготовитель ООО "Тест". Мощность 7,5 кВт.'
+    ]
+    assert result.document_type_suggestion == "Паспорт оборудования"
+    assert {
+        fact.field: fact.value
+        for fact in result.facts
+    } == {
+        "manufacturer": 'ООО "Тест"',
+        "power": "7,5 кВт",
+    }
+    assert all(fact.evidence == fact.value for fact in result.facts)
+    assert all(fact.confidence < 1.0 for fact in result.facts)
+    assert result.requires_human_review is True
+    assert result.engineering_confirmation is False
+    assert any(
+        "автоном" in warning.lower()
+        for warning in result.warnings
+    )
+
+
+def test_autonomous_backend_uses_existing_project_analyzers():
+    backend = AutonomousAnalysisBackend()
+
+    result = backend(
+        "паспорт.pdf",
+        (
+            "Паспорт оборудования\n"
+            'ООО "Тест"\n'
+            "Шкаф управления ШУ-1, 7,5 кВт\n"
+            "IP 54\n"
+            "Серийный номер ABC-123"
+        ),
+    )
+
+    facts = {
+        fact.field: fact.value
+        for fact in result.facts
+    }
+
+    assert result.document_type_suggestion == "Паспорт оборудования"
+    assert facts["manufacturer"] == 'ООО "Тест"'
+    assert facts["equipment"] == "Шкаф управления ШУ-1, 7,5 кВт"
+    assert facts["power"] == "7,5 кВт"
+    assert facts["ip"] == "IP54"
+    assert facts["serial_number"] == "ABC-123"
