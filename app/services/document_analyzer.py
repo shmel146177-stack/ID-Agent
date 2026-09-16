@@ -87,14 +87,33 @@ class DocumentAnalyzer:
             result["current"] = match.group(1).strip() + " А"
 
         # Напряжение
-        match = re.search(
-            r"\b\d+(?:,\d+)?\s*В\b",
+        input_voltage_match = re.search(
+            (
+                r"(?:ввод|питание|"
+                r"напряжение\s+питания)"
+                r"[^\r\n]{0,40}?"
+                r"\b((?:\d\s*[xх×]\s*)?"
+                r"\d+(?:,\d+)?\s*В)\b"
+            ),
             text,
-            re.IGNORECASE
+            re.IGNORECASE,
         )
 
-        if match:
-            result["voltage"] = match.group().strip()
+        if input_voltage_match:
+            result["voltage"] = (
+                " ".join(
+                    input_voltage_match.group(1).split()
+                )
+            )
+        else:
+            match = re.search(
+                r"\b\d+(?:,\d+)?\s*В\b",
+                text,
+                re.IGNORECASE,
+            )
+
+            if match:
+                result["voltage"] = match.group().strip()
 
         # Степень защиты
         match = re.search(

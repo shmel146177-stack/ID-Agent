@@ -1,4 +1,4 @@
-﻿from pathlib import Path
+from pathlib import Path
 
 import pytest
 
@@ -25,9 +25,23 @@ def test_document_analyzer_extracts_equipment_data():
     assert result["date"] == "17.08.2023"
     assert result["drawing_number"] == "ТДЭО.30182.АЭП40-016-54К-22У"
     assert result["power"] == "7,5 кВт"
-    assert result["voltage"] == "24В"
+    assert result["voltage"] == "3x380 В"
     assert result["current"] == "10 - 16 А"
     assert result["ip"] == "IP66"
     assert result["frequency"] == "50 Гц"
     assert result["weight"] is None
     assert result["serial_number"] is None
+
+
+def test_document_analyzer_prefers_input_voltage():
+    text = (
+        "Шкаф управления 7,5 кВт.\n"
+        "Выход 24В.\n"
+        "Светодиод 220 В.\n"
+        "Контактор 230В 50Гц.\n"
+        "Ввод 3x380 В.\n"
+    )
+
+    result = DocumentAnalyzer().analyze_text(text)
+
+    assert result["voltage"] == "3x380 В"
