@@ -2,13 +2,13 @@
 
 Дата проверки: 16.09.2026
 Ветка: `develop`
-Текущая контрольная точка: `333066f` - `Filter component-level autonomous facts`
+Текущая контрольная точка: `a5e9318` - `Report autonomous fact exclusion reasons`
 
 ## Состояние репозитория
 
 - Основная рабочая ветка: `develop`.
 - GitHub: `https://github.com/shmel146177-stack/ID-Agent.git`
-- Последний подтвержденный коммит: `333066f08345474c440271cd59d678b6209892ff`.
+- Последний подтвержденный коммит: `a5e93185b255ef6658169baa937bc175e46bf180`.
 - Коммит отправлен в `origin/develop`.
 - Рабочее дерево после push было чистым.
 
@@ -16,7 +16,7 @@
 
 Полный набор тестов:
 
-`435 passed, 1 skipped`
+`439 passed, 1 skipped`
 
 Пропущенный тест связан с невозможностью создания симлинков в текущей Windows-среде и не является ошибкой ID-Agent.
 
@@ -540,12 +540,12 @@ Next environment-improvement plan:
 - API-тест подтверждает возврат и сохранение `credit_balance_exhausted`;
 - API-тесты: `50 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `435 passed, 1 skipped`;
+- полная регрессия: `439 passed, 1 skipped`;
 - восстановленная среда проверена на Python `3.14.7`.
 
 Текущая стабильная точка:
 
-`333066f` - `Filter component-level autonomous facts`
+`a5e9318` - `Report autonomous fact exclusion reasons`
 <!-- END PRECISE AI FALLBACK REASONS STATUS -->
 
 <!-- BEGIN STRICT AI FALLBACK REASONS STATUS -->
@@ -568,11 +568,11 @@ Next environment-improvement plan:
 - неизвестная причина вызывает `ValidationError`;
 - связанный AI-контур прошел без ошибок;
 - Ruff пройден без ошибок;
-- полная регрессия: `435 passed, 1 skipped`.
+- полная регрессия: `439 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`333066f` - `Filter component-level autonomous facts`
+`a5e9318` - `Report autonomous fact exclusion reasons`
 <!-- END STRICT AI FALLBACK REASONS STATUS -->
 
 <!-- BEGIN AI EXECUTION CONSISTENCY STATUS -->
@@ -592,11 +592,11 @@ Next environment-improvement plan:
 - тест корректной автономной диагностики;
 - связанный AI-контур: `92 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `435 passed, 1 skipped`.
+- полная регрессия: `439 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`333066f` - `Filter component-level autonomous facts`
+`a5e9318` - `Report autonomous fact exclusion reasons`
 <!-- END AI EXECUTION CONSISTENCY STATUS -->
 
 <!-- BEGIN AI PROVIDER MODEL DIAGNOSTICS STATUS -->
@@ -616,11 +616,11 @@ Next environment-improvement plan:
 - тест отклонения пустого имени модели;
 - связанный AI-контур: `94 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `435 passed, 1 skipped`.
+- полная регрессия: `439 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`333066f` - `Filter component-level autonomous facts`
+`a5e9318` - `Report autonomous fact exclusion reasons`
 <!-- END AI PROVIDER MODEL DIAGNOSTICS STATUS -->
 
 <!-- BEGIN BLANK AI MODEL FALLBACK STATUS -->
@@ -638,11 +638,11 @@ Next environment-improvement plan:
 - добавлен тест пробельного значения `OPENAI_MODEL`;
 - тесты контура AI-настроек: `75 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `435 passed, 1 skipped`.
+- полная регрессия: `439 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`333066f` - `Filter component-level autonomous facts`
+`a5e9318` - `Report autonomous fact exclusion reasons`
 <!-- END BLANK AI MODEL FALLBACK STATUS -->
 
 <!-- BEGIN AUTONOMOUS DETERMINISTIC ANALYSIS STATUS -->
@@ -670,11 +670,11 @@ Next environment-improvement plan:
 - API-тест подтверждает возврат и сохранение локальных фактов;
 - связанный AI-контур: `113 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `435 passed, 1 skipped`.
+- полная регрессия: `439 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`333066f` - `Filter component-level autonomous facts`
+`a5e9318` - `Report autonomous fact exclusion reasons`
 <!-- END AUTONOMOUS DETERMINISTIC ANALYSIS STATUS -->
 
 <!-- BEGIN AUTONOMOUS SOURCE EVIDENCE STATUS -->
@@ -696,11 +696,11 @@ Next environment-improvement plan:
 - тесты автономного backend: `6 passed`;
 - связанный AI-контур: `117 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `435 passed, 1 skipped`.
+- полная регрессия: `439 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`333066f` - `Filter component-level autonomous facts`
+`a5e9318` - `Report autonomous fact exclusion reasons`
 <!-- END AUTONOMOUS SOURCE EVIDENCE STATUS -->
 
 <!-- BEGIN STRUCTURED AUTONOMOUS EXCLUSIONS STATUS -->
@@ -724,11 +724,11 @@ Next environment-improvement plan:
 - API-тест возврата и сохранения списка;
 - связанный AI-контур: `107 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `435 passed, 1 skipped`.
+- полная регрессия: `439 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`333066f` - `Filter component-level autonomous facts`
+`a5e9318` - `Report autonomous fact exclusion reasons`
 <!-- END STRUCTURED AUTONOMOUS EXCLUSIONS STATUS -->
 
 <!-- BEGIN STRICT EXCLUDED AUTONOMOUS FIELDS STATUS -->
@@ -748,11 +748,11 @@ Next environment-improvement plan:
 - три теста новых ограничений;
 - тесты модели AI: `17 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `435 passed, 1 skipped`.
+- полная регрессия: `439 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`333066f` - `Filter component-level autonomous facts`
+`a5e9318` - `Report autonomous fact exclusion reasons`
 <!-- END STRICT EXCLUDED AUTONOMOUS FIELDS STATUS -->
 
 <!-- BEGIN SHARED AUTONOMOUS FIELD VALIDATION STATUS -->
@@ -774,11 +774,11 @@ Next environment-improvement plan:
 - тесты модели AI: `19 passed`;
 - связанный AI-контур: `112 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `435 passed, 1 skipped`.
+- полная регрессия: `439 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`333066f` - `Filter component-level autonomous facts`
+`a5e9318` - `Report autonomous fact exclusion reasons`
 <!-- END SHARED AUTONOMOUS FIELD VALIDATION STATUS -->
 
 <!-- BEGIN EQUIPMENT INPUT VOLTAGE STATUS -->
@@ -807,11 +807,11 @@ Next environment-improvement plan:
 - тесты `DocumentAnalyzer`: `2 passed`;
 - связанный контур: `9 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `435 passed, 1 skipped`.
+- полная регрессия: `439 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`333066f` - `Filter component-level autonomous facts`
+`a5e9318` - `Report autonomous fact exclusion reasons`
 <!-- END EQUIPMENT INPUT VOLTAGE STATUS -->
 
 <!-- BEGIN PARENTHESIZED AUTONOMOUS EVIDENCE STATUS -->
@@ -838,11 +838,11 @@ Next environment-improvement plan:
 - тесты автономного backend: `7 passed`;
 - связанный контур: `10 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `435 passed, 1 skipped`.
+- полная регрессия: `439 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`333066f` - `Filter component-level autonomous facts`
+`a5e9318` - `Report autonomous fact exclusion reasons`
 <!-- END PARENTHESIZED AUTONOMOUS EVIDENCE STATUS -->
 
 <!-- BEGIN COMPONENT CHARACTERISTICS FILTER STATUS -->
@@ -867,9 +867,39 @@ Next environment-improvement plan:
 - Ruff пройден без ошибок;
 - реальный PDF подтвердил сохранение напряжения и тока;
 - реальный PDF подтвердил исключение неоднозначных `ip` и `frequency`;
-- полная регрессия: `435 passed, 1 skipped`.
+- полная регрессия: `439 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`333066f` - `Filter component-level autonomous facts`
+`a5e9318` - `Report autonomous fact exclusion reasons`
 <!-- END COMPONENT CHARACTERISTICS FILTER STATUS -->
+
+<!-- BEGIN AUTONOMOUS EXCLUSION REASONS STATUS -->
+## Причины исключения автономных фактов - 16.09.2026
+
+Реализовано:
+
+- добавлено поле `excluded_autonomous_fact_reasons`;
+- причина `missing_evidence` обозначает отсутствие подтверждения в исходном тексте;
+- причина `insufficient_context` обозначает найденное значение без достаточного инженерного контекста;
+- допустимые причины ограничены строгим типом;
+- ключи карты причин проверяются на соответствие списку исключенных полей;
+- диагностика передается через `AIDocumentAnalysisService`;
+- карта причин возвращается через API и сохраняется вместе с результатом;
+- в режиме `openai` автономная диагностика запрещена;
+- обязательная проверка человеком сохранена.
+
+Проверки:
+
+- тесты модели AI: `23 passed`;
+- тесты автономного backend: `9 passed`;
+- тесты сервиса AI-документов: `16 passed`;
+- связанный AI-контур: `119 passed`;
+- API-тест подтверждает возврат и сохранение карты причин;
+- Ruff пройден без ошибок;
+- полная регрессия: `439 passed, 1 skipped`.
+
+Текущая стабильная точка:
+
+`a5e9318` - `Report autonomous fact exclusion reasons`
+<!-- END AUTONOMOUS EXCLUSION REASONS STATUS -->
