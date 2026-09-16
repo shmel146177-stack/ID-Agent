@@ -14,6 +14,29 @@ AIFallbackReason = Literal[
 ]
 
 
+def _normalize_excluded_autonomous_fact_fields(
+    fields: list[str],
+) -> list[str]:
+    normalized_fields = [
+        field.strip()
+        for field in fields
+    ]
+
+    if any(not field for field in normalized_fields):
+        raise ValueError(
+            "excluded autonomous fact fields "
+            "must not be blank"
+        )
+
+    if len(normalized_fields) != len(set(normalized_fields)):
+        raise ValueError(
+            "excluded autonomous fact fields "
+            "must be unique"
+        )
+
+    return normalized_fields
+
+
 class AIFactSuggestion(BaseModel):
     """Факт, предложенный AI для последующей проверки."""
 
@@ -45,6 +68,15 @@ class AutonomousAnalysisResult(AIAnalysisResult):
     excluded_autonomous_fact_fields: list[str] = Field(
         default_factory=list
     )
+
+    @model_validator(mode="after")
+    def validate_excluded_autonomous_fact_fields(self):
+        self.excluded_autonomous_fact_fields = (
+            _normalize_excluded_autonomous_fact_fields(
+                self.excluded_autonomous_fact_fields
+            )
+        )
+        return self
 
 
 class AIAnalysisExecutionResult(AIAnalysisResult):
@@ -81,22 +113,11 @@ class AIAnalysisExecutionResult(AIAnalysisResult):
                 "in autonomous mode"
             )
 
-        excluded_fields = [
-            field.strip()
-            for field in self.excluded_autonomous_fact_fields
-        ]
-
-        if any(not field for field in excluded_fields):
-            raise ValueError(
-                "excluded autonomous fact fields "
-                "must not be blank"
+        excluded_fields = (
+            _normalize_excluded_autonomous_fact_fields(
+                self.excluded_autonomous_fact_fields
             )
-
-        if len(excluded_fields) != len(set(excluded_fields)):
-            raise ValueError(
-                "excluded autonomous fact fields "
-                "must be unique"
-            )
+        )
 
         if (
             self.analysis_mode == "openai"

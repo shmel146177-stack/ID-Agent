@@ -209,3 +209,27 @@ def test_ai_execution_result_rejects_duplicate_excluded_autonomous_fields():
                 "serial_number",
             ],
         )
+
+def test_autonomous_analysis_result_rejects_blank_excluded_fact_field():
+    from app.models.ai_analysis import AutonomousAnalysisResult
+
+    with pytest.raises(ValidationError):
+        AutonomousAnalysisResult(
+            summary="Autonomous analysis completed.",
+            excluded_autonomous_fact_fields=[
+                "   ",
+            ],
+        )
+
+
+def test_autonomous_analysis_result_rejects_duplicate_excluded_fact_fields():
+    from app.models.ai_analysis import AutonomousAnalysisResult
+
+    with pytest.raises(ValidationError):
+        AutonomousAnalysisResult(
+            summary="Autonomous analysis completed.",
+            excluded_autonomous_fact_fields=[
+                "serial_number",
+                "serial_number",
+            ],
+        )
