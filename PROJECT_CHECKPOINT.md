@@ -2,13 +2,13 @@
 
 Дата проверки: 16.09.2026
 Ветка: `develop`
-Текущая контрольная точка: `b9f7cc6` - `Prefer equipment input voltage`
+Текущая контрольная точка: `6cf8281` - `Match parenthesized autonomous evidence`
 
 ## Состояние репозитория
 
 - Основная рабочая ветка: `develop`.
 - GitHub: `https://github.com/shmel146177-stack/ID-Agent.git`
-- Последний подтвержденный коммит: `b9f7cc621f607ec4104148dcbcaed30ba3105189`.
+- Последний подтвержденный коммит: `6cf8281c76e9b3888420535a8991207512faa0f4`.
 - Коммит отправлен в `origin/develop`.
 - Рабочее дерево после push было чистым.
 
@@ -16,7 +16,7 @@
 
 Полный набор тестов:
 
-`432 passed, 1 skipped`
+`433 passed, 1 skipped`
 
 Пропущенный тест связан с невозможностью создания симлинков в текущей Windows-среде и не является ошибкой ID-Agent.
 
@@ -540,12 +540,12 @@ Next environment-improvement plan:
 - API-тест подтверждает возврат и сохранение `credit_balance_exhausted`;
 - API-тесты: `50 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `432 passed, 1 skipped`;
+- полная регрессия: `433 passed, 1 skipped`;
 - восстановленная среда проверена на Python `3.14.7`.
 
 Текущая стабильная точка:
 
-`b9f7cc6` - `Prefer equipment input voltage`
+`6cf8281` - `Match parenthesized autonomous evidence`
 <!-- END PRECISE AI FALLBACK REASONS STATUS -->
 
 <!-- BEGIN STRICT AI FALLBACK REASONS STATUS -->
@@ -568,11 +568,11 @@ Next environment-improvement plan:
 - неизвестная причина вызывает `ValidationError`;
 - связанный AI-контур прошел без ошибок;
 - Ruff пройден без ошибок;
-- полная регрессия: `432 passed, 1 skipped`.
+- полная регрессия: `433 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`b9f7cc6` - `Prefer equipment input voltage`
+`6cf8281` - `Match parenthesized autonomous evidence`
 <!-- END STRICT AI FALLBACK REASONS STATUS -->
 
 <!-- BEGIN AI EXECUTION CONSISTENCY STATUS -->
@@ -592,11 +592,11 @@ Next environment-improvement plan:
 - тест корректной автономной диагностики;
 - связанный AI-контур: `92 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `432 passed, 1 skipped`.
+- полная регрессия: `433 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`b9f7cc6` - `Prefer equipment input voltage`
+`6cf8281` - `Match parenthesized autonomous evidence`
 <!-- END AI EXECUTION CONSISTENCY STATUS -->
 
 <!-- BEGIN AI PROVIDER MODEL DIAGNOSTICS STATUS -->
@@ -616,11 +616,11 @@ Next environment-improvement plan:
 - тест отклонения пустого имени модели;
 - связанный AI-контур: `94 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `432 passed, 1 skipped`.
+- полная регрессия: `433 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`b9f7cc6` - `Prefer equipment input voltage`
+`6cf8281` - `Match parenthesized autonomous evidence`
 <!-- END AI PROVIDER MODEL DIAGNOSTICS STATUS -->
 
 <!-- BEGIN BLANK AI MODEL FALLBACK STATUS -->
@@ -638,11 +638,11 @@ Next environment-improvement plan:
 - добавлен тест пробельного значения `OPENAI_MODEL`;
 - тесты контура AI-настроек: `75 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `432 passed, 1 skipped`.
+- полная регрессия: `433 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`b9f7cc6` - `Prefer equipment input voltage`
+`6cf8281` - `Match parenthesized autonomous evidence`
 <!-- END BLANK AI MODEL FALLBACK STATUS -->
 
 <!-- BEGIN AUTONOMOUS DETERMINISTIC ANALYSIS STATUS -->
@@ -670,11 +670,11 @@ Next environment-improvement plan:
 - API-тест подтверждает возврат и сохранение локальных фактов;
 - связанный AI-контур: `113 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `432 passed, 1 skipped`.
+- полная регрессия: `433 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`b9f7cc6` - `Prefer equipment input voltage`
+`6cf8281` - `Match parenthesized autonomous evidence`
 <!-- END AUTONOMOUS DETERMINISTIC ANALYSIS STATUS -->
 
 <!-- BEGIN AUTONOMOUS SOURCE EVIDENCE STATUS -->
@@ -696,11 +696,11 @@ Next environment-improvement plan:
 - тесты автономного backend: `6 passed`;
 - связанный AI-контур: `117 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `432 passed, 1 skipped`.
+- полная регрессия: `433 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`b9f7cc6` - `Prefer equipment input voltage`
+`6cf8281` - `Match parenthesized autonomous evidence`
 <!-- END AUTONOMOUS SOURCE EVIDENCE STATUS -->
 
 <!-- BEGIN STRUCTURED AUTONOMOUS EXCLUSIONS STATUS -->
@@ -724,11 +724,11 @@ Next environment-improvement plan:
 - API-тест возврата и сохранения списка;
 - связанный AI-контур: `107 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `432 passed, 1 skipped`.
+- полная регрессия: `433 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`b9f7cc6` - `Prefer equipment input voltage`
+`6cf8281` - `Match parenthesized autonomous evidence`
 <!-- END STRUCTURED AUTONOMOUS EXCLUSIONS STATUS -->
 
 <!-- BEGIN STRICT EXCLUDED AUTONOMOUS FIELDS STATUS -->
@@ -748,11 +748,11 @@ Next environment-improvement plan:
 - три теста новых ограничений;
 - тесты модели AI: `17 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `432 passed, 1 skipped`.
+- полная регрессия: `433 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`b9f7cc6` - `Prefer equipment input voltage`
+`6cf8281` - `Match parenthesized autonomous evidence`
 <!-- END STRICT EXCLUDED AUTONOMOUS FIELDS STATUS -->
 
 <!-- BEGIN SHARED AUTONOMOUS FIELD VALIDATION STATUS -->
@@ -774,11 +774,11 @@ Next environment-improvement plan:
 - тесты модели AI: `19 passed`;
 - связанный AI-контур: `112 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `432 passed, 1 skipped`.
+- полная регрессия: `433 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`b9f7cc6` - `Prefer equipment input voltage`
+`6cf8281` - `Match parenthesized autonomous evidence`
 <!-- END SHARED AUTONOMOUS FIELD VALIDATION STATUS -->
 
 <!-- BEGIN EQUIPMENT INPUT VOLTAGE STATUS -->
@@ -807,9 +807,40 @@ Next environment-improvement plan:
 - тесты `DocumentAnalyzer`: `2 passed`;
 - связанный контур: `9 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `432 passed, 1 skipped`.
+- полная регрессия: `433 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`b9f7cc6` - `Prefer equipment input voltage`
+`6cf8281` - `Match parenthesized autonomous evidence`
 <!-- END EQUIPMENT INPUT VOLTAGE STATUS -->
+
+<!-- BEGIN PARENTHESIZED AUTONOMOUS EVIDENCE STATUS -->
+## Доказательства со скобками в автономном анализе - 16.09.2026
+
+Реализовано:
+
+- поиск доказательства игнорирует различия в пробелах;
+- между значимыми символами допускаются скобки и знак `=`;
+- значение `10 - 16 А` сопоставляется со строкой `Iном=(10 - 16) А`;
+- существующее сопоставление `IP54` и `IP 54` сохранено;
+- неподтвержденные значения по-прежнему исключаются;
+- ограничение длины доказательства сохранено.
+
+Проверка на реальном документе:
+
+- документ: `projects\ТП-102\input\паспорт.pdf`;
+- номинальный ток: `10 - 16 А`;
+- доказательство найдено в основной строке оборудования;
+- поле `current` больше не попадает в список исключенных фактов.
+
+Автоматические проверки:
+
+- тесты автономного backend: `7 passed`;
+- связанный контур: `10 passed`;
+- Ruff пройден без ошибок;
+- полная регрессия: `433 passed, 1 skipped`.
+
+Текущая стабильная точка:
+
+`6cf8281` - `Match parenthesized autonomous evidence`
+<!-- END PARENTHESIZED AUTONOMOUS EVIDENCE STATUS -->
