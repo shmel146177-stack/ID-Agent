@@ -1,6 +1,12 @@
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    computed_field,
+    model_validator,
+)
 
 AIFallbackReason = Literal[
     "empty_text",
@@ -77,6 +83,20 @@ def _normalize_excluded_autonomous_fact_reasons(
     return normalized_reasons
 
 
+def _count_excluded_autonomous_fact_reasons(
+    reasons: dict[str, AutonomousFactExclusionReason],
+) -> dict[AutonomousFactExclusionReason, int]:
+    counts: dict[
+        AutonomousFactExclusionReason,
+        int,
+    ] = {}
+
+    for reason in reasons.values():
+        counts[reason] = counts.get(reason, 0) + 1
+
+    return counts
+
+
 class AIFactSuggestion(BaseModel):
     """Факт, предложенный AI для последующей проверки."""
 
@@ -113,6 +133,15 @@ class AutonomousAnalysisResult(AIAnalysisResult):
         AutonomousFactExclusionReason,
     ] = Field(default_factory=dict)
 
+    @computed_field
+    @property
+    def excluded_autonomous_fact_reason_counts(
+        self,
+    ) -> dict[AutonomousFactExclusionReason, int]:
+        return _count_excluded_autonomous_fact_reasons(
+            self.excluded_autonomous_fact_reasons
+        )
+
     @model_validator(mode="after")
     def validate_excluded_autonomous_fact_fields(self):
         self.excluded_autonomous_fact_fields = (
@@ -141,6 +170,15 @@ class AIAnalysisExecutionResult(AIAnalysisResult):
         str,
         AutonomousFactExclusionReason,
     ] = Field(default_factory=dict)
+
+    @computed_field
+    @property
+    def excluded_autonomous_fact_reason_counts(
+        self,
+    ) -> dict[AutonomousFactExclusionReason, int]:
+        return _count_excluded_autonomous_fact_reasons(
+            self.excluded_autonomous_fact_reasons
+        )
 
     @model_validator(mode="after")
     def validate_execution_diagnostics(self):

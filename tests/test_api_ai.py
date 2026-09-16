@@ -1890,6 +1890,9 @@ def test_ai_analyze_returns_and_saves_excluded_autonomous_fact_fields(
     assert data["excluded_autonomous_fact_reasons"] == {
         "serial_number": "missing_evidence",
     }
+    assert data["excluded_autonomous_fact_reason_counts"] == {
+        "missing_evidence": 1,
+    }
 
     saved = project_service.get_ai_analysis()
 
@@ -1898,4 +1901,7 @@ def test_ai_analyze_returns_and_saves_excluded_autonomous_fact_fields(
     ]
     assert saved["excluded_autonomous_fact_reasons"] == {
         "serial_number": "missing_evidence",
+    }
+    assert saved["excluded_autonomous_fact_reason_counts"] == {
+        "missing_evidence": 1,
     }

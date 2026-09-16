@@ -116,6 +116,10 @@ class AIDocumentAnalysisService:
             "excluded_autonomous_fact_reasons",
             None,
         )
+        result_data.pop(
+            "excluded_autonomous_fact_reason_counts",
+            None,
+        )
         result_data["summary"] = (
             f"{fallback_result.summary} {result.summary}"
         )

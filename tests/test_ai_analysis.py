@@ -298,3 +298,33 @@ def test_ai_execution_result_rejects_openai_exclusion_reasons():
                 "ip": "insufficient_context",
             },
         )
+
+def test_autonomous_analysis_result_counts_exclusion_reasons():
+    from app.models.ai_analysis import AutonomousAnalysisResult
+
+    result = AutonomousAnalysisResult(
+        summary="Autonomous analysis completed.",
+        excluded_autonomous_fact_fields=[
+            "serial_number",
+            "ip",
+            "frequency",
+        ],
+        excluded_autonomous_fact_reasons={
+            "serial_number": "missing_evidence",
+            "ip": "insufficient_context",
+            "frequency": "insufficient_context",
+        },
+    )
+
+    expected_counts = {
+        "missing_evidence": 1,
+        "insufficient_context": 2,
+    }
+
+    assert (
+        result.excluded_autonomous_fact_reason_counts
+        == expected_counts
+    )
+    assert result.model_dump()[
+        "excluded_autonomous_fact_reason_counts"
+    ] == expected_counts

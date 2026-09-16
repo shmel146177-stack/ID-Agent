@@ -464,3 +464,6 @@ def test_ai_document_analysis_preserves_excluded_autonomous_fact_fields():
     assert result.excluded_autonomous_fact_reasons == {
         "serial_number": "missing_evidence",
     }
+    assert result.excluded_autonomous_fact_reason_counts == {
+        "missing_evidence": 1,
+    }
