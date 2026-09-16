@@ -196,3 +196,35 @@ def test_autonomous_backend_excludes_fact_without_source_evidence():
         and "доказатель" in warning.lower()
         for warning in result.warnings
     )
+
+
+def test_autonomous_backend_finds_evidence_through_parentheses():
+    class CurrentAnalyzerStub:
+        def analyze_text(self, text):
+            return {
+                "document_type": "Equipment documentation",
+                "current": "10 - 16 \u0410",
+            }
+
+    backend = AutonomousAnalysisBackend(
+        classifier=ClassifierStub(),
+        analyzer=CurrentAnalyzerStub(),
+    )
+    source_line = (
+        "Control cabinet, "
+        "I\u043d\u043e\u043c=(10 - 16) \u0410."
+    )
+
+    result = backend(
+        "passport.pdf",
+        source_line,
+    )
+    current_fact = next(
+        fact
+        for fact in result.facts
+        if fact.field == "current"
+    )
+
+    assert current_fact.value == "10 - 16 \u0410"
+    assert current_fact.evidence == source_line
+    assert result.excluded_autonomous_fact_fields == []

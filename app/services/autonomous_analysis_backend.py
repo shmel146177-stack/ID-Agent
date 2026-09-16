@@ -61,9 +61,14 @@ class AutonomousAnalysisBackend:
         text: str,
         value: str,
     ) -> str | None:
-        flexible_value = r"\s*".join(
-            re.escape(character)
+        value_characters = (
+            character
             for character in value
+            if not character.isspace()
+        )
+        flexible_value = r"[\s()=]*".join(
+            re.escape(character)
+            for character in value_characters
         )
 
         for source_line in text.splitlines():
