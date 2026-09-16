@@ -2,13 +2,13 @@
 
 Дата проверки: 16.09.2026
 Ветка: `develop`
-Текущая контрольная точка: `a5e9318` - `Report autonomous fact exclusion reasons`
+Текущая контрольная точка: `7e3e82d` - `Report autonomous exclusion reason counts`
 
 ## Состояние репозитория
 
 - Основная рабочая ветка: `develop`.
 - GitHub: `https://github.com/shmel146177-stack/ID-Agent.git`
-- Последний подтвержденный коммит: `a5e93185b255ef6658169baa937bc175e46bf180`.
+- Последний подтвержденный коммит: `7e3e82d47b0760d76553e5608cfa4a103e68cfb4`.
 - Коммит отправлен в `origin/develop`.
 - Рабочее дерево после push было чистым.
 
@@ -545,7 +545,7 @@ Next environment-improvement plan:
 
 Текущая стабильная точка:
 
-`a5e9318` - `Report autonomous fact exclusion reasons`
+`7e3e82d` - `Report autonomous exclusion reason counts`
 <!-- END PRECISE AI FALLBACK REASONS STATUS -->
 
 <!-- BEGIN STRICT AI FALLBACK REASONS STATUS -->
@@ -572,7 +572,7 @@ Next environment-improvement plan:
 
 Текущая стабильная точка:
 
-`a5e9318` - `Report autonomous fact exclusion reasons`
+`7e3e82d` - `Report autonomous exclusion reason counts`
 <!-- END STRICT AI FALLBACK REASONS STATUS -->
 
 <!-- BEGIN AI EXECUTION CONSISTENCY STATUS -->
@@ -596,7 +596,7 @@ Next environment-improvement plan:
 
 Текущая стабильная точка:
 
-`a5e9318` - `Report autonomous fact exclusion reasons`
+`7e3e82d` - `Report autonomous exclusion reason counts`
 <!-- END AI EXECUTION CONSISTENCY STATUS -->
 
 <!-- BEGIN AI PROVIDER MODEL DIAGNOSTICS STATUS -->
@@ -620,7 +620,7 @@ Next environment-improvement plan:
 
 Текущая стабильная точка:
 
-`a5e9318` - `Report autonomous fact exclusion reasons`
+`7e3e82d` - `Report autonomous exclusion reason counts`
 <!-- END AI PROVIDER MODEL DIAGNOSTICS STATUS -->
 
 <!-- BEGIN BLANK AI MODEL FALLBACK STATUS -->
@@ -642,7 +642,7 @@ Next environment-improvement plan:
 
 Текущая стабильная точка:
 
-`a5e9318` - `Report autonomous fact exclusion reasons`
+`7e3e82d` - `Report autonomous exclusion reason counts`
 <!-- END BLANK AI MODEL FALLBACK STATUS -->
 
 <!-- BEGIN AUTONOMOUS DETERMINISTIC ANALYSIS STATUS -->
@@ -674,7 +674,7 @@ Next environment-improvement plan:
 
 Текущая стабильная точка:
 
-`a5e9318` - `Report autonomous fact exclusion reasons`
+`7e3e82d` - `Report autonomous exclusion reason counts`
 <!-- END AUTONOMOUS DETERMINISTIC ANALYSIS STATUS -->
 
 <!-- BEGIN AUTONOMOUS SOURCE EVIDENCE STATUS -->
@@ -700,7 +700,7 @@ Next environment-improvement plan:
 
 Текущая стабильная точка:
 
-`a5e9318` - `Report autonomous fact exclusion reasons`
+`7e3e82d` - `Report autonomous exclusion reason counts`
 <!-- END AUTONOMOUS SOURCE EVIDENCE STATUS -->
 
 <!-- BEGIN STRUCTURED AUTONOMOUS EXCLUSIONS STATUS -->
@@ -728,7 +728,7 @@ Next environment-improvement plan:
 
 Текущая стабильная точка:
 
-`a5e9318` - `Report autonomous fact exclusion reasons`
+`7e3e82d` - `Report autonomous exclusion reason counts`
 <!-- END STRUCTURED AUTONOMOUS EXCLUSIONS STATUS -->
 
 <!-- BEGIN STRICT EXCLUDED AUTONOMOUS FIELDS STATUS -->
@@ -752,7 +752,7 @@ Next environment-improvement plan:
 
 Текущая стабильная точка:
 
-`a5e9318` - `Report autonomous fact exclusion reasons`
+`7e3e82d` - `Report autonomous exclusion reason counts`
 <!-- END STRICT EXCLUDED AUTONOMOUS FIELDS STATUS -->
 
 <!-- BEGIN SHARED AUTONOMOUS FIELD VALIDATION STATUS -->
@@ -778,7 +778,7 @@ Next environment-improvement plan:
 
 Текущая стабильная точка:
 
-`a5e9318` - `Report autonomous fact exclusion reasons`
+`7e3e82d` - `Report autonomous exclusion reason counts`
 <!-- END SHARED AUTONOMOUS FIELD VALIDATION STATUS -->
 
 <!-- BEGIN EQUIPMENT INPUT VOLTAGE STATUS -->
@@ -811,7 +811,7 @@ Next environment-improvement plan:
 
 Текущая стабильная точка:
 
-`a5e9318` - `Report autonomous fact exclusion reasons`
+`7e3e82d` - `Report autonomous exclusion reason counts`
 <!-- END EQUIPMENT INPUT VOLTAGE STATUS -->
 
 <!-- BEGIN PARENTHESIZED AUTONOMOUS EVIDENCE STATUS -->
@@ -842,7 +842,7 @@ Next environment-improvement plan:
 
 Текущая стабильная точка:
 
-`a5e9318` - `Report autonomous fact exclusion reasons`
+`7e3e82d` - `Report autonomous exclusion reason counts`
 <!-- END PARENTHESIZED AUTONOMOUS EVIDENCE STATUS -->
 
 <!-- BEGIN COMPONENT CHARACTERISTICS FILTER STATUS -->
@@ -871,7 +871,7 @@ Next environment-improvement plan:
 
 Текущая стабильная точка:
 
-`a5e9318` - `Report autonomous fact exclusion reasons`
+`7e3e82d` - `Report autonomous exclusion reason counts`
 <!-- END COMPONENT CHARACTERISTICS FILTER STATUS -->
 
 <!-- BEGIN AUTONOMOUS EXCLUSION REASONS STATUS -->
@@ -901,5 +901,32 @@ Next environment-improvement plan:
 
 Текущая стабильная точка:
 
-`a5e9318` - `Report autonomous fact exclusion reasons`
+`7e3e82d` - `Report autonomous exclusion reason counts`
 <!-- END AUTONOMOUS EXCLUSION REASONS STATUS -->
+
+<!-- BEGIN AUTONOMOUS EXCLUSION WARNING COUNTS STATUS -->
+## Раздельные предупреждения об исключенных фактах - 16.09.2026
+
+Реализовано:
+
+- предупреждения формируются отдельно для каждой причины исключения;
+- `missing_evidence` сообщает количество фактов без доказательства;
+- `insufficient_context` сообщает количество фактов с недостаточным инженерным контекстом;
+- предупреждение добавляется только при наличии соответствующих исключений;
+- факты с недостаточным контекстом больше не обозначаются как факты без доказательства;
+- структурированная карта причин остается основным источником диагностики;
+- обязательная проверка человеком сохранена.
+
+Проверки:
+
+- проверено предупреждение для отсутствующего доказательства;
+- проверено предупреждение для недостаточного контекста;
+- тесты автономного backend: `9 passed`;
+- связанный AI-контур: `119 passed`;
+- Ruff пройден без ошибок;
+- полная регрессия: `439 passed, 1 skipped`.
+
+Текущая стабильная точка:
+
+`7e3e82d` - `Report autonomous exclusion reason counts`
+<!-- END AUTONOMOUS EXCLUSION WARNING COUNTS STATUS -->
