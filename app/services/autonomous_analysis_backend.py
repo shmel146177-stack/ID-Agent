@@ -13,6 +13,18 @@ class AutonomousAnalysisBackend:
 
     FACT_CONFIDENCE = 0.8
     EVIDENCE_MAX_CHARS = 240
+    REQUIRED_EVIDENCE_CONTEXT = {
+        "ip": (
+            "степень защиты",
+            "класс защиты",
+        ),
+        "frequency": (
+            "частот",
+            "питан",
+            "ввод",
+            "сеть",
+        ),
+    }
 
     def __init__(
         self,
@@ -92,6 +104,26 @@ class AutonomousAnalysisBackend:
 
         return None
 
+    @classmethod
+    def _has_required_evidence_context(
+        cls,
+        field: str,
+        evidence: str,
+    ) -> bool:
+        required_terms = cls.REQUIRED_EVIDENCE_CONTEXT.get(
+            field,
+        )
+
+        if not required_terms:
+            return True
+
+        normalized_evidence = evidence.casefold()
+
+        return any(
+            term in normalized_evidence
+            for term in required_terms
+        )
+
     def __call__(
         self,
         filename: str,
@@ -120,7 +152,13 @@ class AutonomousAnalysisBackend:
                 value,
             )
 
-            if evidence is None:
+            if (
+                evidence is None
+                or not self._has_required_evidence_context(
+                    field,
+                    evidence,
+                )
+            ):
                 excluded_fact_fields.append(field)
                 continue
 

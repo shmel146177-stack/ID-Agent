@@ -78,7 +78,7 @@ def test_autonomous_backend_uses_existing_project_analyzers():
             "Паспорт оборудования\n"
             'ООО "Тест"\n'
             "Шкаф управления ШУ-1, 7,5 кВт\n"
-            "IP 54\n"
+            "Степень защиты корпуса: IP 54\n"
             "Серийный номер ABC-123"
         ),
     )
@@ -227,4 +227,65 @@ def test_autonomous_backend_finds_evidence_through_parentheses():
 
     assert current_fact.value == "10 - 16 \u0410"
     assert current_fact.evidence == source_line
+    assert result.excluded_autonomous_fact_fields == []
+
+def test_autonomous_backend_excludes_component_level_characteristics():
+    class ComponentAnalyzerStub:
+        def analyze_text(self, text):
+            return {
+                "document_type": "Equipment documentation",
+                "ip": "IP66",
+                "frequency": "50 \u0413\u0446",
+            }
+
+    backend = AutonomousAnalysisBackend(
+        classifier=ClassifierStub(),
+        analyzer=ComponentAnalyzerStub(),
+    )
+    text = (
+        "Cabinet enclosure 500x400x200 IP66.\n"
+        "Contactor 18\u0410 230\u0412 50\u0413\u0446."
+    )
+
+    result = backend(
+        "passport.pdf",
+        text,
+    )
+
+    assert result.facts == []
+    assert result.excluded_autonomous_fact_fields == [
+        "ip",
+        "frequency",
+    ]
+
+def test_autonomous_backend_keeps_labeled_frequency():
+    class FrequencyAnalyzerStub:
+        def analyze_text(self, text):
+            return {
+                "document_type": "Equipment documentation",
+                "frequency": "50 \u0413\u0446",
+            }
+
+    backend = AutonomousAnalysisBackend(
+        classifier=ClassifierStub(),
+        analyzer=FrequencyAnalyzerStub(),
+    )
+    source_line = (
+        "\u041d\u043e\u043c\u0438\u043d\u0430\u043b\u044c\u043d\u0430\u044f "
+        "\u0447\u0430\u0441\u0442\u043e\u0442\u0430 "
+        "\u043f\u0438\u0442\u0430\u043d\u0438\u044f: 50 \u0413\u0446."
+    )
+
+    result = backend(
+        "passport.pdf",
+        source_line,
+    )
+    frequency_fact = next(
+        fact
+        for fact in result.facts
+        if fact.field == "frequency"
+    )
+
+    assert frequency_fact.value == "50 \u0413\u0446"
+    assert frequency_fact.evidence == source_line
     assert result.excluded_autonomous_fact_fields == []
