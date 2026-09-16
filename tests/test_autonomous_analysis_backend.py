@@ -190,6 +190,9 @@ def test_autonomous_backend_excludes_fact_without_source_evidence():
     assert result.excluded_autonomous_fact_fields == [
         "serial_number",
     ]
+    assert result.excluded_autonomous_fact_reasons == {
+        "serial_number": "missing_evidence",
+    }
     assert any(
         "1" in warning
         and "исключ" in warning.lower()
@@ -257,6 +260,10 @@ def test_autonomous_backend_excludes_component_level_characteristics():
         "ip",
         "frequency",
     ]
+    assert result.excluded_autonomous_fact_reasons == {
+        "ip": "insufficient_context",
+        "frequency": "insufficient_context",
+    }
 
 def test_autonomous_backend_keeps_labeled_frequency():
     class FrequencyAnalyzerStub:

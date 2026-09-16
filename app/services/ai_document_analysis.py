@@ -3,6 +3,7 @@ from collections.abc import Callable
 from app.models.ai_analysis import (
     AIAnalysisExecutionResult,
     AIAnalysisResult,
+    AutonomousFactExclusionReason,
 )
 from app.services.ai_client import AIClient, AIUnavailableError
 from app.services.autonomous_analysis_backend import (
@@ -53,6 +54,10 @@ class AIDocumentAnalysisService:
         analysis_mode: str,
         fallback_reason: str | None = None,
         excluded_autonomous_fact_fields: list[str] | None = None,
+        excluded_autonomous_fact_reasons: dict[
+            str,
+            AutonomousFactExclusionReason,
+        ] | None = None,
     ) -> AIAnalysisExecutionResult:
         return AIAnalysisExecutionResult(
             **result.model_dump(),
@@ -62,6 +67,9 @@ class AIDocumentAnalysisService:
             fallback_reason=fallback_reason,
             excluded_autonomous_fact_fields=(
                 excluded_autonomous_fact_fields or []
+            ),
+            excluded_autonomous_fact_reasons=(
+                excluded_autonomous_fact_reasons or {}
             ),
         )
 
@@ -91,10 +99,21 @@ class AIDocumentAnalysisService:
                 [],
             )
         )
+        excluded_fact_reasons = dict(
+            getattr(
+                result,
+                "excluded_autonomous_fact_reasons",
+                {},
+            )
+        )
 
         result_data = result.model_dump()
         result_data.pop(
             "excluded_autonomous_fact_fields",
+            None,
+        )
+        result_data.pop(
+            "excluded_autonomous_fact_reasons",
             None,
         )
         result_data["summary"] = (
@@ -111,6 +130,9 @@ class AIDocumentAnalysisService:
             fallback_reason=fallback_reason,
             excluded_autonomous_fact_fields=(
                 excluded_fact_fields
+            ),
+            excluded_autonomous_fact_reasons=(
+                excluded_fact_reasons
             ),
         )
 

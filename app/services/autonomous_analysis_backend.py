@@ -137,6 +137,7 @@ class AutonomousAnalysisBackend:
 
         facts = []
         excluded_fact_fields = []
+        excluded_fact_reasons = {}
 
         for field, raw_value in extracted_data.items():
             if field == "document_type" or raw_value is None:
@@ -152,14 +153,21 @@ class AutonomousAnalysisBackend:
                 value,
             )
 
-            if (
-                evidence is None
-                or not self._has_required_evidence_context(
-                    field,
-                    evidence,
+            if evidence is None:
+                excluded_fact_fields.append(field)
+                excluded_fact_reasons[field] = (
+                    "missing_evidence"
                 )
+                continue
+
+            if not self._has_required_evidence_context(
+                field,
+                evidence,
             ):
                 excluded_fact_fields.append(field)
+                excluded_fact_reasons[field] = (
+                    "insufficient_context"
+                )
                 continue
 
             facts.append(
@@ -183,6 +191,9 @@ class AutonomousAnalysisBackend:
             facts=facts,
             excluded_autonomous_fact_fields=(
                 excluded_fact_fields
+            ),
+            excluded_autonomous_fact_reasons=(
+                excluded_fact_reasons
             ),
             warnings=[
                 (

@@ -1,4 +1,4 @@
-﻿import pytest
+import pytest
 
 from app.models.ai_analysis import AIAnalysisResult, AIFactSuggestion
 from app.services.ai_client import AIClient, AIUnavailableError
@@ -441,6 +441,9 @@ def test_ai_document_analysis_preserves_excluded_autonomous_fact_fields():
             excluded_autonomous_fact_fields=[
                 "serial_number",
             ],
+            excluded_autonomous_fact_reasons={
+                "serial_number": "missing_evidence",
+            },
         )
 
     service = AIDocumentAnalysisService(
@@ -458,3 +461,6 @@ def test_ai_document_analysis_preserves_excluded_autonomous_fact_fields():
     assert result.excluded_autonomous_fact_fields == [
         "serial_number",
     ]
+    assert result.excluded_autonomous_fact_reasons == {
+        "serial_number": "missing_evidence",
+    }

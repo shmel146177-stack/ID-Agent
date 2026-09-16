@@ -233,3 +233,68 @@ def test_autonomous_analysis_result_rejects_duplicate_excluded_fact_fields():
                 "serial_number",
             ],
         )
+
+def test_autonomous_analysis_result_tracks_exclusion_reasons():
+    from app.models.ai_analysis import AutonomousAnalysisResult
+
+    result = AutonomousAnalysisResult(
+        summary="Autonomous analysis completed.",
+        excluded_autonomous_fact_fields=[
+            "serial_number",
+            "ip",
+        ],
+        excluded_autonomous_fact_reasons={
+            "serial_number": "missing_evidence",
+            "ip": "insufficient_context",
+        },
+    )
+
+    assert result.excluded_autonomous_fact_reasons == {
+        "serial_number": "missing_evidence",
+        "ip": "insufficient_context",
+    }
+
+
+def test_autonomous_analysis_result_rejects_unknown_exclusion_reason():
+    from app.models.ai_analysis import AutonomousAnalysisResult
+
+    with pytest.raises(ValidationError):
+        AutonomousAnalysisResult(
+            summary="Autonomous analysis completed.",
+            excluded_autonomous_fact_fields=[
+                "serial_number",
+            ],
+            excluded_autonomous_fact_reasons={
+                "serial_number": "unknown_reason",
+            },
+        )
+
+
+def test_autonomous_analysis_result_rejects_mismatched_exclusion_reasons():
+    from app.models.ai_analysis import AutonomousAnalysisResult
+
+    with pytest.raises(ValidationError):
+        AutonomousAnalysisResult(
+            summary="Autonomous analysis completed.",
+            excluded_autonomous_fact_fields=[
+                "serial_number",
+            ],
+            excluded_autonomous_fact_reasons={
+                "ip": "insufficient_context",
+            },
+        )
+
+
+def test_ai_execution_result_rejects_openai_exclusion_reasons():
+    from app.models.ai_analysis import AIAnalysisExecutionResult
+
+    with pytest.raises(ValidationError):
+        AIAnalysisExecutionResult(
+            summary="OpenAI analysis completed.",
+            analysis_mode="openai",
+            ai_provider="openai",
+            ai_model="test-model",
+            excluded_autonomous_fact_reasons={
+                "ip": "insufficient_context",
+            },
+        )

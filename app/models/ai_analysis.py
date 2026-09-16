@@ -14,6 +14,12 @@ AIFallbackReason = Literal[
 ]
 
 
+AutonomousFactExclusionReason = Literal[
+    "missing_evidence",
+    "insufficient_context",
+]
+
+
 def _normalize_excluded_autonomous_fact_fields(
     fields: list[str],
 ) -> list[str]:
@@ -35,6 +41,40 @@ def _normalize_excluded_autonomous_fact_fields(
         )
 
     return normalized_fields
+
+
+
+def _normalize_excluded_autonomous_fact_reasons(
+    fields: list[str],
+    reasons: dict[str, AutonomousFactExclusionReason],
+) -> dict[str, AutonomousFactExclusionReason]:
+    normalized_reasons = {
+        field.strip(): reason
+        for field, reason in reasons.items()
+    }
+
+    if any(not field for field in normalized_reasons):
+        raise ValueError(
+            "excluded autonomous fact reason fields "
+            "must not be blank"
+        )
+
+    if len(normalized_reasons) != len(reasons):
+        raise ValueError(
+            "excluded autonomous fact reason fields "
+            "must be unique"
+        )
+
+    if (
+        normalized_reasons
+        and set(normalized_reasons) != set(fields)
+    ):
+        raise ValueError(
+            "excluded autonomous fact reasons "
+            "must match excluded fields"
+        )
+
+    return normalized_reasons
 
 
 class AIFactSuggestion(BaseModel):
@@ -68,12 +108,22 @@ class AutonomousAnalysisResult(AIAnalysisResult):
     excluded_autonomous_fact_fields: list[str] = Field(
         default_factory=list
     )
+    excluded_autonomous_fact_reasons: dict[
+        str,
+        AutonomousFactExclusionReason,
+    ] = Field(default_factory=dict)
 
     @model_validator(mode="after")
     def validate_excluded_autonomous_fact_fields(self):
         self.excluded_autonomous_fact_fields = (
             _normalize_excluded_autonomous_fact_fields(
                 self.excluded_autonomous_fact_fields
+            )
+        )
+        self.excluded_autonomous_fact_reasons = (
+            _normalize_excluded_autonomous_fact_reasons(
+                self.excluded_autonomous_fact_fields,
+                self.excluded_autonomous_fact_reasons,
             )
         )
         return self
@@ -87,6 +137,10 @@ class AIAnalysisExecutionResult(AIAnalysisResult):
     ai_model: str
     fallback_reason: AIFallbackReason | None = None
     excluded_autonomous_fact_fields: list[str] = Field(default_factory=list)
+    excluded_autonomous_fact_reasons: dict[
+        str,
+        AutonomousFactExclusionReason,
+    ] = Field(default_factory=dict)
 
     @model_validator(mode="after")
     def validate_execution_diagnostics(self):
@@ -118,10 +172,16 @@ class AIAnalysisExecutionResult(AIAnalysisResult):
                 self.excluded_autonomous_fact_fields
             )
         )
+        excluded_reasons = (
+            _normalize_excluded_autonomous_fact_reasons(
+                excluded_fields,
+                self.excluded_autonomous_fact_reasons,
+            )
+        )
 
         if (
             self.analysis_mode == "openai"
-            and excluded_fields
+            and (excluded_fields or excluded_reasons)
         ):
             raise ValueError(
                 "excluded autonomous fact fields "
@@ -129,5 +189,6 @@ class AIAnalysisExecutionResult(AIAnalysisResult):
             )
 
         self.excluded_autonomous_fact_fields = excluded_fields
+        self.excluded_autonomous_fact_reasons = excluded_reasons
 
         return self

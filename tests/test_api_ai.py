@@ -1859,6 +1859,9 @@ def test_ai_analyze_returns_and_saves_excluded_autonomous_fact_fields(
             excluded_autonomous_fact_fields=[
                 "serial_number",
             ],
+            excluded_autonomous_fact_reasons={
+                "serial_number": "missing_evidence",
+            },
         )
 
     monkeypatch.setattr(
@@ -1884,9 +1887,15 @@ def test_ai_analyze_returns_and_saves_excluded_autonomous_fact_fields(
     assert data["excluded_autonomous_fact_fields"] == [
         "serial_number",
     ]
+    assert data["excluded_autonomous_fact_reasons"] == {
+        "serial_number": "missing_evidence",
+    }
 
     saved = project_service.get_ai_analysis()
 
     assert saved["excluded_autonomous_fact_fields"] == [
         "serial_number",
     ]
+    assert saved["excluded_autonomous_fact_reasons"] == {
+        "serial_number": "missing_evidence",
+    }
