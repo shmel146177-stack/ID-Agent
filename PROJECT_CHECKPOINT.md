@@ -2,13 +2,13 @@
 
 Дата проверки: 08.09.2026
 Ветка: `develop`
-Текущая контрольная точка: `4fba0f0` - `Validate excluded autonomous fact fields`
+Текущая контрольная точка: `9f509b8` - `Share autonomous fact field validation`
 
 ## Состояние репозитория
 
 - Основная рабочая ветка: `develop`.
 - GitHub: `https://github.com/shmel146177-stack/ID-Agent.git`
-- Последний подтвержденный коммит: `4fba0f025e8e21a2924664205c397e7f7df050c6`.
+- Последний подтвержденный коммит: `9f509b8c08d27f5a2ffab1971e5b9d3b40de5767`.
 - Коммит отправлен в `origin/develop`.
 - Рабочее дерево после push было чистым.
 
@@ -16,7 +16,7 @@
 
 Полный набор тестов:
 
-`429 passed, 1 skipped`
+`431 passed, 1 skipped`
 
 Пропущенный тест связан с невозможностью создания симлинков в текущей Windows-среде и не является ошибкой ID-Agent.
 
@@ -540,12 +540,12 @@ Next environment-improvement plan:
 - API-тест подтверждает возврат и сохранение `credit_balance_exhausted`;
 - API-тесты: `50 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `429 passed, 1 skipped`;
+- полная регрессия: `431 passed, 1 skipped`;
 - восстановленная среда проверена на Python `3.14.7`.
 
 Текущая стабильная точка:
 
-`4fba0f0` - `Validate excluded autonomous fact fields`
+`9f509b8` - `Share autonomous fact field validation`
 <!-- END PRECISE AI FALLBACK REASONS STATUS -->
 
 <!-- BEGIN STRICT AI FALLBACK REASONS STATUS -->
@@ -568,11 +568,11 @@ Next environment-improvement plan:
 - неизвестная причина вызывает `ValidationError`;
 - связанный AI-контур прошел без ошибок;
 - Ruff пройден без ошибок;
-- полная регрессия: `429 passed, 1 skipped`.
+- полная регрессия: `431 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`4fba0f0` - `Validate excluded autonomous fact fields`
+`9f509b8` - `Share autonomous fact field validation`
 <!-- END STRICT AI FALLBACK REASONS STATUS -->
 
 <!-- BEGIN AI EXECUTION CONSISTENCY STATUS -->
@@ -592,11 +592,11 @@ Next environment-improvement plan:
 - тест корректной автономной диагностики;
 - связанный AI-контур: `92 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `429 passed, 1 skipped`.
+- полная регрессия: `431 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`4fba0f0` - `Validate excluded autonomous fact fields`
+`9f509b8` - `Share autonomous fact field validation`
 <!-- END AI EXECUTION CONSISTENCY STATUS -->
 
 <!-- BEGIN AI PROVIDER MODEL DIAGNOSTICS STATUS -->
@@ -616,11 +616,11 @@ Next environment-improvement plan:
 - тест отклонения пустого имени модели;
 - связанный AI-контур: `94 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `429 passed, 1 skipped`.
+- полная регрессия: `431 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`4fba0f0` - `Validate excluded autonomous fact fields`
+`9f509b8` - `Share autonomous fact field validation`
 <!-- END AI PROVIDER MODEL DIAGNOSTICS STATUS -->
 
 <!-- BEGIN BLANK AI MODEL FALLBACK STATUS -->
@@ -638,11 +638,11 @@ Next environment-improvement plan:
 - добавлен тест пробельного значения `OPENAI_MODEL`;
 - тесты контура AI-настроек: `75 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `429 passed, 1 skipped`.
+- полная регрессия: `431 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`4fba0f0` - `Validate excluded autonomous fact fields`
+`9f509b8` - `Share autonomous fact field validation`
 <!-- END BLANK AI MODEL FALLBACK STATUS -->
 
 <!-- BEGIN AUTONOMOUS DETERMINISTIC ANALYSIS STATUS -->
@@ -670,11 +670,11 @@ Next environment-improvement plan:
 - API-тест подтверждает возврат и сохранение локальных фактов;
 - связанный AI-контур: `113 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `429 passed, 1 skipped`.
+- полная регрессия: `431 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`4fba0f0` - `Validate excluded autonomous fact fields`
+`9f509b8` - `Share autonomous fact field validation`
 <!-- END AUTONOMOUS DETERMINISTIC ANALYSIS STATUS -->
 
 <!-- BEGIN AUTONOMOUS SOURCE EVIDENCE STATUS -->
@@ -696,11 +696,11 @@ Next environment-improvement plan:
 - тесты автономного backend: `6 passed`;
 - связанный AI-контур: `117 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `429 passed, 1 skipped`.
+- полная регрессия: `431 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`4fba0f0` - `Validate excluded autonomous fact fields`
+`9f509b8` - `Share autonomous fact field validation`
 <!-- END AUTONOMOUS SOURCE EVIDENCE STATUS -->
 
 <!-- BEGIN STRUCTURED AUTONOMOUS EXCLUSIONS STATUS -->
@@ -724,11 +724,11 @@ Next environment-improvement plan:
 - API-тест возврата и сохранения списка;
 - связанный AI-контур: `107 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `429 passed, 1 skipped`.
+- полная регрессия: `431 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`4fba0f0` - `Validate excluded autonomous fact fields`
+`9f509b8` - `Share autonomous fact field validation`
 <!-- END STRUCTURED AUTONOMOUS EXCLUSIONS STATUS -->
 
 <!-- BEGIN STRICT EXCLUDED AUTONOMOUS FIELDS STATUS -->
@@ -748,9 +748,35 @@ Next environment-improvement plan:
 - три теста новых ограничений;
 - тесты модели AI: `17 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `429 passed, 1 skipped`.
+- полная регрессия: `431 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`4fba0f0` - `Validate excluded autonomous fact fields`
+`9f509b8` - `Share autonomous fact field validation`
 <!-- END STRICT EXCLUDED AUTONOMOUS FIELDS STATUS -->
+
+<!-- BEGIN SHARED AUTONOMOUS FIELD VALIDATION STATUS -->
+## Единая проверка автономных диагностических полей - 16.09.2026
+
+Реализовано:
+
+- нормализация `excluded_autonomous_fact_fields` вынесена в общую функцию;
+- одинаковая проверка используется в `AutonomousAnalysisResult`;
+- одинаковая проверка используется в `AIAnalysisExecutionResult`;
+- пустые названия и строки из пробелов отклоняются на внутреннем уровне;
+- повторяющиеся названия отклоняются до передачи результата сервису;
+- пробелы по краям названий удаляются;
+- правила внутреннего и итогового результата больше не расходятся.
+
+Проверки:
+
+- два теста внутренней автономной модели;
+- тесты модели AI: `19 passed`;
+- связанный AI-контур: `112 passed`;
+- Ruff пройден без ошибок;
+- полная регрессия: `431 passed, 1 skipped`.
+
+Текущая стабильная точка:
+
+`9f509b8` - `Share autonomous fact field validation`
+<!-- END SHARED AUTONOMOUS FIELD VALIDATION STATUS -->
