@@ -1,14 +1,14 @@
 # ID-Agent - контрольная точка
 
-Дата проверки: 08.09.2026
+Дата проверки: 16.09.2026
 Ветка: `develop`
-Текущая контрольная точка: `9f509b8` - `Share autonomous fact field validation`
+Текущая контрольная точка: `b9f7cc6` - `Prefer equipment input voltage`
 
 ## Состояние репозитория
 
 - Основная рабочая ветка: `develop`.
 - GitHub: `https://github.com/shmel146177-stack/ID-Agent.git`
-- Последний подтвержденный коммит: `9f509b8c08d27f5a2ffab1971e5b9d3b40de5767`.
+- Последний подтвержденный коммит: `b9f7cc621f607ec4104148dcbcaed30ba3105189`.
 - Коммит отправлен в `origin/develop`.
 - Рабочее дерево после push было чистым.
 
@@ -16,7 +16,7 @@
 
 Полный набор тестов:
 
-`431 passed, 1 skipped`
+`432 passed, 1 skipped`
 
 Пропущенный тест связан с невозможностью создания симлинков в текущей Windows-среде и не является ошибкой ID-Agent.
 
@@ -540,12 +540,12 @@ Next environment-improvement plan:
 - API-тест подтверждает возврат и сохранение `credit_balance_exhausted`;
 - API-тесты: `50 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `431 passed, 1 skipped`;
+- полная регрессия: `432 passed, 1 skipped`;
 - восстановленная среда проверена на Python `3.14.7`.
 
 Текущая стабильная точка:
 
-`9f509b8` - `Share autonomous fact field validation`
+`b9f7cc6` - `Prefer equipment input voltage`
 <!-- END PRECISE AI FALLBACK REASONS STATUS -->
 
 <!-- BEGIN STRICT AI FALLBACK REASONS STATUS -->
@@ -568,11 +568,11 @@ Next environment-improvement plan:
 - неизвестная причина вызывает `ValidationError`;
 - связанный AI-контур прошел без ошибок;
 - Ruff пройден без ошибок;
-- полная регрессия: `431 passed, 1 skipped`.
+- полная регрессия: `432 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`9f509b8` - `Share autonomous fact field validation`
+`b9f7cc6` - `Prefer equipment input voltage`
 <!-- END STRICT AI FALLBACK REASONS STATUS -->
 
 <!-- BEGIN AI EXECUTION CONSISTENCY STATUS -->
@@ -592,11 +592,11 @@ Next environment-improvement plan:
 - тест корректной автономной диагностики;
 - связанный AI-контур: `92 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `431 passed, 1 skipped`.
+- полная регрессия: `432 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`9f509b8` - `Share autonomous fact field validation`
+`b9f7cc6` - `Prefer equipment input voltage`
 <!-- END AI EXECUTION CONSISTENCY STATUS -->
 
 <!-- BEGIN AI PROVIDER MODEL DIAGNOSTICS STATUS -->
@@ -616,11 +616,11 @@ Next environment-improvement plan:
 - тест отклонения пустого имени модели;
 - связанный AI-контур: `94 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `431 passed, 1 skipped`.
+- полная регрессия: `432 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`9f509b8` - `Share autonomous fact field validation`
+`b9f7cc6` - `Prefer equipment input voltage`
 <!-- END AI PROVIDER MODEL DIAGNOSTICS STATUS -->
 
 <!-- BEGIN BLANK AI MODEL FALLBACK STATUS -->
@@ -638,11 +638,11 @@ Next environment-improvement plan:
 - добавлен тест пробельного значения `OPENAI_MODEL`;
 - тесты контура AI-настроек: `75 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `431 passed, 1 skipped`.
+- полная регрессия: `432 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`9f509b8` - `Share autonomous fact field validation`
+`b9f7cc6` - `Prefer equipment input voltage`
 <!-- END BLANK AI MODEL FALLBACK STATUS -->
 
 <!-- BEGIN AUTONOMOUS DETERMINISTIC ANALYSIS STATUS -->
@@ -670,11 +670,11 @@ Next environment-improvement plan:
 - API-тест подтверждает возврат и сохранение локальных фактов;
 - связанный AI-контур: `113 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `431 passed, 1 skipped`.
+- полная регрессия: `432 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`9f509b8` - `Share autonomous fact field validation`
+`b9f7cc6` - `Prefer equipment input voltage`
 <!-- END AUTONOMOUS DETERMINISTIC ANALYSIS STATUS -->
 
 <!-- BEGIN AUTONOMOUS SOURCE EVIDENCE STATUS -->
@@ -696,11 +696,11 @@ Next environment-improvement plan:
 - тесты автономного backend: `6 passed`;
 - связанный AI-контур: `117 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `431 passed, 1 skipped`.
+- полная регрессия: `432 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`9f509b8` - `Share autonomous fact field validation`
+`b9f7cc6` - `Prefer equipment input voltage`
 <!-- END AUTONOMOUS SOURCE EVIDENCE STATUS -->
 
 <!-- BEGIN STRUCTURED AUTONOMOUS EXCLUSIONS STATUS -->
@@ -724,11 +724,11 @@ Next environment-improvement plan:
 - API-тест возврата и сохранения списка;
 - связанный AI-контур: `107 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `431 passed, 1 skipped`.
+- полная регрессия: `432 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`9f509b8` - `Share autonomous fact field validation`
+`b9f7cc6` - `Prefer equipment input voltage`
 <!-- END STRUCTURED AUTONOMOUS EXCLUSIONS STATUS -->
 
 <!-- BEGIN STRICT EXCLUDED AUTONOMOUS FIELDS STATUS -->
@@ -748,11 +748,11 @@ Next environment-improvement plan:
 - три теста новых ограничений;
 - тесты модели AI: `17 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `431 passed, 1 skipped`.
+- полная регрессия: `432 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`9f509b8` - `Share autonomous fact field validation`
+`b9f7cc6` - `Prefer equipment input voltage`
 <!-- END STRICT EXCLUDED AUTONOMOUS FIELDS STATUS -->
 
 <!-- BEGIN SHARED AUTONOMOUS FIELD VALIDATION STATUS -->
@@ -774,9 +774,42 @@ Next environment-improvement plan:
 - тесты модели AI: `19 passed`;
 - связанный AI-контур: `112 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `431 passed, 1 skipped`.
+- полная регрессия: `432 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`9f509b8` - `Share autonomous fact field validation`
+`b9f7cc6` - `Prefer equipment input voltage`
 <!-- END SHARED AUTONOMOUS FIELD VALIDATION STATUS -->
+
+<!-- BEGIN EQUIPMENT INPUT VOLTAGE STATUS -->
+## Приоритет входного напряжения оборудования - 16.09.2026
+
+Реализовано:
+
+- анализатор отдает приоритет строкам `Ввод`, `Питание` и `Напряжение питания`;
+- поддерживается трехфазная запись вида `3x380 В`;
+- поддерживаются символы `x`, `х` и `×`;
+- напряжения выходов, светодиодов, реле и контакторов больше не перекрывают входное напряжение;
+- старый общий поиск напряжения сохранен как fallback;
+- автономный backend автоматически использует уточненное значение.
+
+Проверка на реальном документе:
+
+- документ: `projects\ТП-102\input\паспорт.pdf`;
+- страниц: `10`;
+- встроенный текст: `11069` символов;
+- прежний результат: `24В` из строки `Выход 24В`;
+- новый результат: `3x380 В`;
+- доказательство: `Ввод 3x380 В`.
+
+Автоматические проверки:
+
+- тесты `DocumentAnalyzer`: `2 passed`;
+- связанный контур: `9 passed`;
+- Ruff пройден без ошибок;
+- полная регрессия: `432 passed, 1 skipped`.
+
+Текущая стабильная точка:
+
+`b9f7cc6` - `Prefer equipment input voltage`
+<!-- END EQUIPMENT INPUT VOLTAGE STATUS -->
