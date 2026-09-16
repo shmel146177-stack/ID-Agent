@@ -199,6 +199,11 @@ def test_autonomous_backend_excludes_fact_without_source_evidence():
         and "доказатель" in warning.lower()
         for warning in result.warnings
     )
+    assert not any(
+        "недостаточн" in warning.lower()
+        and "контекст" in warning.lower()
+        for warning in result.warnings
+    )
 
 
 def test_autonomous_backend_finds_evidence_through_parentheses():
@@ -264,6 +269,16 @@ def test_autonomous_backend_excludes_component_level_characteristics():
         "ip": "insufficient_context",
         "frequency": "insufficient_context",
     }
+    assert any(
+        "2" in warning
+        and "недостаточн" in warning.lower()
+        and "контекст" in warning.lower()
+        for warning in result.warnings
+    )
+    assert not any(
+        "без доказательства" in warning.lower()
+        for warning in result.warnings
+    )
 
 def test_autonomous_backend_keeps_labeled_frequency():
     class FrequencyAnalyzerStub:

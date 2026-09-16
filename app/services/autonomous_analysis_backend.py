@@ -204,12 +204,31 @@ class AutonomousAnalysisBackend:
             ],
         )
 
-        if excluded_fact_fields:
+        missing_evidence_count = sum(
+            reason == "missing_evidence"
+            for reason in excluded_fact_reasons.values()
+        )
+
+        if missing_evidence_count:
             result.warnings.append(
                 (
                     "Из автономного результата исключено фактов "
                     "без доказательства: "
-                    f"{len(excluded_fact_fields)}."
+                    f"{missing_evidence_count}."
+                )
+            )
+
+        insufficient_context_count = sum(
+            reason == "insufficient_context"
+            for reason in excluded_fact_reasons.values()
+        )
+
+        if insufficient_context_count:
+            result.warnings.append(
+                (
+                    "Из автономного результата исключено фактов "
+                    "с недостаточным инженерным контекстом: "
+                    f"{insufficient_context_count}."
                 )
             )
 
