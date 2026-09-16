@@ -2,13 +2,13 @@
 
 Дата проверки: 16.09.2026
 Ветка: `develop`
-Текущая контрольная точка: `7e3e82d` - `Report autonomous exclusion reason counts`
+Текущая контрольная точка: `4b0d3a3` - `Normalize AI test file endings`
 
 ## Состояние репозитория
 
 - Основная рабочая ветка: `develop`.
 - GitHub: `https://github.com/shmel146177-stack/ID-Agent.git`
-- Последний подтвержденный коммит: `7e3e82d47b0760d76553e5608cfa4a103e68cfb4`.
+- Последний подтвержденный коммит: `4b0d3a3819153a05fd52a15c2f2b35a528909c00`.
 - Коммит отправлен в `origin/develop`.
 - Рабочее дерево после push было чистым.
 
@@ -16,7 +16,7 @@
 
 Полный набор тестов:
 
-`439 passed, 1 skipped`
+`440 passed, 1 skipped`
 
 Пропущенный тест связан с невозможностью создания симлинков в текущей Windows-среде и не является ошибкой ID-Agent.
 
@@ -540,12 +540,12 @@ Next environment-improvement plan:
 - API-тест подтверждает возврат и сохранение `credit_balance_exhausted`;
 - API-тесты: `50 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `439 passed, 1 skipped`;
+- полная регрессия: `440 passed, 1 skipped`;
 - восстановленная среда проверена на Python `3.14.7`.
 
 Текущая стабильная точка:
 
-`7e3e82d` - `Report autonomous exclusion reason counts`
+`4b0d3a3` - `Normalize AI test file endings`
 <!-- END PRECISE AI FALLBACK REASONS STATUS -->
 
 <!-- BEGIN STRICT AI FALLBACK REASONS STATUS -->
@@ -568,11 +568,11 @@ Next environment-improvement plan:
 - неизвестная причина вызывает `ValidationError`;
 - связанный AI-контур прошел без ошибок;
 - Ruff пройден без ошибок;
-- полная регрессия: `439 passed, 1 skipped`.
+- полная регрессия: `440 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`7e3e82d` - `Report autonomous exclusion reason counts`
+`4b0d3a3` - `Normalize AI test file endings`
 <!-- END STRICT AI FALLBACK REASONS STATUS -->
 
 <!-- BEGIN AI EXECUTION CONSISTENCY STATUS -->
@@ -592,11 +592,11 @@ Next environment-improvement plan:
 - тест корректной автономной диагностики;
 - связанный AI-контур: `92 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `439 passed, 1 skipped`.
+- полная регрессия: `440 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`7e3e82d` - `Report autonomous exclusion reason counts`
+`4b0d3a3` - `Normalize AI test file endings`
 <!-- END AI EXECUTION CONSISTENCY STATUS -->
 
 <!-- BEGIN AI PROVIDER MODEL DIAGNOSTICS STATUS -->
@@ -616,11 +616,11 @@ Next environment-improvement plan:
 - тест отклонения пустого имени модели;
 - связанный AI-контур: `94 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `439 passed, 1 skipped`.
+- полная регрессия: `440 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`7e3e82d` - `Report autonomous exclusion reason counts`
+`4b0d3a3` - `Normalize AI test file endings`
 <!-- END AI PROVIDER MODEL DIAGNOSTICS STATUS -->
 
 <!-- BEGIN BLANK AI MODEL FALLBACK STATUS -->
@@ -638,11 +638,11 @@ Next environment-improvement plan:
 - добавлен тест пробельного значения `OPENAI_MODEL`;
 - тесты контура AI-настроек: `75 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `439 passed, 1 skipped`.
+- полная регрессия: `440 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`7e3e82d` - `Report autonomous exclusion reason counts`
+`4b0d3a3` - `Normalize AI test file endings`
 <!-- END BLANK AI MODEL FALLBACK STATUS -->
 
 <!-- BEGIN AUTONOMOUS DETERMINISTIC ANALYSIS STATUS -->
@@ -670,11 +670,11 @@ Next environment-improvement plan:
 - API-тест подтверждает возврат и сохранение локальных фактов;
 - связанный AI-контур: `113 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `439 passed, 1 skipped`.
+- полная регрессия: `440 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`7e3e82d` - `Report autonomous exclusion reason counts`
+`4b0d3a3` - `Normalize AI test file endings`
 <!-- END AUTONOMOUS DETERMINISTIC ANALYSIS STATUS -->
 
 <!-- BEGIN AUTONOMOUS SOURCE EVIDENCE STATUS -->
@@ -696,11 +696,11 @@ Next environment-improvement plan:
 - тесты автономного backend: `6 passed`;
 - связанный AI-контур: `117 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `439 passed, 1 skipped`.
+- полная регрессия: `440 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`7e3e82d` - `Report autonomous exclusion reason counts`
+`4b0d3a3` - `Normalize AI test file endings`
 <!-- END AUTONOMOUS SOURCE EVIDENCE STATUS -->
 
 <!-- BEGIN STRUCTURED AUTONOMOUS EXCLUSIONS STATUS -->
@@ -724,11 +724,11 @@ Next environment-improvement plan:
 - API-тест возврата и сохранения списка;
 - связанный AI-контур: `107 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `439 passed, 1 skipped`.
+- полная регрессия: `440 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`7e3e82d` - `Report autonomous exclusion reason counts`
+`4b0d3a3` - `Normalize AI test file endings`
 <!-- END STRUCTURED AUTONOMOUS EXCLUSIONS STATUS -->
 
 <!-- BEGIN STRICT EXCLUDED AUTONOMOUS FIELDS STATUS -->
@@ -748,11 +748,11 @@ Next environment-improvement plan:
 - три теста новых ограничений;
 - тесты модели AI: `17 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `439 passed, 1 skipped`.
+- полная регрессия: `440 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`7e3e82d` - `Report autonomous exclusion reason counts`
+`4b0d3a3` - `Normalize AI test file endings`
 <!-- END STRICT EXCLUDED AUTONOMOUS FIELDS STATUS -->
 
 <!-- BEGIN SHARED AUTONOMOUS FIELD VALIDATION STATUS -->
@@ -774,11 +774,11 @@ Next environment-improvement plan:
 - тесты модели AI: `19 passed`;
 - связанный AI-контур: `112 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `439 passed, 1 skipped`.
+- полная регрессия: `440 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`7e3e82d` - `Report autonomous exclusion reason counts`
+`4b0d3a3` - `Normalize AI test file endings`
 <!-- END SHARED AUTONOMOUS FIELD VALIDATION STATUS -->
 
 <!-- BEGIN EQUIPMENT INPUT VOLTAGE STATUS -->
@@ -807,11 +807,11 @@ Next environment-improvement plan:
 - тесты `DocumentAnalyzer`: `2 passed`;
 - связанный контур: `9 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `439 passed, 1 skipped`.
+- полная регрессия: `440 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`7e3e82d` - `Report autonomous exclusion reason counts`
+`4b0d3a3` - `Normalize AI test file endings`
 <!-- END EQUIPMENT INPUT VOLTAGE STATUS -->
 
 <!-- BEGIN PARENTHESIZED AUTONOMOUS EVIDENCE STATUS -->
@@ -838,11 +838,11 @@ Next environment-improvement plan:
 - тесты автономного backend: `7 passed`;
 - связанный контур: `10 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `439 passed, 1 skipped`.
+- полная регрессия: `440 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`7e3e82d` - `Report autonomous exclusion reason counts`
+`4b0d3a3` - `Normalize AI test file endings`
 <!-- END PARENTHESIZED AUTONOMOUS EVIDENCE STATUS -->
 
 <!-- BEGIN COMPONENT CHARACTERISTICS FILTER STATUS -->
@@ -867,11 +867,11 @@ Next environment-improvement plan:
 - Ruff пройден без ошибок;
 - реальный PDF подтвердил сохранение напряжения и тока;
 - реальный PDF подтвердил исключение неоднозначных `ip` и `frequency`;
-- полная регрессия: `439 passed, 1 skipped`.
+- полная регрессия: `440 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`7e3e82d` - `Report autonomous exclusion reason counts`
+`4b0d3a3` - `Normalize AI test file endings`
 <!-- END COMPONENT CHARACTERISTICS FILTER STATUS -->
 
 <!-- BEGIN AUTONOMOUS EXCLUSION REASONS STATUS -->
@@ -897,11 +897,11 @@ Next environment-improvement plan:
 - связанный AI-контур: `119 passed`;
 - API-тест подтверждает возврат и сохранение карты причин;
 - Ruff пройден без ошибок;
-- полная регрессия: `439 passed, 1 skipped`.
+- полная регрессия: `440 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`7e3e82d` - `Report autonomous exclusion reason counts`
+`4b0d3a3` - `Normalize AI test file endings`
 <!-- END AUTONOMOUS EXCLUSION REASONS STATUS -->
 
 <!-- BEGIN AUTONOMOUS EXCLUSION WARNING COUNTS STATUS -->
@@ -924,9 +924,40 @@ Next environment-improvement plan:
 - тесты автономного backend: `9 passed`;
 - связанный AI-контур: `119 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `439 passed, 1 skipped`.
+- полная регрессия: `440 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`7e3e82d` - `Report autonomous exclusion reason counts`
+`4b0d3a3` - `Normalize AI test file endings`
 <!-- END AUTONOMOUS EXCLUSION WARNING COUNTS STATUS -->
+
+<!-- BEGIN AUTONOMOUS EXCLUSION COUNT SUMMARY STATUS -->
+## Структурированная статистика исключений - 16.09.2026
+
+Реализовано:
+
+- добавлено вычисляемое поле `excluded_autonomous_fact_reason_counts`;
+- статистика автоматически строится из `excluded_autonomous_fact_reasons`;
+- отдельно подсчитываются `missing_evidence` и `insufficient_context`;
+- счетчики доступны во внутреннем автономном результате;
+- счетчики доступны в итоговом результате выполнения;
+- поле возвращается через API и сохраняется вместе с анализом;
+- промежуточный базовый результат не принимает автономную диагностику;
+- клиенту API больше не требуется самостоятельно подсчитывать причины;
+- обязательная проверка человеком сохранена.
+
+Проверки:
+
+- тесты модели AI: `24 passed`;
+- тесты сервиса AI-документов: `16 passed`;
+- связанный AI-контур: `120 passed`;
+- API-тест подтверждает возврат и сохранение счетчиков;
+- Ruff пройден без ошибок;
+- полная регрессия: `440 passed, 1 skipped`;
+- GitHub подтвердил функциональный коммит `41be78d`;
+- окончания трех тестовых файлов нормализованы коммитом `4b0d3a3`.
+
+Текущая стабильная точка:
+
+`4b0d3a3` - `Normalize AI test file endings`
+<!-- END AUTONOMOUS EXCLUSION COUNT SUMMARY STATUS -->
