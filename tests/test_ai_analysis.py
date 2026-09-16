@@ -162,3 +162,50 @@ def test_ai_execution_result_tracks_excluded_autonomous_fact_fields():
         "serial_number",
         "manufacturer",
     ]
+
+def test_ai_execution_result_rejects_openai_excluded_autonomous_fields():
+    from app.models.ai_analysis import AIAnalysisExecutionResult
+
+    with pytest.raises(ValidationError):
+        AIAnalysisExecutionResult(
+            summary="OpenAI analysis completed.",
+            analysis_mode="openai",
+            ai_provider="openai",
+            ai_model="test-model",
+            excluded_autonomous_fact_fields=[
+                "serial_number",
+            ],
+        )
+
+
+def test_ai_execution_result_rejects_blank_excluded_autonomous_field():
+    from app.models.ai_analysis import AIAnalysisExecutionResult
+
+    with pytest.raises(ValidationError):
+        AIAnalysisExecutionResult(
+            summary="Autonomous analysis completed.",
+            analysis_mode="autonomous",
+            ai_provider="openai",
+            ai_model="test-model",
+            fallback_reason="ai_disabled",
+            excluded_autonomous_fact_fields=[
+                "   ",
+            ],
+        )
+
+
+def test_ai_execution_result_rejects_duplicate_excluded_autonomous_fields():
+    from app.models.ai_analysis import AIAnalysisExecutionResult
+
+    with pytest.raises(ValidationError):
+        AIAnalysisExecutionResult(
+            summary="Autonomous analysis completed.",
+            analysis_mode="autonomous",
+            ai_provider="openai",
+            ai_model="test-model",
+            fallback_reason="ai_disabled",
+            excluded_autonomous_fact_fields=[
+                "serial_number",
+                "serial_number",
+            ],
+        )

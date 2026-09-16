@@ -1,4 +1,4 @@
-﻿from typing import Literal
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -80,5 +80,33 @@ class AIAnalysisExecutionResult(AIAnalysisResult):
                 "fallback_reason is required "
                 "in autonomous mode"
             )
+
+        excluded_fields = [
+            field.strip()
+            for field in self.excluded_autonomous_fact_fields
+        ]
+
+        if any(not field for field in excluded_fields):
+            raise ValueError(
+                "excluded autonomous fact fields "
+                "must not be blank"
+            )
+
+        if len(excluded_fields) != len(set(excluded_fields)):
+            raise ValueError(
+                "excluded autonomous fact fields "
+                "must be unique"
+            )
+
+        if (
+            self.analysis_mode == "openai"
+            and excluded_fields
+        ):
+            raise ValueError(
+                "excluded autonomous fact fields "
+                "must be empty in openai mode"
+            )
+
+        self.excluded_autonomous_fact_fields = excluded_fields
 
         return self
