@@ -444,6 +444,13 @@ def test_ai_document_analysis_preserves_excluded_autonomous_fact_fields():
             excluded_autonomous_fact_reasons={
                 "serial_number": "missing_evidence",
             },
+            excluded_autonomous_facts=[
+                {
+                    "field": "serial_number",
+                    "value": "ABC-123",
+                    "reason": "missing_evidence",
+                },
+            ],
         )
 
     service = AIDocumentAnalysisService(
@@ -467,3 +474,11 @@ def test_ai_document_analysis_preserves_excluded_autonomous_fact_fields():
     assert result.excluded_autonomous_fact_reason_counts == {
         "missing_evidence": 1,
     }
+    assert result.model_dump()["excluded_autonomous_facts"] == [
+        {
+            "field": "serial_number",
+            "value": "ABC-123",
+            "reason": "missing_evidence",
+            "evidence": None,
+        },
+    ]

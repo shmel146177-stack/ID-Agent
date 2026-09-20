@@ -3,6 +3,7 @@ import re
 from app.analyzer.document_classifier import DocumentClassifier
 from app.models.ai_analysis import (
     AutonomousAnalysisResult,
+    AutonomousFactExclusion,
     AIFactSuggestion,
 )
 from app.services.document_analyzer import DocumentAnalyzer
@@ -138,6 +139,7 @@ class AutonomousAnalysisBackend:
         facts = []
         excluded_fact_fields = []
         excluded_fact_reasons = {}
+        excluded_facts = []
 
         for field, raw_value in extracted_data.items():
             if field == "document_type" or raw_value is None:
@@ -158,6 +160,13 @@ class AutonomousAnalysisBackend:
                 excluded_fact_reasons[field] = (
                     "missing_evidence"
                 )
+                excluded_facts.append(
+                    AutonomousFactExclusion(
+                        field=field,
+                        value=value,
+                        reason="missing_evidence",
+                    )
+                )
                 continue
 
             if not self._has_required_evidence_context(
@@ -167,6 +176,14 @@ class AutonomousAnalysisBackend:
                 excluded_fact_fields.append(field)
                 excluded_fact_reasons[field] = (
                     "insufficient_context"
+                )
+                excluded_facts.append(
+                    AutonomousFactExclusion(
+                        field=field,
+                        value=value,
+                        reason="insufficient_context",
+                        evidence=evidence,
+                    )
                 )
                 continue
 
@@ -195,6 +212,7 @@ class AutonomousAnalysisBackend:
             excluded_autonomous_fact_reasons=(
                 excluded_fact_reasons
             ),
+            excluded_autonomous_facts=excluded_facts,
             warnings=[
                 (
                     "Результат получен автономными "

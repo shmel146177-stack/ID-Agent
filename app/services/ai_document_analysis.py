@@ -3,6 +3,7 @@ from collections.abc import Callable
 from app.models.ai_analysis import (
     AIAnalysisExecutionResult,
     AIAnalysisResult,
+    AutonomousFactExclusion,
     AutonomousFactExclusionReason,
 )
 from app.services.ai_client import AIClient, AIUnavailableError
@@ -58,6 +59,9 @@ class AIDocumentAnalysisService:
             str,
             AutonomousFactExclusionReason,
         ] | None = None,
+        excluded_autonomous_facts: list[
+            AutonomousFactExclusion
+        ] | None = None,
     ) -> AIAnalysisExecutionResult:
         return AIAnalysisExecutionResult(
             **result.model_dump(),
@@ -70,6 +74,9 @@ class AIDocumentAnalysisService:
             ),
             excluded_autonomous_fact_reasons=(
                 excluded_autonomous_fact_reasons or {}
+            ),
+            excluded_autonomous_facts=(
+                excluded_autonomous_facts or []
             ),
         )
 
@@ -106,6 +113,13 @@ class AIDocumentAnalysisService:
                 {},
             )
         )
+        excluded_facts = list(
+            getattr(
+                result,
+                "excluded_autonomous_facts",
+                [],
+            )
+        )
 
         result_data = result.model_dump()
         result_data.pop(
@@ -114,6 +128,10 @@ class AIDocumentAnalysisService:
         )
         result_data.pop(
             "excluded_autonomous_fact_reasons",
+            None,
+        )
+        result_data.pop(
+            "excluded_autonomous_facts",
             None,
         )
         result_data.pop(
@@ -138,6 +156,7 @@ class AIDocumentAnalysisService:
             excluded_autonomous_fact_reasons=(
                 excluded_fact_reasons
             ),
+            excluded_autonomous_facts=excluded_facts,
         )
 
     def analyze_text(

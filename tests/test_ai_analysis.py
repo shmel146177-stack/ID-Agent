@@ -328,3 +328,195 @@ def test_autonomous_analysis_result_counts_exclusion_reasons():
     assert result.model_dump()[
         "excluded_autonomous_fact_reason_counts"
     ] == expected_counts
+
+
+def test_autonomous_analysis_result_tracks_excluded_fact_details():
+    from app.models.ai_analysis import (
+        AutonomousAnalysisResult,
+        AutonomousFactExclusion,
+    )
+
+    result = AutonomousAnalysisResult(
+        summary="Autonomous analysis completed.",
+        excluded_autonomous_fact_fields=[
+            "serial_number",
+            "ip",
+        ],
+        excluded_autonomous_fact_reasons={
+            "serial_number": "missing_evidence",
+            "ip": "insufficient_context",
+        },
+        excluded_autonomous_facts=[
+            AutonomousFactExclusion(
+                field="serial_number",
+                value="ABC-123",
+                reason="missing_evidence",
+            ),
+            AutonomousFactExclusion(
+                field="ip",
+                value="IP66",
+                reason="insufficient_context",
+                evidence="Component enclosure IP66.",
+            ),
+        ],
+    )
+
+    assert result.model_dump()["excluded_autonomous_facts"] == [
+        {
+            "field": "serial_number",
+            "value": "ABC-123",
+            "reason": "missing_evidence",
+            "evidence": None,
+        },
+        {
+            "field": "ip",
+            "value": "IP66",
+            "reason": "insufficient_context",
+            "evidence": "Component enclosure IP66.",
+        },
+    ]
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {
+            "field": "   ",
+            "value": "ABC-123",
+            "reason": "missing_evidence",
+        },
+        {
+            "field": "serial_number",
+            "value": "   ",
+            "reason": "missing_evidence",
+        },
+        {
+            "field": "serial_number",
+            "value": "ABC-123",
+            "reason": "missing_evidence",
+            "evidence": "Serial number ABC-123.",
+        },
+        {
+            "field": "ip",
+            "value": "IP66",
+            "reason": "insufficient_context",
+        },
+        {
+            "field": "ip",
+            "value": "IP66",
+            "reason": "insufficient_context",
+            "evidence": "   ",
+        },
+    ],
+)
+def test_autonomous_fact_exclusion_rejects_invalid_details(payload):
+    from app.models.ai_analysis import AutonomousFactExclusion
+
+    with pytest.raises(ValidationError):
+        AutonomousFactExclusion(**payload)
+
+
+@pytest.mark.parametrize(
+    (
+        "excluded_fields",
+        "excluded_reasons",
+        "excluded_facts",
+    ),
+    [
+        (
+            ["serial_number"],
+            {"serial_number": "missing_evidence"},
+            [
+                {
+                    "field": "ip",
+                    "value": "IP66",
+                    "reason": "insufficient_context",
+                    "evidence": "Component enclosure IP66.",
+                },
+            ],
+        ),
+        (
+            ["serial_number"],
+            {"serial_number": "missing_evidence"},
+            [
+                {
+                    "field": "serial_number",
+                    "value": "ABC-123",
+                    "reason": "insufficient_context",
+                    "evidence": "Serial number ABC-123.",
+                },
+            ],
+        ),
+        (
+            ["serial_number"],
+            {"serial_number": "missing_evidence"},
+            [
+                {
+                    "field": "serial_number",
+                    "value": "ABC-123",
+                    "reason": "missing_evidence",
+                },
+                {
+                    "field": "serial_number",
+                    "value": "XYZ-789",
+                    "reason": "missing_evidence",
+                },
+            ],
+        ),
+        (
+            ["ip", "frequency"],
+            {
+                "ip": "insufficient_context",
+                "frequency": "insufficient_context",
+            },
+            [
+                {
+                    "field": "frequency",
+                    "value": "50 Hz",
+                    "reason": "insufficient_context",
+                    "evidence": "Contactor frequency 50 Hz.",
+                },
+                {
+                    "field": "ip",
+                    "value": "IP66",
+                    "reason": "insufficient_context",
+                    "evidence": "Component enclosure IP66.",
+                },
+            ],
+        ),
+    ],
+)
+def test_autonomous_analysis_result_rejects_inconsistent_excluded_fact_details(
+    excluded_fields,
+    excluded_reasons,
+    excluded_facts,
+):
+    from app.models.ai_analysis import AutonomousAnalysisResult
+
+    with pytest.raises(ValidationError):
+        AutonomousAnalysisResult(
+            summary="Autonomous analysis completed.",
+            excluded_autonomous_fact_fields=excluded_fields,
+            excluded_autonomous_fact_reasons=excluded_reasons,
+            excluded_autonomous_facts=excluded_facts,
+        )
+
+
+def test_ai_execution_result_rejects_openai_excluded_autonomous_facts():
+    from app.models.ai_analysis import AIAnalysisExecutionResult
+
+    with pytest.raises(ValidationError):
+        AIAnalysisExecutionResult(
+            summary="OpenAI analysis completed.",
+            analysis_mode="openai",
+            ai_provider="openai",
+            ai_model="test-model",
+            excluded_autonomous_facts=[
+                {
+                    "field": "ip",
+                    "value": "IP66",
+                    "reason": "insufficient_context",
+                    "evidence": "Component enclosure IP66.",
+                },
+            ],
+        )

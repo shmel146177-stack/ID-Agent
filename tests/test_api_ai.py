@@ -1862,6 +1862,13 @@ def test_ai_analyze_returns_and_saves_excluded_autonomous_fact_fields(
             excluded_autonomous_fact_reasons={
                 "serial_number": "missing_evidence",
             },
+            excluded_autonomous_facts=[
+                {
+                    "field": "serial_number",
+                    "value": "ABC-123",
+                    "reason": "missing_evidence",
+                },
+            ],
         )
 
     monkeypatch.setattr(
@@ -1893,6 +1900,14 @@ def test_ai_analyze_returns_and_saves_excluded_autonomous_fact_fields(
     assert data["excluded_autonomous_fact_reason_counts"] == {
         "missing_evidence": 1,
     }
+    assert data["excluded_autonomous_facts"] == [
+        {
+            "field": "serial_number",
+            "value": "ABC-123",
+            "reason": "missing_evidence",
+            "evidence": None,
+        },
+    ]
 
     saved = project_service.get_ai_analysis()
 
@@ -1905,3 +1920,11 @@ def test_ai_analyze_returns_and_saves_excluded_autonomous_fact_fields(
     assert saved["excluded_autonomous_fact_reason_counts"] == {
         "missing_evidence": 1,
     }
+    assert saved["excluded_autonomous_facts"] == [
+        {
+            "field": "serial_number",
+            "value": "ABC-123",
+            "reason": "missing_evidence",
+            "evidence": None,
+        },
+    ]

@@ -311,3 +311,38 @@ def test_autonomous_backend_keeps_labeled_frequency():
     assert frequency_fact.value == "50 \u0413\u0446"
     assert frequency_fact.evidence == source_line
     assert result.excluded_autonomous_fact_fields == []
+
+def test_autonomous_backend_records_excluded_fact_details():
+    class ExcludedFactsAnalyzerStub:
+        def analyze_text(self, text):
+            return {
+                "document_type": "Equipment documentation",
+                "serial_number": "ABC-123",
+                "ip": "IP66",
+            }
+
+    backend = AutonomousAnalysisBackend(
+        classifier=ClassifierStub(),
+        analyzer=ExcludedFactsAnalyzerStub(),
+    )
+    source_line = "Cabinet enclosure 500x400x200 IP66."
+
+    result = backend(
+        "passport.pdf",
+        source_line,
+    )
+
+    assert result.model_dump()["excluded_autonomous_facts"] == [
+        {
+            "field": "serial_number",
+            "value": "ABC-123",
+            "reason": "missing_evidence",
+            "evidence": None,
+        },
+        {
+            "field": "ip",
+            "value": "IP66",
+            "reason": "insufficient_context",
+            "evidence": source_line,
+        },
+    ]

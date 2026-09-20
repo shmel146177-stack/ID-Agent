@@ -97,6 +97,85 @@ def _count_excluded_autonomous_fact_reasons(
     return counts
 
 
+class AutonomousFactExclusion(BaseModel):
+    """Excluded autonomous fact with audit details."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    field: str
+    value: str
+    reason: AutonomousFactExclusionReason
+    evidence: str | None = None
+
+    @model_validator(mode="after")
+    def validate_exclusion_details(self):
+        self.field = self.field.strip()
+        self.value = self.value.strip()
+
+        if not self.field:
+            raise ValueError("excluded fact field must not be blank")
+
+        if not self.value:
+            raise ValueError("excluded fact value must not be blank")
+
+        if self.evidence is not None:
+            self.evidence = self.evidence.strip()
+
+            if not self.evidence:
+                raise ValueError(
+                    "excluded fact evidence must not be blank"
+                )
+
+        if (
+            self.reason == "missing_evidence"
+            and self.evidence is not None
+        ):
+            raise ValueError(
+                "missing evidence exclusion must not contain evidence"
+            )
+
+        if (
+            self.reason == "insufficient_context"
+            and self.evidence is None
+        ):
+            raise ValueError(
+                "insufficient context exclusion requires evidence"
+            )
+
+        return self
+
+
+def _validate_excluded_autonomous_facts(
+    fields: list[str],
+    reasons: dict[str, AutonomousFactExclusionReason],
+    facts: list[AutonomousFactExclusion],
+) -> list[AutonomousFactExclusion]:
+    if not facts:
+        return facts
+
+    fact_fields = [
+        fact.field
+        for fact in facts
+    ]
+
+    if fact_fields != fields:
+        raise ValueError(
+            "excluded autonomous facts "
+            "must match excluded fields in order"
+        )
+
+    if any(
+        reasons.get(fact.field) != fact.reason
+        for fact in facts
+    ):
+        raise ValueError(
+            "excluded autonomous fact reasons "
+            "must match structured facts"
+        )
+
+    return facts
+
+
 class AIFactSuggestion(BaseModel):
     """Факт, предложенный AI для последующей проверки."""
 
@@ -132,6 +211,9 @@ class AutonomousAnalysisResult(AIAnalysisResult):
         str,
         AutonomousFactExclusionReason,
     ] = Field(default_factory=dict)
+    excluded_autonomous_facts: list[
+        AutonomousFactExclusion
+    ] = Field(default_factory=list)
 
     @computed_field
     @property
@@ -155,6 +237,13 @@ class AutonomousAnalysisResult(AIAnalysisResult):
                 self.excluded_autonomous_fact_reasons,
             )
         )
+        self.excluded_autonomous_facts = (
+            _validate_excluded_autonomous_facts(
+                self.excluded_autonomous_fact_fields,
+                self.excluded_autonomous_fact_reasons,
+                self.excluded_autonomous_facts,
+            )
+        )
         return self
 
 
@@ -170,6 +259,9 @@ class AIAnalysisExecutionResult(AIAnalysisResult):
         str,
         AutonomousFactExclusionReason,
     ] = Field(default_factory=dict)
+    excluded_autonomous_facts: list[
+        AutonomousFactExclusion
+    ] = Field(default_factory=list)
 
     @computed_field
     @property
@@ -219,14 +311,25 @@ class AIAnalysisExecutionResult(AIAnalysisResult):
 
         if (
             self.analysis_mode == "openai"
-            and (excluded_fields or excluded_reasons)
+            and (
+                excluded_fields
+                or excluded_reasons
+                or self.excluded_autonomous_facts
+            )
         ):
             raise ValueError(
-                "excluded autonomous fact fields "
+                "excluded autonomous fact diagnostics "
                 "must be empty in openai mode"
             )
 
         self.excluded_autonomous_fact_fields = excluded_fields
         self.excluded_autonomous_fact_reasons = excluded_reasons
+        self.excluded_autonomous_facts = (
+            _validate_excluded_autonomous_facts(
+                excluded_fields,
+                excluded_reasons,
+                self.excluded_autonomous_facts,
+            )
+        )
 
         return self
