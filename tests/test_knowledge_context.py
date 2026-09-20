@@ -257,3 +257,24 @@ def test_extract_knowledge_source_pages_preserves_source_binding():
             "page": None,
         },
     ]
+
+
+@pytest.mark.parametrize("page", ["abc", "0", "-1"])
+def test_extract_knowledge_source_pages_rejects_invalid_page(page):
+    from app.services.knowledge_context import extract_knowledge_source_pages
+
+    context = (
+        "[SOURCE 1]\n"
+        "source_id: sp-grounding\n"
+        "source_title: Grounding standard\n"
+        "section: section-1\n"
+        f"page: {page}\n"
+        "text_origin: native\n"
+        "requires_human_review: false\n"
+        "matched_terms: grounding\n"
+        "text:\n"
+        "Grounding requirement.\n"
+        "[/SOURCE]"
+    )
+
+    assert extract_knowledge_source_pages(context) == []
