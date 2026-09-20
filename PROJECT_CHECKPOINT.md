@@ -1,14 +1,14 @@
 # ID-Agent - контрольная точка
 
-Дата проверки: 16.09.2026
+Дата проверки: 20.09.2026
 Ветка: `develop`
-Текущая контрольная точка: `4b0d3a3` - `Normalize AI test file endings`
+Текущая контрольная точка: `f814f57` - `Fix Copilot instructions formatting`
 
 ## Состояние репозитория
 
 - Основная рабочая ветка: `develop`.
 - GitHub: `https://github.com/shmel146177-stack/ID-Agent.git`
-- Последний подтвержденный коммит: `4b0d3a3819153a05fd52a15c2f2b35a528909c00`.
+- Последний подтвержденный коммит: `f814f574bc7707d02db35483d3f142d68bd57807`.
 - Коммит отправлен в `origin/develop`.
 - Рабочее дерево после push было чистым.
 
@@ -16,7 +16,7 @@
 
 Полный набор тестов:
 
-`440 passed, 1 skipped`
+`443 passed, 1 skipped`
 
 Пропущенный тест связан с невозможностью создания симлинков в текущей Windows-среде и не является ошибкой ID-Agent.
 
@@ -540,12 +540,12 @@ Next environment-improvement plan:
 - API-тест подтверждает возврат и сохранение `credit_balance_exhausted`;
 - API-тесты: `50 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `440 passed, 1 skipped`;
+- полная регрессия: `443 passed, 1 skipped`;
 - восстановленная среда проверена на Python `3.14.7`.
 
 Текущая стабильная точка:
 
-`4b0d3a3` - `Normalize AI test file endings`
+`f814f57` - `Fix Copilot instructions formatting`
 <!-- END PRECISE AI FALLBACK REASONS STATUS -->
 
 <!-- BEGIN STRICT AI FALLBACK REASONS STATUS -->
@@ -568,11 +568,11 @@ Next environment-improvement plan:
 - неизвестная причина вызывает `ValidationError`;
 - связанный AI-контур прошел без ошибок;
 - Ruff пройден без ошибок;
-- полная регрессия: `440 passed, 1 skipped`.
+- полная регрессия: `443 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`4b0d3a3` - `Normalize AI test file endings`
+`f814f57` - `Fix Copilot instructions formatting`
 <!-- END STRICT AI FALLBACK REASONS STATUS -->
 
 <!-- BEGIN AI EXECUTION CONSISTENCY STATUS -->
@@ -592,11 +592,11 @@ Next environment-improvement plan:
 - тест корректной автономной диагностики;
 - связанный AI-контур: `92 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `440 passed, 1 skipped`.
+- полная регрессия: `443 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`4b0d3a3` - `Normalize AI test file endings`
+`f814f57` - `Fix Copilot instructions formatting`
 <!-- END AI EXECUTION CONSISTENCY STATUS -->
 
 <!-- BEGIN AI PROVIDER MODEL DIAGNOSTICS STATUS -->
@@ -616,11 +616,11 @@ Next environment-improvement plan:
 - тест отклонения пустого имени модели;
 - связанный AI-контур: `94 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `440 passed, 1 skipped`.
+- полная регрессия: `443 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`4b0d3a3` - `Normalize AI test file endings`
+`f814f57` - `Fix Copilot instructions formatting`
 <!-- END AI PROVIDER MODEL DIAGNOSTICS STATUS -->
 
 <!-- BEGIN BLANK AI MODEL FALLBACK STATUS -->
@@ -638,11 +638,11 @@ Next environment-improvement plan:
 - добавлен тест пробельного значения `OPENAI_MODEL`;
 - тесты контура AI-настроек: `75 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `440 passed, 1 skipped`.
+- полная регрессия: `443 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`4b0d3a3` - `Normalize AI test file endings`
+`f814f57` - `Fix Copilot instructions formatting`
 <!-- END BLANK AI MODEL FALLBACK STATUS -->
 
 <!-- BEGIN AUTONOMOUS DETERMINISTIC ANALYSIS STATUS -->
@@ -670,11 +670,11 @@ Next environment-improvement plan:
 - API-тест подтверждает возврат и сохранение локальных фактов;
 - связанный AI-контур: `113 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `440 passed, 1 skipped`.
+- полная регрессия: `443 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`4b0d3a3` - `Normalize AI test file endings`
+`f814f57` - `Fix Copilot instructions formatting`
 <!-- END AUTONOMOUS DETERMINISTIC ANALYSIS STATUS -->
 
 <!-- BEGIN AUTONOMOUS SOURCE EVIDENCE STATUS -->
@@ -696,11 +696,11 @@ Next environment-improvement plan:
 - тесты автономного backend: `6 passed`;
 - связанный AI-контур: `117 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `440 passed, 1 skipped`.
+- полная регрессия: `443 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`4b0d3a3` - `Normalize AI test file endings`
+`f814f57` - `Fix Copilot instructions formatting`
 <!-- END AUTONOMOUS SOURCE EVIDENCE STATUS -->
 
 <!-- BEGIN STRUCTURED AUTONOMOUS EXCLUSIONS STATUS -->
@@ -724,11 +724,11 @@ Next environment-improvement plan:
 - API-тест возврата и сохранения списка;
 - связанный AI-контур: `107 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `440 passed, 1 skipped`.
+- полная регрессия: `443 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`4b0d3a3` - `Normalize AI test file endings`
+`f814f57` - `Fix Copilot instructions formatting`
 <!-- END STRUCTURED AUTONOMOUS EXCLUSIONS STATUS -->
 
 <!-- BEGIN STRICT EXCLUDED AUTONOMOUS FIELDS STATUS -->
@@ -748,11 +748,11 @@ Next environment-improvement plan:
 - три теста новых ограничений;
 - тесты модели AI: `17 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `440 passed, 1 skipped`.
+- полная регрессия: `443 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`4b0d3a3` - `Normalize AI test file endings`
+`f814f57` - `Fix Copilot instructions formatting`
 <!-- END STRICT EXCLUDED AUTONOMOUS FIELDS STATUS -->
 
 <!-- BEGIN SHARED AUTONOMOUS FIELD VALIDATION STATUS -->
@@ -774,11 +774,11 @@ Next environment-improvement plan:
 - тесты модели AI: `19 passed`;
 - связанный AI-контур: `112 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `440 passed, 1 skipped`.
+- полная регрессия: `443 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`4b0d3a3` - `Normalize AI test file endings`
+`f814f57` - `Fix Copilot instructions formatting`
 <!-- END SHARED AUTONOMOUS FIELD VALIDATION STATUS -->
 
 <!-- BEGIN EQUIPMENT INPUT VOLTAGE STATUS -->
@@ -807,11 +807,11 @@ Next environment-improvement plan:
 - тесты `DocumentAnalyzer`: `2 passed`;
 - связанный контур: `9 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `440 passed, 1 skipped`.
+- полная регрессия: `443 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`4b0d3a3` - `Normalize AI test file endings`
+`f814f57` - `Fix Copilot instructions formatting`
 <!-- END EQUIPMENT INPUT VOLTAGE STATUS -->
 
 <!-- BEGIN PARENTHESIZED AUTONOMOUS EVIDENCE STATUS -->
@@ -838,11 +838,11 @@ Next environment-improvement plan:
 - тесты автономного backend: `7 passed`;
 - связанный контур: `10 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `440 passed, 1 skipped`.
+- полная регрессия: `443 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`4b0d3a3` - `Normalize AI test file endings`
+`f814f57` - `Fix Copilot instructions formatting`
 <!-- END PARENTHESIZED AUTONOMOUS EVIDENCE STATUS -->
 
 <!-- BEGIN COMPONENT CHARACTERISTICS FILTER STATUS -->
@@ -867,11 +867,11 @@ Next environment-improvement plan:
 - Ruff пройден без ошибок;
 - реальный PDF подтвердил сохранение напряжения и тока;
 - реальный PDF подтвердил исключение неоднозначных `ip` и `frequency`;
-- полная регрессия: `440 passed, 1 skipped`.
+- полная регрессия: `443 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`4b0d3a3` - `Normalize AI test file endings`
+`f814f57` - `Fix Copilot instructions formatting`
 <!-- END COMPONENT CHARACTERISTICS FILTER STATUS -->
 
 <!-- BEGIN AUTONOMOUS EXCLUSION REASONS STATUS -->
@@ -897,11 +897,11 @@ Next environment-improvement plan:
 - связанный AI-контур: `119 passed`;
 - API-тест подтверждает возврат и сохранение карты причин;
 - Ruff пройден без ошибок;
-- полная регрессия: `440 passed, 1 skipped`.
+- полная регрессия: `443 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`4b0d3a3` - `Normalize AI test file endings`
+`f814f57` - `Fix Copilot instructions formatting`
 <!-- END AUTONOMOUS EXCLUSION REASONS STATUS -->
 
 <!-- BEGIN AUTONOMOUS EXCLUSION WARNING COUNTS STATUS -->
@@ -924,11 +924,11 @@ Next environment-improvement plan:
 - тесты автономного backend: `9 passed`;
 - связанный AI-контур: `119 passed`;
 - Ruff пройден без ошибок;
-- полная регрессия: `440 passed, 1 skipped`.
+- полная регрессия: `443 passed, 1 skipped`.
 
 Текущая стабильная точка:
 
-`4b0d3a3` - `Normalize AI test file endings`
+`f814f57` - `Fix Copilot instructions formatting`
 <!-- END AUTONOMOUS EXCLUSION WARNING COUNTS STATUS -->
 
 <!-- BEGIN AUTONOMOUS EXCLUSION COUNT SUMMARY STATUS -->
@@ -953,11 +953,41 @@ Next environment-improvement plan:
 - связанный AI-контур: `120 passed`;
 - API-тест подтверждает возврат и сохранение счетчиков;
 - Ruff пройден без ошибок;
-- полная регрессия: `440 passed, 1 skipped`;
+- полная регрессия: `443 passed, 1 skipped`;
 - GitHub подтвердил функциональный коммит `41be78d`;
 - окончания трех тестовых файлов нормализованы коммитом `4b0d3a3`.
 
 Текущая стабильная точка:
 
-`4b0d3a3` - `Normalize AI test file endings`
+`f814f57` - `Fix Copilot instructions formatting`
 <!-- END AUTONOMOUS EXCLUSION COUNT SUMMARY STATUS -->
+
+<!-- BEGIN DEVELOPMENT QUALITY STATUS -->
+## Инструкции разработки и контроль качества - 20.09.2026
+
+Реализовано:
+
+- добавлен файл `.github/copilot-instructions.md`;
+- зафиксированы правила архитектуры, тестирования, FastAPI и обработки файлов;
+- зафиксированы требования безопасности Git;
+- AI не должен заменять детерминированную инженерную логику;
+- сохранены требования source-bound контекста базы знаний;
+- исправлена Markdown-структура инструкций Copilot;
+- GitHub Actions запускает pytest с измерением покрытия;
+- действует минимальный порог покрытия `80%`;
+- артефакты `.coverage`, `.coverage.*`, `htmlcov/` и `coverage.xml` исключены из Git;
+- некорректные номера страниц источников `abc`, `0` и `-1` отклоняются.
+
+Проверки:
+
+- полная регрессия: `443 passed, 1 skipped`;
+- фактическое покрытие: `84.06%`;
+- обязательный порог покрытия `80%` достигнут;
+- Ruff пройден без ошибок;
+- `git diff --check` ошибок не выявил;
+- GitHub подтвердил коммиты `dd6f54a`, `a1c27ee`, `6d7c369`, `3e2960e` и `f814f57`.
+
+Текущая стабильная точка:
+
+`f814f57` - `Fix Copilot instructions formatting`
+<!-- END DEVELOPMENT QUALITY STATUS -->
