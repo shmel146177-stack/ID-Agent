@@ -40,13 +40,15 @@ Preferred commands:
 ```powershell
 python -m pytest tests/<relevant_test_file>.py -q
 python -m pytest -q
-Do not modify tests merely to make failing implementation pass unless the specification itself has changed.
-FastAPI
+```
+
+- Do not modify tests merely to make failing implementation pass unless the specification itself has changed.
+## FastAPI
 - Preserve existing HTTP status code conventions.
 - Map domain exceptions to appropriate HTTP responses.
 - Keep API validation explicit.
 - Avoid breaking existing endpoints or request/response models.
-File handling
+## File handling
 For uploaded files:
 - prefer streaming writes
 - enforce configured file size limits
@@ -54,13 +56,13 @@ For uploaded files:
 - remove partial files after failed uploads
 - close file streams reliably
 - validate paths and filenames
-Project data
+## Project data
 When updating persisted project JSON data:
 - preserve fields that were not explicitly changed
 - avoid replacing whole records when a partial update is intended
 - keep generated paths portable where applicable
 - prefer POSIX-style paths inside manifests and ZIP metadata
-AI features
+## AI features
 AI output must not silently replace deterministic engineering logic.
 - keep AI results distinguishable from deterministic analysis
 - preserve human-review requirements
@@ -68,19 +70,19 @@ AI output must not silently replace deterministic engineering logic.
 - prefer source-grounded context
 - keep source references where available
 - do not remove deterministic validation in favor of AI output
-Knowledge service
+## Knowledge service
 - preserve source-bound context behavior
 - preserve result limits
 - reject invalid nonpositive limits where existing APIs require this
 - avoid duplicate search terms and duplicate results when existing behavior prevents them
-Code style
+## Code style
 - follow the style already present in nearby files
 - keep functions focused
 - use clear names
 - avoid unnecessary dependencies
 - avoid speculative abstractions
 - do not generate placeholder production code
-Workflow
+## Workflow
 Before proposing a code change:
 1. Inspect the relevant existing implementation.
 2. Inspect related tests.
@@ -89,7 +91,7 @@ Before proposing a code change:
 5. Run focused tests.
 6. Run the full pytest suite.
 7. Review the diff before committing.
-Git safety
+## Git safety
 - Do not run destructive Git commands.
 - Do not reset, clean, force-push, rebase, or delete branches unless explicitly requested.
 - Do not commit automatically unless explicitly requested.
