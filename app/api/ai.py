@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field, model_validator
 
 from app.models.ai_review import (
@@ -241,8 +241,20 @@ def get_ai_review_history(analysis_id: str):
 
 
 @router.get("/review/history")
-def list_ai_review_history():
-    return exclusion_review_service.list_review_history()
+def list_ai_review_history(
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
+    source_filename: str | None = Query(
+        default=None,
+        min_length=1,
+        max_length=255,
+    ),
+):
+    return exclusion_review_service.list_review_history(
+        limit=limit,
+        offset=offset,
+        source_filename=source_filename,
+    )
 
 
 @router.put("/review/exclusions/{field}")

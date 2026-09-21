@@ -1588,8 +1588,68 @@ def test_ai_review_history_lists_archive_summaries(monkeypatch):
     assert response.status_code == 200
     assert response.json() == {
         "count": 1,
+        "total_count": 1,
+        "limit": 50,
+        "offset": 0,
         "archives": archives,
     }
+
+
+def test_ai_review_history_paginates_and_filters_archives(monkeypatch):
+    from app.services.project_service import project_service
+
+    archives = [
+        {
+            "analysis_id": "analysis-3",
+            "source_filename": "passport.pdf",
+        },
+        {
+            "analysis_id": "analysis-2",
+            "source_filename": "drawing.pdf",
+        },
+        {
+            "analysis_id": "analysis-1",
+            "source_filename": "passport.pdf",
+        },
+    ]
+    monkeypatch.setattr(
+        project_service,
+        "list_ai_review_history",
+        lambda: archives,
+    )
+
+    response = client.get(
+        "/ai/review/history",
+        params={
+            "source_filename": "passport.pdf",
+            "limit": 1,
+            "offset": 1,
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "count": 1,
+        "total_count": 2,
+        "limit": 1,
+        "offset": 1,
+        "archives": [archives[2]],
+    }
+
+
+@pytest.mark.parametrize(
+    "params",
+    [
+        {"limit": 0},
+        {"limit": 201},
+        {"offset": -1},
+        {"source_filename": ""},
+    ],
+)
+def test_ai_review_history_rejects_invalid_pagination(params):
+    response = client.get("/ai/review/history", params=params)
+
+    assert response.status_code == 422
 
 
 def test_ai_review_rejects_missing_current_analysis_id(monkeypatch):

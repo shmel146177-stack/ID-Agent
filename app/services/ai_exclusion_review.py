@@ -171,11 +171,30 @@ class AIExclusionReviewService:
 
         return review
 
-    def list_review_history(self) -> dict:
+    def list_review_history(
+        self,
+        limit: int = 50,
+        offset: int = 0,
+        source_filename: str | None = None,
+    ) -> dict:
         archives = self.project_service.list_ai_review_history()
+
+        if source_filename is not None:
+            archives = [
+                archive
+                for archive in archives
+                if archive.get("source_filename") == source_filename
+            ]
+
+        total_count = len(archives)
+        page = archives[offset : offset + limit]
+
         return {
-            "count": len(archives),
-            "archives": archives,
+            "count": len(page),
+            "total_count": total_count,
+            "limit": limit,
+            "offset": offset,
+            "archives": page,
         }
 
     def get_statuses(self) -> dict:
