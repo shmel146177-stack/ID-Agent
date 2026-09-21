@@ -74,3 +74,31 @@ class AIReviewDecision(BaseModel):
             )
 
         return self
+
+
+class ExcludedAutonomousFactReviewUpdate(BaseModel):
+    """Partial review request bound to one current AI analysis."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    source_filename: str
+    analysis_id: str
+    decision: Literal[
+        "accepted",
+        "rejected",
+        "corrected",
+    ]
+    corrected_value: str | None = None
+    notes: str | None = None
+
+    @model_validator(mode="after")
+    def validate_review_details(self):
+        validated = ExcludedAutonomousFactReview(
+            field="validated-field",
+            decision=self.decision,
+            corrected_value=self.corrected_value,
+            notes=self.notes,
+        )
+        self.corrected_value = validated.corrected_value
+        self.notes = validated.notes
+        return self

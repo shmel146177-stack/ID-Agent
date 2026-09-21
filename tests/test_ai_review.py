@@ -4,6 +4,7 @@ from pydantic import ValidationError
 from app.models.ai_review import (
     AIReviewDecision,
     ExcludedAutonomousFactReview,
+    ExcludedAutonomousFactReviewUpdate,
 )
 
 
@@ -90,3 +91,16 @@ def test_ai_review_rejects_duplicate_excluded_fact_fields():
                 },
             ],
         )
+
+
+def test_excluded_fact_review_update_normalizes_correction():
+    update = ExcludedAutonomousFactReviewUpdate(
+        source_filename="passport.pdf",
+        analysis_id="analysis-1",
+        decision="corrected",
+        corrected_value=" 230 В ",
+        notes=" Checked by human. ",
+    )
+
+    assert update.corrected_value == "230 В"
+    assert update.notes == "Checked by human."

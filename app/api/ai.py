@@ -5,6 +5,7 @@ from app.models.ai_analysis import AutonomousFactExclusion
 from app.models.ai_review import (
     AIReviewDecision,
     ExcludedAutonomousFactReview,
+    ExcludedAutonomousFactReviewUpdate,
 )
 from app.services.ai_client import AIClient
 from app.services.ai_document_analysis import AIDocumentAnalysisService
@@ -409,6 +410,122 @@ def get_excluded_fact_review_statuses():
         },
         "engineering_confirmation": False,
     }
+
+
+@router.put("/review/exclusions/{field}")
+def update_excluded_fact_review(
+    field: str,
+    request: ExcludedAutonomousFactReviewUpdate,
+):
+    latest_ai = project_service.get_ai_analysis()
+
+    if latest_ai is None:
+        raise HTTPException(
+            status_code=404,
+            detail="AI analysis not found",
+        )
+
+    analysis_id = latest_ai.get("analysis_id")
+    source_filename = latest_ai.get("source_filename")
+
+    if analysis_id != request.analysis_id:
+        raise HTTPException(
+            status_code=409,
+            detail="AI analysis id mismatch",
+        )
+
+    if source_filename != request.source_filename:
+        raise HTTPException(
+            status_code=409,
+            detail="AI analysis source filename mismatch",
+        )
+
+    try:
+        excluded_facts = [
+            AutonomousFactExclusion.model_validate(item)
+            for item in latest_ai.get(
+                "excluded_autonomous_facts",
+                [],
+            )
+        ]
+    except (TypeError, ValueError) as error:
+        raise HTTPException(
+            status_code=409,
+            detail="AI analysis has invalid structured exclusions",
+        ) from error
+
+    excluded_fact_fields = [fact.field for fact in excluded_facts]
+
+    if field not in excluded_fact_fields:
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                "Reviewed field is not a current structured "
+                "autonomous exclusion"
+            ),
+        )
+
+    new_fact_review = ExcludedAutonomousFactReview(
+        field=field,
+        decision=request.decision,
+        corrected_value=request.corrected_value,
+        notes=request.notes,
+    )
+    saved_review = project_service.get_ai_review()
+
+    if saved_review is None:
+        review_data = AIReviewDecision(
+            source_filename=request.source_filename,
+            analysis_id=request.analysis_id,
+            decision="needs_changes",
+        ).model_dump()
+    else:
+        if saved_review.get("analysis_id") != analysis_id:
+            raise HTTPException(
+                status_code=409,
+                detail="AI review analysis id mismatch",
+            )
+
+        if saved_review.get("source_filename") != source_filename:
+            raise HTTPException(
+                status_code=409,
+                detail="AI review source filename mismatch",
+            )
+
+        try:
+            review_data = AIReviewDecision.model_validate(
+                {
+                    key: value
+                    for key, value in saved_review.items()
+                    if key != "knowledge_source_ids"
+                }
+            ).model_dump()
+        except (TypeError, ValueError) as error:
+            raise HTTPException(
+                status_code=409,
+                detail="AI review has invalid data",
+            ) from error
+
+    reviews_by_field = {
+        item["field"]: item
+        for item in review_data["excluded_fact_reviews"]
+    }
+    reviews_by_field[field] = new_fact_review.model_dump()
+    review_data["excluded_fact_reviews"] = [
+        reviews_by_field[current_field]
+        for current_field in excluded_fact_fields
+        if current_field in reviews_by_field
+    ]
+
+    knowledge_source_ids = latest_ai.get("knowledge_source_ids")
+
+    if knowledge_source_ids is not None:
+        review_data["knowledge_source_ids"] = list(
+            knowledge_source_ids
+        )
+
+    project_service.save_ai_review(review_data)
+    return review_data
 
 
 @router.post("/review")
