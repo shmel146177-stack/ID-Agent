@@ -37,23 +37,7 @@ class ProjectService:
     def save_analysis(self, data: dict):
 
         self._archive_current_ai_review()
-
-        os.makedirs(
-            "projects/data",
-            exist_ok=True
-        )
-
-        with open(
-            self.file_path,
-            "w",
-            encoding="utf-8"
-        ) as file:
-            json.dump(
-                data,
-                file,
-                ensure_ascii=False,
-                indent=4
-            )
+        write_json_atomically(self.file_path, data)
 
         if os.path.exists(self.ai_file_path):
             os.remove(self.ai_file_path)

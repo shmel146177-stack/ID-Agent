@@ -102,6 +102,57 @@ def test_new_deterministic_analysis_invalidates_old_ai(tmp_path):
     assert not Path(service.ai_file_path).exists()
 
 
+def test_failed_deterministic_analysis_preserves_current_state(
+    monkeypatch,
+    tmp_path,
+):
+    service = ProjectService()
+    analysis_path = tmp_path / "current_analysis.json"
+    ai_path = tmp_path / "current_ai_analysis.json"
+    comparison_path = tmp_path / "current_ai_comparison.json"
+    service.file_path = str(analysis_path)
+    service.ai_file_path = str(ai_path)
+    service.ai_review_file_path = str(
+        tmp_path / "current_ai_review.json"
+    )
+    service.ai_comparison_file_path = str(comparison_path)
+
+    service.save_analysis({"document_type": "drawing"})
+    service.save_ai_analysis(
+        {"summary": "Current AI analysis"},
+        source_filename="drawing.pdf",
+    )
+    service.save_ai_comparison(
+        {"matches": []},
+        analysis_id="analysis-1",
+        source_filename="drawing.pdf",
+    )
+    previous_analysis = analysis_path.read_bytes()
+    previous_ai = ai_path.read_bytes()
+    previous_comparison = comparison_path.read_bytes()
+
+    def fail_dump(data, file, **kwargs):
+        file.write('{"document_type":')
+        raise OSError("simulated deterministic write failure")
+
+    monkeypatch.setattr(
+        atomic_json_module.json,
+        "dump",
+        fail_dump,
+    )
+
+    with pytest.raises(
+        OSError,
+        match="simulated deterministic write failure",
+    ):
+        service.save_analysis({"document_type": "passport"})
+
+    assert analysis_path.read_bytes() == previous_analysis
+    assert ai_path.read_bytes() == previous_ai
+    assert comparison_path.read_bytes() == previous_comparison
+    assert list(tmp_path.glob("current_analysis.json.*.tmp")) == []
+
+
 def test_ai_analysis_can_store_source_filename(tmp_path):
     service = ProjectService()
 
