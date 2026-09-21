@@ -1,5 +1,8 @@
 from pathlib import Path
 
+import pytest
+
+import app.services.atomic_json as atomic_json_module
 from app.services.project_service import ProjectService
 
 
@@ -157,6 +160,47 @@ def test_project_service_saves_ai_comparison_with_source_binding(tmp_path):
     assert saved["suggestions"] == comparison["suggestions"]
     assert saved["requires_human_review"] is True
     assert saved["engineering_confirmation"] is False
+
+
+def test_failed_ai_comparison_write_preserves_previous_file(
+    monkeypatch,
+    tmp_path,
+):
+    service = ProjectService()
+    comparison_path = tmp_path / "current_ai_comparison.json"
+    service.ai_comparison_file_path = str(comparison_path)
+    first = service.save_ai_comparison(
+        {"matches": []},
+        analysis_id="analysis-1",
+        source_filename="drawing.pdf",
+    )["document"]
+    previous_bytes = comparison_path.read_bytes()
+
+    def fail_dump(data, file, **kwargs):
+        file.write('{"analysis_id":')
+        raise OSError("simulated comparison write failure")
+
+    monkeypatch.setattr(
+        atomic_json_module.json,
+        "dump",
+        fail_dump,
+    )
+
+    with pytest.raises(
+        OSError,
+        match="simulated comparison write failure",
+    ):
+        service.save_ai_comparison(
+            {"matches": ["changed"]},
+            analysis_id="analysis-2",
+            source_filename="drawing.pdf",
+        )
+
+    assert comparison_path.read_bytes() == previous_bytes
+    assert service.get_ai_comparison() == first
+    assert list(
+        tmp_path.glob("current_ai_comparison.json.*.tmp")
+    ) == []
 
 def test_new_deterministic_analysis_invalidates_old_ai_comparison(tmp_path):
     service = ProjectService()

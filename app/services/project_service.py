@@ -109,16 +109,6 @@ class ProjectService:
         source_filename: str,
         knowledge_source_ids: list[str] | None = None,
     ):
-        directory = os.path.dirname(
-            self.ai_comparison_file_path
-        )
-
-        if directory:
-            os.makedirs(
-                directory,
-                exist_ok=True,
-            )
-
         data_to_save = dict(data)
         data_to_save["analysis_id"] = analysis_id
         data_to_save["source_filename"] = source_filename
@@ -128,17 +118,10 @@ class ProjectService:
                 knowledge_source_ids
             )
 
-        with open(
+        write_json_atomically(
             self.ai_comparison_file_path,
-            "w",
-            encoding="utf-8",
-        ) as file:
-            json.dump(
-                data_to_save,
-                file,
-                ensure_ascii=False,
-                indent=4,
-            )
+            data_to_save,
+        )
 
         return {
             "status": "AI comparison saved",
@@ -201,32 +184,14 @@ class ProjectService:
         ):
             return None
 
-        os.makedirs(self.ai_review_history_dir, exist_ok=True)
         archive_path = self._ai_review_history_path(analysis_id)
-        temporary_path = f"{archive_path}.{uuid4().hex}.tmp"
 
         archived_review = dict(review)
         archived_review["archived_at"] = datetime.now(
             timezone.utc
         ).isoformat()
 
-        try:
-            with open(
-                temporary_path,
-                "w",
-                encoding="utf-8",
-            ) as file:
-                json.dump(
-                    archived_review,
-                    file,
-                    ensure_ascii=False,
-                    indent=4,
-                )
-
-            os.replace(temporary_path, archive_path)
-        finally:
-            if os.path.exists(temporary_path):
-                os.remove(temporary_path)
+        write_json_atomically(archive_path, archived_review)
 
         return archive_path
 
