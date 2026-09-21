@@ -946,6 +946,15 @@ def test_excluded_fact_review_statuses_merge_partial_review(monkeypatch):
                 "review_notes": None,
             },
         ],
+        "excluded_fact_review_summary": {
+            "total": 2,
+            "reviewed": 1,
+            "pending": 1,
+            "accepted": 0,
+            "rejected": 0,
+            "corrected": 1,
+            "can_accept": False,
+        },
         "engineering_confirmation": False,
     }
 
@@ -983,6 +992,76 @@ def test_excluded_fact_review_statuses_are_pending_without_review(
     assert response.json()["excluded_fact_review_statuses"][0][
         "review_status"
     ] == "pending"
+    assert response.json()["excluded_fact_review_summary"] == {
+        "total": 1,
+        "reviewed": 0,
+        "pending": 1,
+        "accepted": 0,
+        "rejected": 0,
+        "corrected": 0,
+        "can_accept": False,
+    }
+
+
+def test_excluded_fact_review_summary_allows_fully_reviewed_analysis(
+    monkeypatch,
+):
+    from app.services.project_service import project_service
+
+    monkeypatch.setattr(
+        project_service,
+        "get_ai_analysis",
+        lambda: {
+            "source_filename": "passport.pdf",
+            "analysis_id": "analysis-1",
+            "excluded_autonomous_facts": [
+                {
+                    "field": "voltage",
+                    "value": "220 В",
+                    "reason": "insufficient_context",
+                    "evidence": "220 В",
+                },
+                {
+                    "field": "ip",
+                    "value": "IP54",
+                    "reason": "missing_evidence",
+                    "evidence": None,
+                },
+            ],
+        },
+    )
+    monkeypatch.setattr(
+        project_service,
+        "get_ai_review",
+        lambda: {
+            "source_filename": "passport.pdf",
+            "analysis_id": "analysis-1",
+            "decision": "accepted",
+            "excluded_fact_reviews": [
+                {
+                    "field": "voltage",
+                    "decision": "accepted",
+                },
+                {
+                    "field": "ip",
+                    "decision": "rejected",
+                },
+            ],
+        },
+    )
+
+    response = client.get("/ai/review/exclusions")
+
+    assert response.status_code == 200
+    assert response.json()["excluded_fact_review_summary"] == {
+        "total": 2,
+        "reviewed": 2,
+        "pending": 0,
+        "accepted": 1,
+        "rejected": 1,
+        "corrected": 0,
+        "can_accept": True,
+    }
 
 
 def test_excluded_fact_review_statuses_reject_stale_review(monkeypatch):

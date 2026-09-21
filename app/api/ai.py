@@ -365,15 +365,22 @@ def get_excluded_fact_review_statuses():
         ) from error
 
     statuses = []
+    review_counts = {
+        "pending": 0,
+        "accepted": 0,
+        "rejected": 0,
+        "corrected": 0,
+    }
 
     for fact in excluded_facts:
         fact_review = fact_reviews.get(fact.field)
-        status = fact.model_dump()
-        status["review_status"] = (
+        review_status = (
             fact_review.decision
             if fact_review is not None
             else "pending"
         )
+        status = fact.model_dump()
+        status["review_status"] = review_status
         status["corrected_value"] = (
             fact_review.corrected_value
             if fact_review is not None
@@ -385,11 +392,21 @@ def get_excluded_fact_review_statuses():
             else None
         )
         statuses.append(status)
+        review_counts[review_status] += 1
+
+    total = len(statuses)
+    pending = review_counts["pending"]
 
     return {
         "source_filename": source_filename,
         "analysis_id": analysis_id,
         "excluded_fact_review_statuses": statuses,
+        "excluded_fact_review_summary": {
+            "total": total,
+            "reviewed": total - pending,
+            **review_counts,
+            "can_accept": pending == 0,
+        },
         "engineering_confirmation": False,
     }
 
