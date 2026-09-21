@@ -1,8 +1,20 @@
 import json
 import os
 from datetime import datetime, timezone
+from functools import wraps
 from hashlib import sha256
 from uuid import uuid4
+
+from app.services.interprocess_lock import exclusive_file_lock
+
+
+def _serialized_review_state(method):
+    @wraps(method)
+    def wrapper(self, *args, **kwargs):
+        with exclusive_file_lock(self.ai_review_lock_path):
+            return method(self, *args, **kwargs)
+
+    return wrapper
 
 
 class ProjectService:
@@ -16,6 +28,11 @@ class ProjectService:
             "projects/data/current_ai_comparison.json"
         )
 
+    @property
+    def ai_review_lock_path(self) -> str:
+        return f"{self.ai_review_file_path}.lock"
+
+    @_serialized_review_state
     def save_analysis(self, data: dict):
 
         self._archive_current_ai_review()
@@ -51,6 +68,7 @@ class ProjectService:
             "document": data
         }
 
+    @_serialized_review_state
     def save_ai_analysis(
         self,
         data: dict,
