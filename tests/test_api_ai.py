@@ -1386,6 +1386,71 @@ def test_single_excluded_fact_review_rejects_stale_revision(monkeypatch):
     }
 
 
+def test_clear_excluded_fact_review_rejects_stale_revision(monkeypatch):
+    from app.services.project_service import project_service
+
+    latest_ai = {
+        "source_filename": "passport.pdf",
+        "analysis_id": "analysis-1",
+        "excluded_autonomous_facts": [
+            {
+                "field": "voltage",
+                "value": "220 В",
+                "reason": "insufficient_context",
+                "evidence": "220 В",
+            },
+        ],
+    }
+    saved_review = {
+        "source_filename": "passport.pdf",
+        "analysis_id": "analysis-1",
+        "decision": "needs_changes",
+        "review_revision": 2,
+        "excluded_fact_reviews": [
+            {
+                "field": "voltage",
+                "decision": "accepted",
+            },
+        ],
+    }
+    save_calls = []
+    monkeypatch.setattr(
+        project_service,
+        "get_ai_analysis",
+        lambda: latest_ai,
+    )
+    monkeypatch.setattr(
+        project_service,
+        "get_ai_review",
+        lambda: saved_review,
+    )
+    monkeypatch.setattr(
+        project_service,
+        "save_ai_review",
+        lambda data: save_calls.append(data),
+    )
+
+    response = client.request(
+        "DELETE",
+        "/ai/review/exclusions/voltage",
+        json={
+            "source_filename": "passport.pdf",
+            "analysis_id": "analysis-1",
+            "expected_revision": 1,
+            "reviewed_by": "Engineer A",
+        },
+    )
+
+    assert response.status_code == 409
+    assert response.json() == {
+        "detail": (
+            "AI review revision mismatch: expected 1, current 2"
+        ),
+    }
+    assert save_calls == []
+    assert saved_review["review_revision"] == 2
+
+
 def test_clear_excluded_fact_review_returns_field_to_pending(monkeypatch):
     from app.services.project_service import project_service
 

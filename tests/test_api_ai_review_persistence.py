@@ -54,15 +54,49 @@ def test_ai_review_persistence_cycle(
     assert response.status_code == 200
     assert review_file.exists()
 
+    response = client.post(
+        "/ai/review",
+        json={
+            "source_filename": "drawing.pdf",
+            "analysis_id": latest_ai["analysis_id"],
+            "decision": "needs_changes",
+            "review_revision": 1,
+            "notes": "Second human decision.",
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["review_revision"] == 2
+
+    review_before_conflict = review_file.read_bytes()
+    response = client.post(
+        "/ai/review",
+        json={
+            "source_filename": "drawing.pdf",
+            "analysis_id": latest_ai["analysis_id"],
+            "decision": "rejected",
+            "review_revision": 1,
+            "notes": "Stale human decision.",
+        },
+    )
+
+    assert response.status_code == 409
+    assert response.json() == {
+        "detail": (
+            "AI review revision mismatch: expected 1, current 2"
+        ),
+    }
+    assert review_file.read_bytes() == review_before_conflict
+
     response = client.get("/ai/review")
 
     assert response.status_code == 200
     assert response.json() == {
         "source_filename": "drawing.pdf",
         "analysis_id": latest_ai["analysis_id"],
-        "decision": "accepted",
-        "review_revision": 1,
-        "notes": "Checked by human.",
+        "decision": "needs_changes",
+        "review_revision": 2,
+        "notes": "Second human decision.",
     }
 
     saved_ai = project_service.get_ai_analysis()

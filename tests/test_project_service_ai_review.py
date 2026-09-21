@@ -161,6 +161,7 @@ def test_new_ai_analysis_archives_matching_review(tmp_path):
         "source_filename": "passport.pdf",
         "analysis_id": first["analysis_id"],
         "decision": "accepted",
+        "review_revision": 3,
         "excluded_fact_review_history": [
             {
                 "field": "voltage",
@@ -184,6 +185,7 @@ def test_new_ai_analysis_archives_matching_review(tmp_path):
 
     assert archived is not None
     assert archived["analysis_id"] == first["analysis_id"]
+    assert archived["review_revision"] == 3
     assert archived["excluded_fact_review_history"] == review[
         "excluded_fact_review_history"
     ]
