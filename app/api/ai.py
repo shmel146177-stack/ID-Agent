@@ -1,17 +1,17 @@
-from datetime import datetime, timezone
-
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field, model_validator
 
-from app.models.ai_analysis import AutonomousFactExclusion
 from app.models.ai_review import (
     AIReviewDecision,
-    ExcludedAutonomousFactReview,
     ExcludedAutonomousFactReviewBinding,
     ExcludedAutonomousFactReviewUpdate,
 )
 from app.services.ai_client import AIClient
 from app.services.ai_document_analysis import AIDocumentAnalysisService
+from app.services.ai_exclusion_review import (
+    AIExclusionReviewError,
+    AIExclusionReviewService,
+)
 from app.services.knowledge_context import (
     MAX_KNOWLEDGE_CONTEXT_CHARS,
     extract_knowledge_source_ids,
@@ -23,6 +23,14 @@ from app.services.project_service import project_service
 
 
 router = APIRouter(prefix="/ai", tags=["AI"])
+exclusion_review_service = AIExclusionReviewService(project_service)
+
+
+def _review_http_error(error: AIExclusionReviewError) -> HTTPException:
+    return HTTPException(
+        status_code=error.status_code,
+        detail=error.detail,
+    )
 
 
 
@@ -210,219 +218,18 @@ def get_ai_comparison():
 
 @router.get("/review")
 def get_ai_review():
-    from fastapi import HTTPException
-
-    review = project_service.get_ai_review()
-
-    if review is None:
-        raise HTTPException(
-            status_code=404,
-            detail="AI review not found",
-        )
-
-    latest_ai = project_service.get_ai_analysis()
-
-    if latest_ai is None:
-        raise HTTPException(
-            status_code=409,
-            detail="AI review has no current AI analysis",
-        )
-
-    if not review.get("analysis_id"):
-        raise HTTPException(
-            status_code=409,
-            detail="AI review missing analysis id",
-        )
-
-    if not latest_ai.get("analysis_id"):
-        raise HTTPException(
-            status_code=409,
-            detail="AI analysis missing analysis id",
-        )
-
-    if (
-        review.get("analysis_id")
-        != latest_ai.get("analysis_id")
-    ):
-        raise HTTPException(
-            status_code=409,
-            detail="AI review analysis id mismatch",
-        )
-
-    if not review.get("source_filename"):
-        raise HTTPException(
-            status_code=409,
-            detail="AI review missing source filename",
-        )
-
-    if not latest_ai.get("source_filename"):
-        raise HTTPException(
-            status_code=409,
-            detail="AI analysis missing source filename",
-        )
-
-    if (
-        review.get("source_filename")
-        != latest_ai.get("source_filename")
-    ):
-        raise HTTPException(
-            status_code=409,
-            detail="AI review source filename mismatch",
-        )
-
-    if review.get(
-        "knowledge_source_ids",
-        [],
-    ) != latest_ai.get(
-        "knowledge_source_ids",
-        [],
-    ):
-        raise HTTPException(
-            status_code=409,
-            detail="AI review knowledge sources mismatch",
-        )
-
-    return review
+    try:
+        return exclusion_review_service.get_review()
+    except AIExclusionReviewError as error:
+        raise _review_http_error(error) from error
 
 
 @router.get("/review/exclusions")
 def get_excluded_fact_review_statuses():
-    latest_ai = project_service.get_ai_analysis()
-
-    if latest_ai is None:
-        raise HTTPException(
-            status_code=404,
-            detail="AI analysis not found",
-        )
-
-    analysis_id = latest_ai.get("analysis_id")
-    source_filename = latest_ai.get("source_filename")
-
-    if not analysis_id:
-        raise HTTPException(
-            status_code=409,
-            detail="AI analysis missing analysis id",
-        )
-
-    if not source_filename:
-        raise HTTPException(
-            status_code=409,
-            detail="AI analysis missing source filename",
-        )
-
-    review = project_service.get_ai_review()
-    fact_reviews = {}
-
-    if review is not None:
-        if review.get("analysis_id") != analysis_id:
-            raise HTTPException(
-                status_code=409,
-                detail="AI review analysis id mismatch",
-            )
-
-        if review.get("source_filename") != source_filename:
-            raise HTTPException(
-                status_code=409,
-                detail="AI review source filename mismatch",
-            )
-
-        if review.get(
-            "knowledge_source_ids",
-            [],
-        ) != latest_ai.get(
-            "knowledge_source_ids",
-            [],
-        ):
-            raise HTTPException(
-                status_code=409,
-                detail="AI review knowledge sources mismatch",
-            )
-
-        try:
-            parsed_reviews = [
-                ExcludedAutonomousFactReview.model_validate(item)
-                for item in review.get("excluded_fact_reviews", [])
-            ]
-        except (TypeError, ValueError) as error:
-            raise HTTPException(
-                status_code=409,
-                detail="AI review has invalid excluded fact decisions",
-            ) from error
-
-        fact_reviews = {
-            item.field: item
-            for item in parsed_reviews
-        }
-
     try:
-        excluded_facts = [
-            AutonomousFactExclusion.model_validate(item)
-            for item in latest_ai.get(
-                "excluded_autonomous_facts",
-                [],
-            )
-        ]
-    except (TypeError, ValueError) as error:
-        raise HTTPException(
-            status_code=409,
-            detail="AI analysis has invalid structured exclusions",
-        ) from error
-
-    statuses = []
-    review_counts = {
-        "pending": 0,
-        "accepted": 0,
-        "rejected": 0,
-        "corrected": 0,
-    }
-
-    for fact in excluded_facts:
-        fact_review = fact_reviews.get(fact.field)
-        review_status = (
-            fact_review.decision
-            if fact_review is not None
-            else "pending"
-        )
-        status = fact.model_dump()
-        status["review_status"] = review_status
-        status["corrected_value"] = (
-            fact_review.corrected_value
-            if fact_review is not None
-            else None
-        )
-        status["review_notes"] = (
-            fact_review.notes
-            if fact_review is not None
-            else None
-        )
-        status["reviewed_by"] = (
-            fact_review.reviewed_by
-            if fact_review is not None
-            else None
-        )
-        status["reviewed_at"] = (
-            fact_review.reviewed_at
-            if fact_review is not None
-            else None
-        )
-        statuses.append(status)
-        review_counts[review_status] += 1
-
-    total = len(statuses)
-    pending = review_counts["pending"]
-
-    return {
-        "source_filename": source_filename,
-        "analysis_id": analysis_id,
-        "excluded_fact_review_statuses": statuses,
-        "excluded_fact_review_summary": {
-            "total": total,
-            "reviewed": total - pending,
-            **review_counts,
-            "can_accept": pending == 0,
-        },
-        "engineering_confirmation": False,
-    }
+        return exclusion_review_service.get_statuses()
+    except AIExclusionReviewError as error:
+        raise _review_http_error(error) from error
 
 
 @router.put("/review/exclusions/{field}")
@@ -430,117 +237,13 @@ def update_excluded_fact_review(
     field: str,
     request: ExcludedAutonomousFactReviewUpdate,
 ):
-    latest_ai = project_service.get_ai_analysis()
-
-    if latest_ai is None:
-        raise HTTPException(
-            status_code=404,
-            detail="AI analysis not found",
-        )
-
-    analysis_id = latest_ai.get("analysis_id")
-    source_filename = latest_ai.get("source_filename")
-
-    if analysis_id != request.analysis_id:
-        raise HTTPException(
-            status_code=409,
-            detail="AI analysis id mismatch",
-        )
-
-    if source_filename != request.source_filename:
-        raise HTTPException(
-            status_code=409,
-            detail="AI analysis source filename mismatch",
-        )
-
     try:
-        excluded_facts = [
-            AutonomousFactExclusion.model_validate(item)
-            for item in latest_ai.get(
-                "excluded_autonomous_facts",
-                [],
-            )
-        ]
-    except (TypeError, ValueError) as error:
-        raise HTTPException(
-            status_code=409,
-            detail="AI analysis has invalid structured exclusions",
-        ) from error
-
-    excluded_fact_fields = [fact.field for fact in excluded_facts]
-
-    if field not in excluded_fact_fields:
-        raise HTTPException(
-            status_code=409,
-            detail=(
-                "Reviewed field is not a current structured "
-                "autonomous exclusion"
-            ),
+        return exclusion_review_service.update_fact_review(
+            field,
+            request,
         )
-
-    new_fact_review = ExcludedAutonomousFactReview(
-        field=field,
-        decision=request.decision,
-        corrected_value=request.corrected_value,
-        notes=request.notes,
-        reviewed_by=request.reviewed_by,
-        reviewed_at=datetime.now(timezone.utc),
-    )
-    saved_review = project_service.get_ai_review()
-
-    if saved_review is None:
-        review_data = AIReviewDecision(
-            source_filename=request.source_filename,
-            analysis_id=request.analysis_id,
-            decision="needs_changes",
-        ).model_dump(mode="json")
-    else:
-        if saved_review.get("analysis_id") != analysis_id:
-            raise HTTPException(
-                status_code=409,
-                detail="AI review analysis id mismatch",
-            )
-
-        if saved_review.get("source_filename") != source_filename:
-            raise HTTPException(
-                status_code=409,
-                detail="AI review source filename mismatch",
-            )
-
-        try:
-            review_data = AIReviewDecision.model_validate(
-                {
-                    key: value
-                    for key, value in saved_review.items()
-                    if key != "knowledge_source_ids"
-                }
-            ).model_dump(mode="json")
-        except (TypeError, ValueError) as error:
-            raise HTTPException(
-                status_code=409,
-                detail="AI review has invalid data",
-            ) from error
-
-    reviews_by_field = {
-        item["field"]: item
-        for item in review_data["excluded_fact_reviews"]
-    }
-    reviews_by_field[field] = new_fact_review.model_dump(mode="json")
-    review_data["excluded_fact_reviews"] = [
-        reviews_by_field[current_field]
-        for current_field in excluded_fact_fields
-        if current_field in reviews_by_field
-    ]
-
-    knowledge_source_ids = latest_ai.get("knowledge_source_ids")
-
-    if knowledge_source_ids is not None:
-        review_data["knowledge_source_ids"] = list(
-            knowledge_source_ids
-        )
-
-    project_service.save_ai_review(review_data)
-    return review_data
+    except AIExclusionReviewError as error:
+        raise _review_http_error(error) from error
 
 
 @router.delete("/review/exclusions/{field}")
@@ -548,217 +251,21 @@ def clear_excluded_fact_review(
     field: str,
     request: ExcludedAutonomousFactReviewBinding,
 ):
-    latest_ai = project_service.get_ai_analysis()
-
-    if latest_ai is None:
-        raise HTTPException(
-            status_code=404,
-            detail="AI analysis not found",
-        )
-
-    analysis_id = latest_ai.get("analysis_id")
-    source_filename = latest_ai.get("source_filename")
-
-    if analysis_id != request.analysis_id:
-        raise HTTPException(
-            status_code=409,
-            detail="AI analysis id mismatch",
-        )
-
-    if source_filename != request.source_filename:
-        raise HTTPException(
-            status_code=409,
-            detail="AI analysis source filename mismatch",
-        )
-
     try:
-        excluded_facts = [
-            AutonomousFactExclusion.model_validate(item)
-            for item in latest_ai.get(
-                "excluded_autonomous_facts",
-                [],
-            )
-        ]
-    except (TypeError, ValueError) as error:
-        raise HTTPException(
-            status_code=409,
-            detail="AI analysis has invalid structured exclusions",
-        ) from error
-
-    excluded_fact_fields = [fact.field for fact in excluded_facts]
-
-    if field not in excluded_fact_fields:
-        raise HTTPException(
-            status_code=409,
-            detail=(
-                "Reviewed field is not a current structured "
-                "autonomous exclusion"
-            ),
+        return exclusion_review_service.clear_fact_review(
+            field,
+            request,
         )
-
-    saved_review = project_service.get_ai_review()
-
-    if saved_review is None:
-        raise HTTPException(
-            status_code=404,
-            detail="Excluded fact review not found",
-        )
-
-    if saved_review.get("analysis_id") != analysis_id:
-        raise HTTPException(
-            status_code=409,
-            detail="AI review analysis id mismatch",
-        )
-
-    if saved_review.get("source_filename") != source_filename:
-        raise HTTPException(
-            status_code=409,
-            detail="AI review source filename mismatch",
-        )
-
-    try:
-        review_data = AIReviewDecision.model_validate(
-            {
-                key: value
-                for key, value in saved_review.items()
-                if key != "knowledge_source_ids"
-            }
-        ).model_dump(mode="json")
-    except (TypeError, ValueError) as error:
-        raise HTTPException(
-            status_code=409,
-            detail="AI review has invalid data",
-        ) from error
-
-    saved_fields = {
-        item["field"]
-        for item in review_data["excluded_fact_reviews"]
-    }
-
-    if field not in saved_fields:
-        raise HTTPException(
-            status_code=404,
-            detail="Excluded fact review not found",
-        )
-
-    review_data["excluded_fact_reviews"] = [
-        item
-        for item in review_data["excluded_fact_reviews"]
-        if item["field"] != field
-    ]
-
-    if review_data["decision"] == "accepted":
-        review_data["decision"] = "needs_changes"
-
-    knowledge_source_ids = latest_ai.get("knowledge_source_ids")
-
-    if knowledge_source_ids is not None:
-        review_data["knowledge_source_ids"] = list(
-            knowledge_source_ids
-        )
-
-    project_service.save_ai_review(review_data)
-    return review_data
+    except AIExclusionReviewError as error:
+        raise _review_http_error(error) from error
 
 
 @router.post("/review")
 def review_ai_analysis(review: AIReviewDecision):
-    from fastapi import HTTPException
-
-    latest_ai = project_service.get_ai_analysis()
-
-    if latest_ai is None:
-        raise HTTPException(
-            status_code=404,
-            detail="AI analysis not found",
-        )
-
-    if not latest_ai.get("analysis_id"):
-        raise HTTPException(
-            status_code=409,
-            detail="AI analysis missing analysis id",
-        )
-
-    if not latest_ai.get("source_filename"):
-        raise HTTPException(
-            status_code=409,
-            detail="AI analysis missing source filename",
-        )
-
-    if (
-        latest_ai.get("source_filename")
-        != review.source_filename
-    ):
-        raise HTTPException(
-            status_code=409,
-            detail="AI analysis source filename mismatch",
-        )
-
-    if (
-        latest_ai.get("analysis_id")
-        != review.analysis_id
-    ):
-        raise HTTPException(
-            status_code=409,
-            detail="AI analysis id mismatch",
-        )
-
-    excluded_facts = latest_ai.get(
-        "excluded_autonomous_facts",
-        [],
-    )
-    excluded_fact_fields = {
-        fact.get("field")
-        for fact in excluded_facts
-        if isinstance(fact, dict) and fact.get("field")
-    }
-
-    for fact_review in review.excluded_fact_reviews:
-        if fact_review.field not in excluded_fact_fields:
-            raise HTTPException(
-                status_code=409,
-                detail=(
-                    "Reviewed field is not a current structured "
-                    "autonomous exclusion"
-                ),
-            )
-
-    reviewed_fact_fields = {
-        fact_review.field
-        for fact_review in review.excluded_fact_reviews
-    }
-
-    if (
-        review.decision == "accepted"
-        and reviewed_fact_fields != excluded_fact_fields
-    ):
-        raise HTTPException(
-            status_code=409,
-            detail=(
-                "All structured autonomous exclusions must be "
-                "reviewed before accepting AI analysis"
-            ),
-        )
-
-    review_data = review.model_dump(mode="json")
-
-    if "excluded_fact_reviews" not in review.model_fields_set:
-        review_data.pop("excluded_fact_reviews", None)
-
-    knowledge_source_ids = latest_ai.get(
-        "knowledge_source_ids"
-    )
-
-    if knowledge_source_ids is not None:
-        review_data["knowledge_source_ids"] = list(
-            knowledge_source_ids
-        )
-
-    project_service.save_ai_review(
-        review_data,
-    )
-
-    return review_data
+    try:
+        return exclusion_review_service.save_review(review)
+    except AIExclusionReviewError as error:
+        raise _review_http_error(error) from error
 
 
 @router.post("/analyze")
