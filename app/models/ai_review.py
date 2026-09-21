@@ -137,6 +137,7 @@ class AIReviewDecision(BaseModel):
         "rejected",
         "needs_changes",
     ]
+    review_revision: int = Field(default=0, ge=0)
     notes: str | None = None
     excluded_fact_reviews: list[
         ExcludedAutonomousFactReview
@@ -167,6 +168,7 @@ class ExcludedAutonomousFactReviewUpdate(BaseModel):
 
     source_filename: str
     analysis_id: str
+    expected_revision: int = Field(default=0, ge=0)
     decision: Literal[
         "accepted",
         "rejected",
@@ -201,6 +203,7 @@ class ExcludedAutonomousFactReviewBinding(BaseModel):
 
     source_filename: str
     analysis_id: str
+    expected_revision: int = Field(default=0, ge=0)
     reviewed_by: str = Field(min_length=1, max_length=255)
 
     @model_validator(mode="after")

@@ -632,6 +632,7 @@ def test_ai_review_saves_human_decision(monkeypatch):
         "source_filename": "drawing.pdf",
         "analysis_id": "analysis-1",
         "decision": "accepted",
+        "review_revision": 1,
         "notes": "Checked by human.",
         "knowledge_source_ids": ["sp-grounding"],
     }
@@ -926,6 +927,7 @@ def test_excluded_fact_review_statuses_merge_partial_review(monkeypatch):
     assert response.json() == {
         "source_filename": "passport.pdf",
         "analysis_id": "analysis-1",
+        "review_revision": 0,
         "excluded_fact_review_statuses": [
             {
                 "field": "voltage",
@@ -1329,6 +1331,58 @@ def test_single_excluded_fact_review_rejects_stale_analysis(monkeypatch):
     assert response.status_code == 409
     assert response.json() == {
         "detail": "AI analysis id mismatch",
+    }
+
+
+def test_single_excluded_fact_review_rejects_stale_revision(monkeypatch):
+    from app.services.project_service import project_service
+
+    latest_ai = {
+        "source_filename": "passport.pdf",
+        "analysis_id": "analysis-1",
+        "excluded_autonomous_facts": [
+            {
+                "field": "voltage",
+                "value": "220 В",
+                "reason": "insufficient_context",
+                "evidence": "220 В",
+            },
+        ],
+    }
+    saved_review = {
+        "source_filename": "passport.pdf",
+        "analysis_id": "analysis-1",
+        "decision": "needs_changes",
+        "review_revision": 2,
+        "excluded_fact_reviews": [],
+    }
+    monkeypatch.setattr(
+        project_service,
+        "get_ai_analysis",
+        lambda: latest_ai,
+    )
+    monkeypatch.setattr(
+        project_service,
+        "get_ai_review",
+        lambda: saved_review,
+    )
+
+    response = client.put(
+        "/ai/review/exclusions/voltage",
+        json={
+            "source_filename": "passport.pdf",
+            "analysis_id": "analysis-1",
+            "expected_revision": 1,
+            "decision": "accepted",
+            "reviewed_by": "Engineer A",
+        },
+    )
+
+    assert response.status_code == 409
+    assert response.json() == {
+        "detail": (
+            "AI review revision mismatch: expected 1, current 2"
+        ),
     }
 
 
@@ -1995,7 +2049,10 @@ def test_ai_review_get_returns_saved_review(monkeypatch):
     response = client.get("/ai/review")
 
     assert response.status_code == 200
-    assert response.json() == saved_review
+    assert response.json() == {
+        **saved_review,
+        "review_revision": 0,
+    }
 
 def test_ai_review_get_returns_404_when_missing(monkeypatch):
     from app.services.project_service import project_service

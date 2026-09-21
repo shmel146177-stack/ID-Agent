@@ -61,6 +61,7 @@ def test_ai_review_persistence_cycle(
         "source_filename": "drawing.pdf",
         "analysis_id": latest_ai["analysis_id"],
         "decision": "accepted",
+        "review_revision": 1,
         "notes": "Checked by human.",
     }
 
@@ -557,4 +558,3 @@ def test_direct_ai_reanalysis_invalidates_review(
     assert review_response.json() == {
         "detail": "AI review not found",
     }
-

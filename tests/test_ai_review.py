@@ -23,6 +23,26 @@ def test_ai_review_decision_requires_explicit_human_decision():
     assert review.analysis_id == "analysis-1"
     assert review.decision == "accepted"
     assert review.notes == "Checked against source document."
+    assert review.review_revision == 0
+
+
+def test_ai_review_models_reject_negative_revisions():
+    with pytest.raises(ValidationError):
+        AIReviewDecision(
+            source_filename="drawing.pdf",
+            analysis_id="analysis-1",
+            decision="accepted",
+            review_revision=-1,
+        )
+
+    with pytest.raises(ValidationError):
+        ExcludedAutonomousFactReviewUpdate(
+            source_filename="drawing.pdf",
+            analysis_id="analysis-1",
+            expected_revision=-1,
+            decision="accepted",
+            reviewed_by="Engineer",
+        )
 
 
 def test_ai_review_decision_rejects_unknown_decision():

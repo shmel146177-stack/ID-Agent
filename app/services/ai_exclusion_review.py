@@ -1,4 +1,6 @@
 from datetime import datetime, timezone
+from functools import wraps
+from threading import Lock
 
 from app.models.ai_analysis import AutonomousFactExclusion
 from app.models.ai_review import (
@@ -17,11 +19,21 @@ class AIExclusionReviewError(Exception):
         self.detail = detail
 
 
+def _serialized_mutation(method):
+    @wraps(method)
+    def wrapper(self, *args, **kwargs):
+        with self._mutation_lock:
+            return method(self, *args, **kwargs)
+
+    return wrapper
+
+
 class AIExclusionReviewService:
     """Manage source-bound human review of autonomous exclusions."""
 
     def __init__(self, project_service):
         self.project_service = project_service
+        self._mutation_lock = Lock()
 
     @staticmethod
     def _error(status_code: int, detail: str):
@@ -117,6 +129,22 @@ class AIExclusionReviewService:
                 "AI review has invalid data",
             ) from error
 
+    def _require_revision(
+        self,
+        review_data: dict,
+        expected_revision: int,
+    ) -> int:
+        current_revision = review_data["review_revision"]
+
+        if expected_revision != current_revision:
+            self._error(
+                409,
+                "AI review revision mismatch: expected "
+                f"{expected_revision}, current {current_revision}",
+            )
+
+        return current_revision
+
     @staticmethod
     def _copy_knowledge_sources(data: dict, analysis: dict) -> None:
         knowledge_source_ids = analysis.get("knowledge_source_ids")
@@ -161,7 +189,11 @@ class AIExclusionReviewService:
         ):
             self._error(409, "AI review knowledge sources mismatch")
 
-        return review
+        review_data = dict(review)
+        review_data["review_revision"] = self._parse_review_data(
+            review
+        )["review_revision"]
+        return review_data
 
     def get_review_history(self, analysis_id: str) -> dict:
         review = self.project_service.get_ai_review_history(analysis_id)
@@ -225,6 +257,12 @@ class AIExclusionReviewService:
 
             fact_reviews = {item.field: item for item in parsed_reviews}
 
+        review_revision = (
+            self._parse_review_data(review)["review_revision"]
+            if review is not None
+            else 0
+        )
+
         statuses = []
         review_counts = {
             "pending": 0,
@@ -275,6 +313,7 @@ class AIExclusionReviewService:
         return {
             "source_filename": source_filename,
             "analysis_id": analysis_id,
+            "review_revision": review_revision,
             "excluded_fact_review_statuses": statuses,
             "excluded_fact_review_summary": {
                 "total": total,
@@ -285,6 +324,7 @@ class AIExclusionReviewService:
             "engineering_confirmation": False,
         }
 
+    @_serialized_mutation
     def update_fact_review(
         self,
         field: str,
@@ -321,6 +361,11 @@ class AIExclusionReviewService:
             self._validate_saved_binding(saved_review, analysis)
             review_data = self._parse_review_data(saved_review)
 
+        current_revision = self._require_revision(
+            review_data,
+            request.expected_revision,
+        )
+
         reviews_by_field = {
             item["field"]: item
             for item in review_data["excluded_fact_reviews"]
@@ -355,10 +400,12 @@ class AIExclusionReviewService:
             "excluded_fact_review_history",
             [],
         ).append(history_event.model_dump(mode="json"))
+        review_data["review_revision"] = current_revision + 1
         self._copy_knowledge_sources(review_data, analysis)
         self.project_service.save_ai_review(review_data)
         return review_data
 
+    @_serialized_mutation
     def clear_fact_review(
         self,
         field: str,
@@ -381,6 +428,10 @@ class AIExclusionReviewService:
 
         self._validate_saved_binding(saved_review, analysis)
         review_data = self._parse_review_data(saved_review)
+        current_revision = self._require_revision(
+            review_data,
+            request.expected_revision,
+        )
         saved_fields = {
             item["field"]
             for item in review_data["excluded_fact_reviews"]
@@ -419,6 +470,7 @@ class AIExclusionReviewService:
             "excluded_fact_review_history",
             [],
         ).append(history_event.model_dump(mode="json"))
+        review_data["review_revision"] = current_revision + 1
 
         if review_data["decision"] == "accepted":
             review_data["decision"] = "needs_changes"
@@ -427,6 +479,7 @@ class AIExclusionReviewService:
         self.project_service.save_ai_review(review_data)
         return review_data
 
+    @_serialized_mutation
     def save_review(self, review: AIReviewDecision) -> dict:
         analysis = self._current_analysis()
         self._current_identity(analysis)
@@ -467,6 +520,10 @@ class AIExclusionReviewService:
         if existing_review is not None:
             self._validate_saved_binding(existing_review, analysis)
             existing_data = self._parse_review_data(existing_review)
+            current_revision = self._require_revision(
+                existing_data,
+                review.review_revision,
+            )
             history = existing_data.get(
                 "excluded_fact_review_history",
                 [],
@@ -475,11 +532,13 @@ class AIExclusionReviewService:
             if history:
                 review_data["excluded_fact_review_history"] = history
         else:
+            current_revision = self._require_revision(review_data, 0)
             review_data.pop("excluded_fact_review_history", None)
 
         if "excluded_fact_reviews" not in review.model_fields_set:
             review_data.pop("excluded_fact_reviews", None)
 
+        review_data["review_revision"] = current_revision + 1
         self._copy_knowledge_sources(review_data, analysis)
         self.project_service.save_ai_review(review_data)
         return review_data
