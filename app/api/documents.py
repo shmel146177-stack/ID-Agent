@@ -7,7 +7,10 @@ import os
 from app.services.document_service import document_service
 from app.parsers.pdf_parser import pdf_parser
 from app.services.document_analyzer import document_analyzer
-from app.services.project_service import project_service
+from app.services.project_service import (
+    ProjectStateConflictError,
+    project_service,
+)
 from app.services.ai_client import AIClient
 from app.services.ai_document_analysis import AIDocumentAnalysisService
 from app.services.ai_analysis_comparison import (
@@ -135,12 +138,18 @@ async def upload_document(
                     )
                 )
 
-            project_service.save_ai_comparison(
-                ai_comparison,
-                analysis_id=saved_ai_document["analysis_id"],
-                source_filename=filename,
-                **comparison_options,
-            )
+            try:
+                project_service.save_ai_comparison(
+                    ai_comparison,
+                    analysis_id=saved_ai_document["analysis_id"],
+                    source_filename=filename,
+                    **comparison_options,
+                )
+            except ProjectStateConflictError as error:
+                raise HTTPException(
+                    status_code=409,
+                    detail=str(error),
+                ) from error
 
             result["ai_comparison"] = ai_comparison
 

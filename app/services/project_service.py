@@ -9,6 +9,10 @@ from app.services.atomic_json import write_json_atomically
 from app.services.interprocess_lock import exclusive_file_lock
 
 
+class ProjectStateConflictError(Exception):
+    pass
+
+
 def _serialized_review_state(method):
     @wraps(method)
     def wrapper(self, *args, **kwargs):
@@ -86,6 +90,7 @@ class ProjectService:
             "document": data_to_save,
         }
 
+    @_serialized_review_state
     def save_ai_comparison(
         self,
         data: dict,
@@ -93,6 +98,30 @@ class ProjectService:
         source_filename: str,
         knowledge_source_ids: list[str] | None = None,
     ):
+        current_analysis = self.get_ai_analysis()
+
+        if current_analysis is None:
+            raise ProjectStateConflictError(
+                "AI comparison has no current AI analysis"
+            )
+
+        if current_analysis.get("analysis_id") != analysis_id:
+            raise ProjectStateConflictError(
+                "AI comparison analysis id mismatch"
+            )
+
+        if current_analysis.get("source_filename") != source_filename:
+            raise ProjectStateConflictError(
+                "AI comparison source filename mismatch"
+            )
+
+        if current_analysis.get("knowledge_source_ids", []) != (
+            knowledge_source_ids or []
+        ):
+            raise ProjectStateConflictError(
+                "AI comparison knowledge sources mismatch"
+            )
+
         data_to_save = dict(data)
         data_to_save["analysis_id"] = analysis_id
         data_to_save["source_filename"] = source_filename

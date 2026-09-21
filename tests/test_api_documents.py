@@ -450,6 +450,104 @@ def test_upload_document_http_with_explicit_ai(monkeypatch, tmp_path):
     assert result["drawing_number"] == "TEST-001"
 
 
+def test_upload_document_rejects_stale_ai_comparison(
+    monkeypatch,
+    tmp_path,
+):
+    monkeypatch.setattr(
+        documents_module,
+        "UPLOAD_DIR",
+        str(tmp_path / "uploads"),
+    )
+    monkeypatch.setattr(
+        documents_module.document_service,
+        "analyze",
+        lambda file_path: {
+            "filename": "test.pdf",
+            "extension": ".pdf",
+            "size_bytes": 8,
+            "status": "Document detected",
+        },
+    )
+    monkeypatch.setattr(
+        documents_module.pdf_parser,
+        "extract_text",
+        lambda file_path: "PDF document text",
+    )
+    monkeypatch.setattr(
+        documents_module.document_analyzer,
+        "analyze_text",
+        lambda text: {"document_type": "drawing"},
+    )
+    monkeypatch.setattr(
+        documents_module.project_service,
+        "save_analysis",
+        lambda data: None,
+    )
+    monkeypatch.setattr(
+        documents_module.project_service,
+        "save_ai_analysis",
+        lambda data, source_filename=None: {
+            "document": {
+                **data,
+                "analysis_id": "analysis-old",
+                "source_filename": source_filename,
+            },
+        },
+    )
+
+    def reject_comparison(*args, **kwargs):
+        raise documents_module.ProjectStateConflictError(
+            "AI comparison analysis id mismatch"
+        )
+
+    monkeypatch.setattr(
+        documents_module.project_service,
+        "save_ai_comparison",
+        reject_comparison,
+    )
+
+    class AIClientStub:
+        class Settings:
+            active = False
+
+        def __init__(self):
+            self.settings = self.Settings()
+
+    class AIServiceStub:
+        def __init__(self, ai_client=None):
+            pass
+
+        def analyze_text(self, filename, text):
+            return AIAnalysisResult(
+                summary="AI analysis completed.",
+                facts=[],
+            )
+
+    monkeypatch.setattr(documents_module, "AIClient", AIClientStub)
+    monkeypatch.setattr(
+        documents_module,
+        "AIDocumentAnalysisService",
+        AIServiceStub,
+    )
+
+    response = client.post(
+        "/upload?use_ai=true",
+        files={
+            "file": (
+                "test.pdf",
+                b"PDF DATA",
+                "application/pdf",
+            ),
+        },
+    )
+
+    assert response.status_code == 409
+    assert response.json() == {
+        "detail": "AI comparison analysis id mismatch",
+    }
+
+
 def test_upload_document_http_ai_unconfigured_falls_back(
     monkeypatch,
     tmp_path,

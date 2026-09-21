@@ -3,7 +3,22 @@ from pathlib import Path
 import pytest
 
 import app.services.atomic_json as atomic_json_module
-from app.services.project_service import ProjectService
+from app.services.project_service import (
+    ProjectService,
+    ProjectStateConflictError,
+)
+
+
+def save_bound_ai_analysis(
+    service,
+    source_filename="drawing.pdf",
+    knowledge_source_ids=None,
+):
+    return service.save_ai_analysis(
+        {"summary": "Bound AI analysis"},
+        source_filename=source_filename,
+        knowledge_source_ids=knowledge_source_ids,
+    )["document"]
 
 
 def test_project_service_saves_ai_analysis_separately(tmp_path):
@@ -122,9 +137,10 @@ def test_failed_deterministic_analysis_preserves_current_state(
         {"summary": "Current AI analysis"},
         source_filename="drawing.pdf",
     )
+    current_ai = service.get_ai_analysis()
     service.save_ai_comparison(
         {"matches": []},
-        analysis_id="analysis-1",
+        analysis_id=current_ai["analysis_id"],
         source_filename="drawing.pdf",
     )
     previous_analysis = analysis_path.read_bytes()
@@ -180,6 +196,11 @@ def test_project_service_saves_ai_comparison_with_source_binding(tmp_path):
     service.ai_comparison_file_path = str(
         tmp_path / "current_ai_comparison.json"
     )
+    service.ai_file_path = str(tmp_path / "current_ai_analysis.json")
+    analysis = save_bound_ai_analysis(
+        service,
+        knowledge_source_ids=["sp-grounding"],
+    )
 
     comparison = {
         "matches": [],
@@ -197,7 +218,7 @@ def test_project_service_saves_ai_comparison_with_source_binding(tmp_path):
 
     service.save_ai_comparison(
         comparison,
-        analysis_id="analysis-123",
+        analysis_id=analysis["analysis_id"],
         source_filename="drawing.pdf",
         knowledge_source_ids=["sp-grounding"],
     )
@@ -205,7 +226,7 @@ def test_project_service_saves_ai_comparison_with_source_binding(tmp_path):
     saved = service.get_ai_comparison()
 
     assert saved is not None
-    assert saved["analysis_id"] == "analysis-123"
+    assert saved["analysis_id"] == analysis["analysis_id"]
     assert saved["source_filename"] == "drawing.pdf"
     assert saved["knowledge_source_ids"] == ["sp-grounding"]
     assert saved["suggestions"] == comparison["suggestions"]
@@ -220,9 +241,11 @@ def test_failed_ai_comparison_write_preserves_previous_file(
     service = ProjectService()
     comparison_path = tmp_path / "current_ai_comparison.json"
     service.ai_comparison_file_path = str(comparison_path)
+    service.ai_file_path = str(tmp_path / "current_ai_analysis.json")
+    analysis = save_bound_ai_analysis(service)
     first = service.save_ai_comparison(
         {"matches": []},
-        analysis_id="analysis-1",
+        analysis_id=analysis["analysis_id"],
         source_filename="drawing.pdf",
     )["document"]
     previous_bytes = comparison_path.read_bytes()
@@ -243,7 +266,7 @@ def test_failed_ai_comparison_write_preserves_previous_file(
     ):
         service.save_ai_comparison(
             {"matches": ["changed"]},
-            analysis_id="analysis-2",
+            analysis_id=analysis["analysis_id"],
             source_filename="drawing.pdf",
         )
 
@@ -262,6 +285,11 @@ def test_new_deterministic_analysis_invalidates_old_ai_comparison(tmp_path):
     service.ai_comparison_file_path = str(
         tmp_path / "current_ai_comparison.json"
     )
+    service.ai_file_path = str(tmp_path / "current_ai_analysis.json")
+    analysis = save_bound_ai_analysis(
+        service,
+        source_filename="old.pdf",
+    )
 
     service.save_ai_comparison(
         {
@@ -271,7 +299,7 @@ def test_new_deterministic_analysis_invalidates_old_ai_comparison(tmp_path):
             "requires_human_review": True,
             "engineering_confirmation": False,
         },
-        analysis_id="old-analysis-id",
+        analysis_id=analysis["analysis_id"],
         source_filename="old.pdf",
     )
 
@@ -294,6 +322,10 @@ def test_new_ai_analysis_invalidates_old_ai_comparison(tmp_path):
     service.ai_comparison_file_path = str(
         tmp_path / "current_ai_comparison.json"
     )
+    analysis = save_bound_ai_analysis(
+        service,
+        source_filename="old.pdf",
+    )
 
     service.save_ai_comparison(
         {
@@ -303,7 +335,7 @@ def test_new_ai_analysis_invalidates_old_ai_comparison(tmp_path):
             "requires_human_review": True,
             "engineering_confirmation": False,
         },
-        analysis_id="old-analysis-id",
+        analysis_id=analysis["analysis_id"],
         source_filename="old.pdf",
     )
 
@@ -317,6 +349,31 @@ def test_new_ai_analysis_invalidates_old_ai_comparison(tmp_path):
         },
         source_filename="new.pdf",
     )
+
+    assert not Path(service.ai_comparison_file_path).exists()
+
+
+def test_ai_comparison_rejects_stale_analysis_binding(tmp_path):
+    service = ProjectService()
+    service.ai_file_path = str(tmp_path / "current_ai_analysis.json")
+    service.ai_review_file_path = str(
+        tmp_path / "current_ai_review.json"
+    )
+    service.ai_comparison_file_path = str(
+        tmp_path / "current_ai_comparison.json"
+    )
+    old_analysis = save_bound_ai_analysis(service)
+    save_bound_ai_analysis(service)
+
+    with pytest.raises(
+        ProjectStateConflictError,
+        match="AI comparison analysis id mismatch",
+    ):
+        service.save_ai_comparison(
+            {"matches": []},
+            analysis_id=old_analysis["analysis_id"],
+            source_filename="drawing.pdf",
+        )
 
     assert not Path(service.ai_comparison_file_path).exists()
 
