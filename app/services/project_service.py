@@ -13,6 +13,16 @@ class ProjectStateConflictError(Exception):
     pass
 
 
+class ProjectStateCorruptionError(Exception):
+
+    def __init__(self, state_name: str, reason: str):
+        self.state_name = state_name
+        self.reason = reason
+        super().__init__(
+            f"Corrupted project state file '{state_name}': {reason}"
+        )
+
+
 def _serialized_review_state(method):
     @wraps(method)
     def wrapper(self, *args, **kwargs):
@@ -36,6 +46,33 @@ class ProjectService:
     @property
     def ai_review_lock_path(self) -> str:
         return f"{self.ai_review_file_path}.lock"
+
+    @staticmethod
+    def _read_json_state(path: str, state_name: str) -> dict:
+        try:
+            with open(path, "r", encoding="utf-8") as file:
+                state = json.load(file)
+        except json.JSONDecodeError as error:
+            raise ProjectStateCorruptionError(
+                state_name,
+                (
+                    "invalid JSON at "
+                    f"line {error.lineno}, column {error.colno}"
+                ),
+            ) from error
+        except UnicodeDecodeError as error:
+            raise ProjectStateCorruptionError(
+                state_name,
+                "invalid UTF-8 encoding",
+            ) from error
+
+        if not isinstance(state, dict):
+            raise ProjectStateCorruptionError(
+                state_name,
+                "top-level JSON value must be an object",
+            )
+
+        return state
 
     @_serialized_review_state
     def save_analysis(self, data: dict):
@@ -148,12 +185,10 @@ class ProjectService:
         ):
             return None
 
-        with open(
+        return self._read_json_state(
             self.ai_comparison_file_path,
-            "r",
-            encoding="utf-8",
-        ) as file:
-            return json.load(file)
+            "AI comparison",
+        )
 
     def save_ai_review(self, data: dict):
         write_json_atomically(self.ai_review_file_path, data)
@@ -168,12 +203,10 @@ class ProjectService:
         if not os.path.exists(self.ai_review_file_path):
             return None
 
-        with open(
+        return self._read_json_state(
             self.ai_review_file_path,
-            "r",
-            encoding="utf-8",
-        ) as file:
-            return json.load(file)
+            "AI review",
+        )
 
     def _ai_review_history_path(self, analysis_id: str) -> str:
         digest = sha256(analysis_id.encode("utf-8")).hexdigest()
@@ -214,12 +247,10 @@ class ProjectService:
         if not os.path.exists(archive_path):
             return None
 
-        with open(
+        review = self._read_json_state(
             archive_path,
-            "r",
-            encoding="utf-8",
-        ) as file:
-            review = json.load(file)
+            "AI review archive",
+        )
 
         if review.get("analysis_id") != analysis_id:
             return None
@@ -248,7 +279,14 @@ class ProjectService:
                     encoding="utf-8",
                 ) as file:
                     review = json.load(file)
-            except (OSError, json.JSONDecodeError):
+            except (
+                OSError,
+                UnicodeDecodeError,
+                json.JSONDecodeError,
+            ):
+                continue
+
+            if not isinstance(review, dict):
                 continue
 
             analysis_id = review.get("analysis_id")
@@ -284,12 +322,10 @@ class ProjectService:
         if not os.path.exists(self.ai_file_path):
             return None
 
-        with open(
+        return self._read_json_state(
             self.ai_file_path,
-            "r",
-            encoding="utf-8",
-        ) as file:
-            return json.load(file)
+            "AI analysis",
+        )
 
 
     def get_analysis(self):
@@ -297,12 +333,10 @@ class ProjectService:
         if not os.path.exists(self.file_path):
             return None
 
-        with open(
+        return self._read_json_state(
             self.file_path,
-            "r",
-            encoding="utf-8"
-        ) as file:
-            return json.load(file)
+            "deterministic analysis",
+        )
 
 
 project_service = ProjectService()
