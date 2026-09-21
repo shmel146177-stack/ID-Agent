@@ -171,6 +171,13 @@ class AIExclusionReviewService:
 
         return review
 
+    def list_review_history(self) -> dict:
+        archives = self.project_service.list_ai_review_history()
+        return {
+            "count": len(archives),
+            "archives": archives,
+        }
+
     def get_statuses(self) -> dict:
         analysis = self._current_analysis()
         analysis_id, source_filename = self._current_identity(analysis)

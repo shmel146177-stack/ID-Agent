@@ -1565,6 +1565,33 @@ def test_ai_review_history_returns_404_for_unknown_analysis(monkeypatch):
     }
 
 
+def test_ai_review_history_lists_archive_summaries(monkeypatch):
+    from app.services.project_service import project_service
+
+    archives = [
+        {
+            "analysis_id": "analysis-old",
+            "source_filename": "passport.pdf",
+            "decision": "accepted",
+            "archived_at": "2026-09-21T10:00:00+00:00",
+            "history_event_count": 3,
+        },
+    ]
+    monkeypatch.setattr(
+        project_service,
+        "list_ai_review_history",
+        lambda: archives,
+    )
+
+    response = client.get("/ai/review/history")
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "count": 1,
+        "archives": archives,
+    }
+
+
 def test_ai_review_rejects_missing_current_analysis_id(monkeypatch):
     from app.services.project_service import project_service
 

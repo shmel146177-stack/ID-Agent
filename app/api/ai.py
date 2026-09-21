@@ -240,6 +240,11 @@ def get_ai_review_history(analysis_id: str):
         raise _review_http_error(error) from error
 
 
+@router.get("/review/history")
+def list_ai_review_history():
+    return exclusion_review_service.list_review_history()
+
+
 @router.put("/review/exclusions/{field}")
 def update_excluded_fact_review(
     field: str,

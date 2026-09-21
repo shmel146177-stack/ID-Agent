@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 from app.services.project_service import ProjectService
@@ -179,7 +180,14 @@ def test_new_ai_analysis_archives_matching_review(tmp_path):
     )
 
     assert service.get_ai_review() is None
-    assert service.get_ai_review_history(first["analysis_id"]) == review
+    archived = service.get_ai_review_history(first["analysis_id"])
+
+    assert archived is not None
+    assert archived["analysis_id"] == first["analysis_id"]
+    assert archived["excluded_fact_review_history"] == review[
+        "excluded_fact_review_history"
+    ]
+    assert archived["archived_at"]
 
 
 def test_deterministic_analysis_archives_matching_ai_review(tmp_path):
@@ -206,7 +214,12 @@ def test_deterministic_analysis_archives_matching_ai_review(tmp_path):
 
     service.save_analysis({"document_type": "drawing"})
 
-    assert service.get_ai_review_history(analysis["analysis_id"]) == review
+    archived = service.get_ai_review_history(analysis["analysis_id"])
+
+    assert archived is not None
+    assert archived["analysis_id"] == analysis["analysis_id"]
+    assert archived["decision"] == review["decision"]
+    assert archived["archived_at"]
 
 
 def test_ai_review_history_path_does_not_use_raw_analysis_id(tmp_path):
@@ -220,3 +233,49 @@ def test_ai_review_history_path_does_not_use_raw_analysis_id(tmp_path):
     assert archive_path.parent == tmp_path / "review_history"
     assert archive_path.suffix == ".json"
     assert "outside" not in archive_path.name
+
+
+def test_project_service_lists_review_archives_newest_first(tmp_path):
+    service = ProjectService()
+    service.ai_review_history_dir = str(tmp_path / "review_history")
+    Path(service.ai_review_history_dir).mkdir()
+
+    archives = [
+        {
+            "analysis_id": "analysis-old",
+            "source_filename": "old.pdf",
+            "decision": "rejected",
+            "archived_at": "2026-09-20T10:00:00+00:00",
+            "excluded_fact_review_history": [{"action": "created"}],
+        },
+        {
+            "analysis_id": "analysis-new",
+            "source_filename": "new.pdf",
+            "decision": "accepted",
+            "archived_at": "2026-09-21T10:00:00+00:00",
+            "excluded_fact_review_history": [
+                {"action": "created"},
+                {"action": "updated"},
+            ],
+        },
+    ]
+
+    for archive in archives:
+        path = service._ai_review_history_path(archive["analysis_id"])
+        Path(path).write_text(
+            json.dumps(archive),
+            encoding="utf-8",
+        )
+
+    (Path(service.ai_review_history_dir) / "broken.json").write_text(
+        "not-json",
+        encoding="utf-8",
+    )
+
+    result = service.list_ai_review_history()
+
+    assert [item["analysis_id"] for item in result] == [
+        "analysis-new",
+        "analysis-old",
+    ]
+    assert result[0]["history_event_count"] == 2

@@ -1,5 +1,6 @@
 import json
 import os
+from datetime import datetime, timezone
 from hashlib import sha256
 from uuid import uuid4
 
@@ -221,6 +222,11 @@ class ProjectService:
         archive_path = self._ai_review_history_path(analysis_id)
         temporary_path = f"{archive_path}.{uuid4().hex}.tmp"
 
+        archived_review = dict(review)
+        archived_review["archived_at"] = datetime.now(
+            timezone.utc
+        ).isoformat()
+
         try:
             with open(
                 temporary_path,
@@ -228,7 +234,7 @@ class ProjectService:
                 encoding="utf-8",
             ) as file:
                 json.dump(
-                    review,
+                    archived_review,
                     file,
                     ensure_ascii=False,
                     indent=4,
@@ -258,6 +264,59 @@ class ProjectService:
             return None
 
         return review
+
+    def list_ai_review_history(self):
+        if not os.path.isdir(self.ai_review_history_dir):
+            return []
+
+        archives = []
+
+        for filename in os.listdir(self.ai_review_history_dir):
+            if not filename.endswith(".json"):
+                continue
+
+            archive_path = os.path.join(
+                self.ai_review_history_dir,
+                filename,
+            )
+
+            try:
+                with open(
+                    archive_path,
+                    "r",
+                    encoding="utf-8",
+                ) as file:
+                    review = json.load(file)
+            except (OSError, json.JSONDecodeError):
+                continue
+
+            analysis_id = review.get("analysis_id")
+
+            if not analysis_id:
+                continue
+
+            archives.append(
+                {
+                    "analysis_id": analysis_id,
+                    "source_filename": review.get(
+                        "source_filename"
+                    ),
+                    "decision": review.get("decision"),
+                    "archived_at": review.get("archived_at"),
+                    "history_event_count": len(
+                        review.get(
+                            "excluded_fact_review_history",
+                            [],
+                        )
+                    ),
+                }
+            )
+
+        archives.sort(
+            key=lambda item: item.get("archived_at") or "",
+            reverse=True,
+        )
+        return archives
 
     def get_ai_analysis(self):
 
