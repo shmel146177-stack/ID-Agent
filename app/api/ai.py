@@ -456,6 +456,23 @@ def review_ai_analysis(review: AIReviewDecision):
                 ),
             )
 
+    reviewed_fact_fields = {
+        fact_review.field
+        for fact_review in review.excluded_fact_reviews
+    }
+
+    if (
+        review.decision == "accepted"
+        and reviewed_fact_fields != excluded_fact_fields
+    ):
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                "All structured autonomous exclusions must be "
+                "reviewed before accepting AI analysis"
+            ),
+        )
+
     review_data = review.model_dump()
 
     if "excluded_fact_reviews" not in review.model_fields_set:

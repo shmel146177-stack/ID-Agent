@@ -757,6 +757,125 @@ def test_ai_review_rejects_unknown_excluded_fact_field(monkeypatch):
     }
 
 
+def test_ai_review_rejects_acceptance_with_pending_exclusions(monkeypatch):
+    from app.services.project_service import project_service
+
+    monkeypatch.setattr(
+        project_service,
+        "get_ai_analysis",
+        lambda: {
+            "summary": "Autonomous analysis",
+            "source_filename": "passport.pdf",
+            "analysis_id": "analysis-1",
+            "excluded_autonomous_facts": [
+                {
+                    "field": "voltage",
+                    "value": "220 В",
+                    "reason": "insufficient_context",
+                    "evidence": "220 В",
+                },
+                {
+                    "field": "ip",
+                    "value": "IP54",
+                    "reason": "missing_evidence",
+                    "evidence": None,
+                },
+            ],
+            "requires_human_review": True,
+            "engineering_confirmation": False,
+        },
+    )
+
+    response = client.post(
+        "/ai/review",
+        json={
+            "source_filename": "passport.pdf",
+            "analysis_id": "analysis-1",
+            "decision": "accepted",
+            "excluded_fact_reviews": [
+                {
+                    "field": "voltage",
+                    "decision": "accepted",
+                },
+            ],
+        },
+    )
+
+    assert response.status_code == 409
+    assert response.json() == {
+        "detail": (
+            "All structured autonomous exclusions must be "
+            "reviewed before accepting AI analysis"
+        ),
+    }
+
+
+def test_ai_review_accepts_analysis_after_all_exclusions_reviewed(
+    monkeypatch,
+):
+    from app.services.project_service import project_service
+
+    latest_ai = {
+        "summary": "Autonomous analysis",
+        "source_filename": "passport.pdf",
+        "analysis_id": "analysis-1",
+        "excluded_autonomous_facts": [
+            {
+                "field": "voltage",
+                "value": "220 В",
+                "reason": "insufficient_context",
+                "evidence": "220 В",
+            },
+            {
+                "field": "ip",
+                "value": "IP54",
+                "reason": "missing_evidence",
+                "evidence": None,
+            },
+        ],
+        "requires_human_review": True,
+        "engineering_confirmation": False,
+    }
+    saved_review = {}
+
+    monkeypatch.setattr(
+        project_service,
+        "get_ai_analysis",
+        lambda: latest_ai,
+    )
+    monkeypatch.setattr(
+        project_service,
+        "save_ai_review",
+        lambda data: saved_review.update(data),
+    )
+
+    response = client.post(
+        "/ai/review",
+        json={
+            "source_filename": "passport.pdf",
+            "analysis_id": "analysis-1",
+            "decision": "accepted",
+            "excluded_fact_reviews": [
+                {
+                    "field": "voltage",
+                    "decision": "corrected",
+                    "corrected_value": "230 В",
+                },
+                {
+                    "field": "ip",
+                    "decision": "rejected",
+                },
+            ],
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["decision"] == "accepted"
+    assert len(response.json()["excluded_fact_reviews"]) == 2
+    assert saved_review == response.json()
+    assert latest_ai["engineering_confirmation"] is False
+
+
 def test_excluded_fact_review_statuses_merge_partial_review(monkeypatch):
     from app.services.project_service import project_service
 
