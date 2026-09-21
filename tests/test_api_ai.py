@@ -1298,6 +1298,136 @@ def test_single_excluded_fact_review_rejects_stale_analysis(monkeypatch):
     }
 
 
+def test_clear_excluded_fact_review_returns_field_to_pending(monkeypatch):
+    from app.services.project_service import project_service
+
+    latest_ai = {
+        "source_filename": "passport.pdf",
+        "analysis_id": "analysis-1",
+        "knowledge_source_ids": ["passport-source"],
+        "excluded_autonomous_facts": [
+            {
+                "field": "voltage",
+                "value": "220 В",
+                "reason": "insufficient_context",
+                "evidence": "220 В",
+            },
+            {
+                "field": "ip",
+                "value": "IP54",
+                "reason": "missing_evidence",
+                "evidence": None,
+            },
+        ],
+    }
+    saved_review = {
+        "source_filename": "passport.pdf",
+        "analysis_id": "analysis-1",
+        "decision": "accepted",
+        "notes": "All exclusions reviewed.",
+        "excluded_fact_reviews": [
+            {
+                "field": "voltage",
+                "decision": "corrected",
+                "corrected_value": "230 В",
+                "notes": None,
+            },
+            {
+                "field": "ip",
+                "decision": "rejected",
+                "corrected_value": None,
+                "notes": None,
+            },
+        ],
+        "knowledge_source_ids": ["passport-source"],
+    }
+
+    monkeypatch.setattr(
+        project_service,
+        "get_ai_analysis",
+        lambda: latest_ai,
+    )
+    monkeypatch.setattr(
+        project_service,
+        "get_ai_review",
+        lambda: saved_review,
+    )
+
+    def save_ai_review(data):
+        saved_review.clear()
+        saved_review.update(data)
+
+    monkeypatch.setattr(
+        project_service,
+        "save_ai_review",
+        save_ai_review,
+    )
+
+    response = client.request(
+        "DELETE",
+        "/ai/review/exclusions/ip",
+        json={
+            "source_filename": "passport.pdf",
+            "analysis_id": "analysis-1",
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["decision"] == "needs_changes"
+    assert response.json()["excluded_fact_reviews"] == [
+        {
+            "field": "voltage",
+            "decision": "corrected",
+            "corrected_value": "230 В",
+            "notes": None,
+        },
+    ]
+    assert response.json()["knowledge_source_ids"] == [
+        "passport-source"
+    ]
+    assert saved_review == response.json()
+
+
+def test_clear_excluded_fact_review_rejects_missing_decision(monkeypatch):
+    from app.services.project_service import project_service
+
+    monkeypatch.setattr(
+        project_service,
+        "get_ai_analysis",
+        lambda: {
+            "source_filename": "passport.pdf",
+            "analysis_id": "analysis-1",
+            "excluded_autonomous_facts": [
+                {
+                    "field": "voltage",
+                    "value": "220 В",
+                    "reason": "insufficient_context",
+                    "evidence": "220 В",
+                },
+            ],
+        },
+    )
+    monkeypatch.setattr(
+        project_service,
+        "get_ai_review",
+        lambda: None,
+    )
+
+    response = client.request(
+        "DELETE",
+        "/ai/review/exclusions/voltage",
+        json={
+            "source_filename": "passport.pdf",
+            "analysis_id": "analysis-1",
+        },
+    )
+
+    assert response.status_code == 404
+    assert response.json() == {
+        "detail": "Excluded fact review not found",
+    }
+
+
 def test_excluded_fact_review_statuses_reject_stale_review(monkeypatch):
     from app.services.project_service import project_service
 

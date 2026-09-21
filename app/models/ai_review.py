@@ -102,3 +102,12 @@ class ExcludedAutonomousFactReviewUpdate(BaseModel):
         self.corrected_value = validated.corrected_value
         self.notes = validated.notes
         return self
+
+
+class ExcludedAutonomousFactReviewBinding(BaseModel):
+    """Binding required to change a saved per-fact review."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    source_filename: str
+    analysis_id: str

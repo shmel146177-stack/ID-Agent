@@ -5,6 +5,7 @@ from app.models.ai_analysis import AutonomousFactExclusion
 from app.models.ai_review import (
     AIReviewDecision,
     ExcludedAutonomousFactReview,
+    ExcludedAutonomousFactReviewBinding,
     ExcludedAutonomousFactReviewUpdate,
 )
 from app.services.ai_client import AIClient
@@ -516,6 +517,124 @@ def update_excluded_fact_review(
         for current_field in excluded_fact_fields
         if current_field in reviews_by_field
     ]
+
+    knowledge_source_ids = latest_ai.get("knowledge_source_ids")
+
+    if knowledge_source_ids is not None:
+        review_data["knowledge_source_ids"] = list(
+            knowledge_source_ids
+        )
+
+    project_service.save_ai_review(review_data)
+    return review_data
+
+
+@router.delete("/review/exclusions/{field}")
+def clear_excluded_fact_review(
+    field: str,
+    request: ExcludedAutonomousFactReviewBinding,
+):
+    latest_ai = project_service.get_ai_analysis()
+
+    if latest_ai is None:
+        raise HTTPException(
+            status_code=404,
+            detail="AI analysis not found",
+        )
+
+    analysis_id = latest_ai.get("analysis_id")
+    source_filename = latest_ai.get("source_filename")
+
+    if analysis_id != request.analysis_id:
+        raise HTTPException(
+            status_code=409,
+            detail="AI analysis id mismatch",
+        )
+
+    if source_filename != request.source_filename:
+        raise HTTPException(
+            status_code=409,
+            detail="AI analysis source filename mismatch",
+        )
+
+    try:
+        excluded_facts = [
+            AutonomousFactExclusion.model_validate(item)
+            for item in latest_ai.get(
+                "excluded_autonomous_facts",
+                [],
+            )
+        ]
+    except (TypeError, ValueError) as error:
+        raise HTTPException(
+            status_code=409,
+            detail="AI analysis has invalid structured exclusions",
+        ) from error
+
+    excluded_fact_fields = [fact.field for fact in excluded_facts]
+
+    if field not in excluded_fact_fields:
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                "Reviewed field is not a current structured "
+                "autonomous exclusion"
+            ),
+        )
+
+    saved_review = project_service.get_ai_review()
+
+    if saved_review is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Excluded fact review not found",
+        )
+
+    if saved_review.get("analysis_id") != analysis_id:
+        raise HTTPException(
+            status_code=409,
+            detail="AI review analysis id mismatch",
+        )
+
+    if saved_review.get("source_filename") != source_filename:
+        raise HTTPException(
+            status_code=409,
+            detail="AI review source filename mismatch",
+        )
+
+    try:
+        review_data = AIReviewDecision.model_validate(
+            {
+                key: value
+                for key, value in saved_review.items()
+                if key != "knowledge_source_ids"
+            }
+        ).model_dump()
+    except (TypeError, ValueError) as error:
+        raise HTTPException(
+            status_code=409,
+            detail="AI review has invalid data",
+        ) from error
+
+    saved_fields = {
+        item["field"]
+        for item in review_data["excluded_fact_reviews"]
+    }
+
+    if field not in saved_fields:
+        raise HTTPException(
+            status_code=404,
+            detail="Excluded fact review not found",
+        )
+
+    review_data["excluded_fact_reviews"] = [
+        item
+        for item in review_data["excluded_fact_reviews"]
+        if item["field"] != field
+    ]
+
+    if review_data["decision"] == "accepted":
+        review_data["decision"] = "needs_changes"
 
     knowledge_source_ids = latest_ai.get("knowledge_source_ids")
 
