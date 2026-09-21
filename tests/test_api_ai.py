@@ -1523,6 +1523,48 @@ def test_ai_review_returns_404_without_ai_analysis(monkeypatch):
     }
 
 
+def test_ai_review_history_returns_archived_review(monkeypatch):
+    from app.services.project_service import project_service
+
+    archived_review = {
+        "source_filename": "passport.pdf",
+        "analysis_id": "analysis-old",
+        "decision": "accepted",
+        "excluded_fact_review_history": [],
+    }
+    monkeypatch.setattr(
+        project_service,
+        "get_ai_review_history",
+        lambda analysis_id: (
+            archived_review
+            if analysis_id == "analysis-old"
+            else None
+        ),
+    )
+
+    response = client.get("/ai/review/history/analysis-old")
+
+    assert response.status_code == 200
+    assert response.json() == archived_review
+
+
+def test_ai_review_history_returns_404_for_unknown_analysis(monkeypatch):
+    from app.services.project_service import project_service
+
+    monkeypatch.setattr(
+        project_service,
+        "get_ai_review_history",
+        lambda analysis_id: None,
+    )
+
+    response = client.get("/ai/review/history/analysis-missing")
+
+    assert response.status_code == 404
+    assert response.json() == {
+        "detail": "AI review history not found",
+    }
+
+
 def test_ai_review_rejects_missing_current_analysis_id(monkeypatch):
     from app.services.project_service import project_service
 

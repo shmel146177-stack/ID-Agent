@@ -140,3 +140,83 @@ def test_ai_analysis_gets_new_id_for_each_save(tmp_path):
     assert first["analysis_id"]
     assert second["analysis_id"]
     assert first["analysis_id"] != second["analysis_id"]
+
+
+def test_new_ai_analysis_archives_matching_review(tmp_path):
+    service = ProjectService()
+    service.ai_file_path = str(tmp_path / "current_ai_analysis.json")
+    service.ai_review_file_path = str(tmp_path / "current_ai_review.json")
+    service.ai_review_history_dir = str(tmp_path / "review_history")
+
+    first = service.save_ai_analysis(
+        {
+            "summary": "First analysis",
+            "requires_human_review": True,
+            "engineering_confirmation": False,
+        },
+        source_filename="passport.pdf",
+    )["document"]
+    review = {
+        "source_filename": "passport.pdf",
+        "analysis_id": first["analysis_id"],
+        "decision": "accepted",
+        "excluded_fact_review_history": [
+            {
+                "field": "voltage",
+                "action": "created",
+            },
+        ],
+    }
+    service.save_ai_review(review)
+
+    service.save_ai_analysis(
+        {
+            "summary": "Second analysis",
+            "requires_human_review": True,
+            "engineering_confirmation": False,
+        },
+        source_filename="passport.pdf",
+    )
+
+    assert service.get_ai_review() is None
+    assert service.get_ai_review_history(first["analysis_id"]) == review
+
+
+def test_deterministic_analysis_archives_matching_ai_review(tmp_path):
+    service = ProjectService()
+    service.file_path = str(tmp_path / "current_analysis.json")
+    service.ai_file_path = str(tmp_path / "current_ai_analysis.json")
+    service.ai_review_file_path = str(tmp_path / "current_ai_review.json")
+    service.ai_review_history_dir = str(tmp_path / "review_history")
+
+    analysis = service.save_ai_analysis(
+        {
+            "summary": "AI analysis",
+            "requires_human_review": True,
+            "engineering_confirmation": False,
+        },
+        source_filename="passport.pdf",
+    )["document"]
+    review = {
+        "source_filename": "passport.pdf",
+        "analysis_id": analysis["analysis_id"],
+        "decision": "needs_changes",
+    }
+    service.save_ai_review(review)
+
+    service.save_analysis({"document_type": "drawing"})
+
+    assert service.get_ai_review_history(analysis["analysis_id"]) == review
+
+
+def test_ai_review_history_path_does_not_use_raw_analysis_id(tmp_path):
+    service = ProjectService()
+    service.ai_review_history_dir = str(tmp_path / "review_history")
+
+    archive_path = Path(
+        service._ai_review_history_path("../../outside")
+    )
+
+    assert archive_path.parent == tmp_path / "review_history"
+    assert archive_path.suffix == ".json"
+    assert "outside" not in archive_path.name

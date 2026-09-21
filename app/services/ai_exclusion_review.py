@@ -163,6 +163,14 @@ class AIExclusionReviewService:
 
         return review
 
+    def get_review_history(self, analysis_id: str) -> dict:
+        review = self.project_service.get_ai_review_history(analysis_id)
+
+        if review is None:
+            self._error(404, "AI review history not found")
+
+        return review
+
     def get_statuses(self) -> dict:
         analysis = self._current_analysis()
         analysis_id, source_filename = self._current_identity(analysis)

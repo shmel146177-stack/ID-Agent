@@ -1,5 +1,6 @@
 import json
 import os
+from hashlib import sha256
 from uuid import uuid4
 
 
@@ -9,11 +10,14 @@ class ProjectService:
         self.file_path = "projects/data/current_analysis.json"
         self.ai_file_path = "projects/data/current_ai_analysis.json"
         self.ai_review_file_path = "projects/data/current_ai_review.json"
+        self.ai_review_history_dir = "projects/data/ai_review_history"
         self.ai_comparison_file_path = (
             "projects/data/current_ai_comparison.json"
         )
 
     def save_analysis(self, data: dict):
+
+        self._archive_current_ai_review()
 
         os.makedirs(
             "projects/data",
@@ -52,6 +56,8 @@ class ProjectService:
         source_filename: str | None = None,
         knowledge_source_ids: list[str] | None = None,
     ):
+        self._archive_current_ai_review()
+
         directory = os.path.dirname(self.ai_file_path)
 
         if directory:
@@ -188,6 +194,70 @@ class ProjectService:
             encoding="utf-8",
         ) as file:
             return json.load(file)
+
+    def _ai_review_history_path(self, analysis_id: str) -> str:
+        digest = sha256(analysis_id.encode("utf-8")).hexdigest()
+        return os.path.join(
+            self.ai_review_history_dir,
+            f"{digest}.json",
+        )
+
+    def _archive_current_ai_review(self):
+        review = self.get_ai_review()
+        analysis = self.get_ai_analysis()
+
+        if review is None or analysis is None:
+            return None
+
+        analysis_id = review.get("analysis_id")
+
+        if (
+            not analysis_id
+            or analysis.get("analysis_id") != analysis_id
+        ):
+            return None
+
+        os.makedirs(self.ai_review_history_dir, exist_ok=True)
+        archive_path = self._ai_review_history_path(analysis_id)
+        temporary_path = f"{archive_path}.{uuid4().hex}.tmp"
+
+        try:
+            with open(
+                temporary_path,
+                "w",
+                encoding="utf-8",
+            ) as file:
+                json.dump(
+                    review,
+                    file,
+                    ensure_ascii=False,
+                    indent=4,
+                )
+
+            os.replace(temporary_path, archive_path)
+        finally:
+            if os.path.exists(temporary_path):
+                os.remove(temporary_path)
+
+        return archive_path
+
+    def get_ai_review_history(self, analysis_id: str):
+        archive_path = self._ai_review_history_path(analysis_id)
+
+        if not os.path.exists(archive_path):
+            return None
+
+        with open(
+            archive_path,
+            "r",
+            encoding="utf-8",
+        ) as file:
+            review = json.load(file)
+
+        if review.get("analysis_id") != analysis_id:
+            return None
+
+        return review
 
     def get_ai_analysis(self):
 

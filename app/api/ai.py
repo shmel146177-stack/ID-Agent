@@ -232,6 +232,14 @@ def get_excluded_fact_review_statuses():
         raise _review_http_error(error) from error
 
 
+@router.get("/review/history/{analysis_id}")
+def get_ai_review_history(analysis_id: str):
+    try:
+        return exclusion_review_service.get_review_history(analysis_id)
+    except AIExclusionReviewError as error:
+        raise _review_http_error(error) from error
+
+
 @router.put("/review/exclusions/{field}")
 def update_excluded_fact_review(
     field: str,
