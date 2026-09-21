@@ -933,8 +933,10 @@ def test_excluded_fact_review_statuses_merge_partial_review(monkeypatch):
                 "reason": "insufficient_context",
                 "evidence": "220 В",
                 "review_status": "corrected",
-                "corrected_value": "230 В",
-                "review_notes": "Checked against the nameplate.",
+                    "corrected_value": "230 В",
+                    "review_notes": "Checked against the nameplate.",
+                    "reviewed_by": None,
+                    "reviewed_at": None,
             },
             {
                 "field": "ip",
@@ -942,8 +944,10 @@ def test_excluded_fact_review_statuses_merge_partial_review(monkeypatch):
                 "reason": "missing_evidence",
                 "evidence": None,
                 "review_status": "pending",
-                "corrected_value": None,
-                "review_notes": None,
+                    "corrected_value": None,
+                    "review_notes": None,
+                    "reviewed_by": None,
+                    "reviewed_at": None,
             },
         ],
         "excluded_fact_review_summary": {
@@ -1131,24 +1135,26 @@ def test_single_excluded_fact_review_preserves_existing_decisions(
             "analysis_id": "analysis-1",
             "decision": "rejected",
             "notes": "Not an equipment characteristic.",
+            "reviewed_by": "Engineer A",
         },
     )
 
     assert response.status_code == 200
-    assert response.json()["excluded_fact_reviews"] == [
-        {
-            "field": "voltage",
-            "decision": "corrected",
-            "corrected_value": "230 В",
-            "notes": None,
-        },
-        {
-            "field": "ip",
-            "decision": "rejected",
-            "corrected_value": None,
-            "notes": "Not an equipment characteristic.",
-        },
-    ]
+    fact_reviews = response.json()["excluded_fact_reviews"]
+    assert fact_reviews[0] == {
+        "field": "voltage",
+        "decision": "corrected",
+        "corrected_value": "230 В",
+        "notes": None,
+    }
+    assert fact_reviews[1]["field"] == "ip"
+    assert fact_reviews[1]["decision"] == "rejected"
+    assert fact_reviews[1]["corrected_value"] is None
+    assert fact_reviews[1]["notes"] == (
+        "Not an equipment characteristic."
+    )
+    assert fact_reviews[1]["reviewed_by"] == "Engineer A"
+    assert fact_reviews[1]["reviewed_at"]
     assert latest_ai["engineering_confirmation"] is False
 
 
@@ -1190,6 +1196,7 @@ def test_single_excluded_fact_review_creates_partial_review(monkeypatch):
             "source_filename": "passport.pdf",
             "analysis_id": "analysis-1",
             "decision": "accepted",
+            "reviewed_by": "Engineer A",
         },
     )
 
@@ -1256,18 +1263,18 @@ def test_single_excluded_fact_review_replaces_existing_decision(
             "analysis_id": "analysis-1",
             "decision": "corrected",
             "corrected_value": "230 В",
+            "reviewed_by": "Engineer B",
         },
     )
 
     assert response.status_code == 200
-    assert response.json()["excluded_fact_reviews"] == [
-        {
-            "field": "voltage",
-            "decision": "corrected",
-            "corrected_value": "230 В",
-            "notes": None,
-        },
-    ]
+    fact_review = response.json()["excluded_fact_reviews"][0]
+    assert fact_review["field"] == "voltage"
+    assert fact_review["decision"] == "corrected"
+    assert fact_review["corrected_value"] == "230 В"
+    assert fact_review["notes"] is None
+    assert fact_review["reviewed_by"] == "Engineer B"
+    assert fact_review["reviewed_at"]
 
 
 def test_single_excluded_fact_review_rejects_stale_analysis(monkeypatch):
@@ -1289,6 +1296,7 @@ def test_single_excluded_fact_review_rejects_stale_analysis(monkeypatch):
             "source_filename": "passport.pdf",
             "analysis_id": "analysis-old",
             "decision": "accepted",
+            "reviewed_by": "Engineer A",
         },
     )
 

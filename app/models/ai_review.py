@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -16,6 +17,14 @@ class ExcludedAutonomousFactReview(BaseModel):
     ]
     corrected_value: str | None = None
     notes: str | None = None
+    reviewed_by: str | None = Field(
+        default=None,
+        exclude_if=lambda value: value is None,
+    )
+    reviewed_at: datetime | None = Field(
+        default=None,
+        exclude_if=lambda value: value is None,
+    )
 
     @model_validator(mode="after")
     def validate_correction(self):
@@ -45,6 +54,23 @@ class ExcludedAutonomousFactReview(BaseModel):
 
             if not self.notes:
                 raise ValueError("review notes must not be blank")
+
+        if self.reviewed_by is not None:
+            self.reviewed_by = self.reviewed_by.strip()
+
+            if not self.reviewed_by:
+                raise ValueError("reviewed by must not be blank")
+
+        if (self.reviewed_by is None) != (self.reviewed_at is None):
+            raise ValueError(
+                "reviewed by and reviewed at must be provided together"
+            )
+
+        if (
+            self.reviewed_at is not None
+            and self.reviewed_at.tzinfo is None
+        ):
+            raise ValueError("reviewed at must include timezone")
 
         return self
 
@@ -90,6 +116,7 @@ class ExcludedAutonomousFactReviewUpdate(BaseModel):
     ]
     corrected_value: str | None = None
     notes: str | None = None
+    reviewed_by: str = Field(min_length=1, max_length=255)
 
     @model_validator(mode="after")
     def validate_review_details(self):
@@ -99,6 +126,11 @@ class ExcludedAutonomousFactReviewUpdate(BaseModel):
             corrected_value=self.corrected_value,
             notes=self.notes,
         )
+        self.reviewed_by = self.reviewed_by.strip()
+
+        if not self.reviewed_by:
+            raise ValueError("reviewed by must not be blank")
+
         self.corrected_value = validated.corrected_value
         self.notes = validated.notes
         return self

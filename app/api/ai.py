@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field, model_validator
 
@@ -393,6 +395,16 @@ def get_excluded_fact_review_statuses():
             if fact_review is not None
             else None
         )
+        status["reviewed_by"] = (
+            fact_review.reviewed_by
+            if fact_review is not None
+            else None
+        )
+        status["reviewed_at"] = (
+            fact_review.reviewed_at
+            if fact_review is not None
+            else None
+        )
         statuses.append(status)
         review_counts[review_status] += 1
 
@@ -471,6 +483,8 @@ def update_excluded_fact_review(
         decision=request.decision,
         corrected_value=request.corrected_value,
         notes=request.notes,
+        reviewed_by=request.reviewed_by,
+        reviewed_at=datetime.now(timezone.utc),
     )
     saved_review = project_service.get_ai_review()
 
@@ -479,7 +493,7 @@ def update_excluded_fact_review(
             source_filename=request.source_filename,
             analysis_id=request.analysis_id,
             decision="needs_changes",
-        ).model_dump()
+        ).model_dump(mode="json")
     else:
         if saved_review.get("analysis_id") != analysis_id:
             raise HTTPException(
@@ -500,7 +514,7 @@ def update_excluded_fact_review(
                     for key, value in saved_review.items()
                     if key != "knowledge_source_ids"
                 }
-            ).model_dump()
+            ).model_dump(mode="json")
         except (TypeError, ValueError) as error:
             raise HTTPException(
                 status_code=409,
@@ -511,7 +525,7 @@ def update_excluded_fact_review(
         item["field"]: item
         for item in review_data["excluded_fact_reviews"]
     }
-    reviews_by_field[field] = new_fact_review.model_dump()
+    reviews_by_field[field] = new_fact_review.model_dump(mode="json")
     review_data["excluded_fact_reviews"] = [
         reviews_by_field[current_field]
         for current_field in excluded_fact_fields
@@ -609,7 +623,7 @@ def clear_excluded_fact_review(
                 for key, value in saved_review.items()
                 if key != "knowledge_source_ids"
             }
-        ).model_dump()
+        ).model_dump(mode="json")
     except (TypeError, ValueError) as error:
         raise HTTPException(
             status_code=409,
@@ -726,7 +740,7 @@ def review_ai_analysis(review: AIReviewDecision):
             ),
         )
 
-    review_data = review.model_dump()
+    review_data = review.model_dump(mode="json")
 
     if "excluded_fact_reviews" not in review.model_fields_set:
         review_data.pop("excluded_fact_reviews", None)

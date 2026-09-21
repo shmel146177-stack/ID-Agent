@@ -100,7 +100,18 @@ def test_excluded_fact_review_update_normalizes_correction():
         decision="corrected",
         corrected_value=" 230 В ",
         notes=" Checked by human. ",
+        reviewed_by=" Engineer ",
     )
 
     assert update.corrected_value == "230 В"
     assert update.notes == "Checked by human."
+    assert update.reviewed_by == "Engineer"
+
+
+def test_excluded_fact_review_validates_audit_pair():
+    with pytest.raises(ValidationError):
+        ExcludedAutonomousFactReview(
+            field="voltage",
+            decision="accepted",
+            reviewed_by="Engineer",
+        )
