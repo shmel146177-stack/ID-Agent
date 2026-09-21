@@ -10,6 +10,7 @@ from app.models.ai_review import (
     ExcludedAutonomousFactReviewHistory,
     ExcludedAutonomousFactReviewUpdate,
 )
+from app.services.interprocess_lock import exclusive_file_lock
 
 
 class AIExclusionReviewError(Exception):
@@ -23,7 +24,12 @@ def _serialized_mutation(method):
     @wraps(method)
     def wrapper(self, *args, **kwargs):
         with self._mutation_lock:
-            return method(self, *args, **kwargs)
+            lock_path = (
+                f"{self.project_service.ai_review_file_path}.lock"
+            )
+
+            with exclusive_file_lock(lock_path):
+                return method(self, *args, **kwargs)
 
     return wrapper
 
