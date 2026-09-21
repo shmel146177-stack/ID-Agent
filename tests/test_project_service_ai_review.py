@@ -1,6 +1,9 @@
 import json
 from pathlib import Path
 
+import pytest
+
+import app.services.project_service as project_service_module
 from app.services.project_service import ProjectService
 
 
@@ -44,6 +47,62 @@ def test_project_service_saves_ai_review_separately(tmp_path):
 
     assert Path(service.ai_file_path).exists()
     assert Path(service.ai_review_file_path).exists()
+
+
+def test_project_service_replaces_ai_review_atomically(
+    monkeypatch,
+    tmp_path,
+):
+    service = ProjectService()
+    review_path = tmp_path / "current_ai_review.json"
+    service.ai_review_file_path = str(review_path)
+    replacements = []
+    original_replace = project_service_module.os.replace
+
+    def record_replace(source, destination):
+        replacements.append((source, destination))
+        original_replace(source, destination)
+
+    monkeypatch.setattr(
+        project_service_module.os,
+        "replace",
+        record_replace,
+    )
+
+    service.save_ai_review({"review_revision": 1})
+
+    assert service.get_ai_review() == {"review_revision": 1}
+    assert len(replacements) == 1
+    assert replacements[0][1] == str(review_path)
+    assert replacements[0][0].endswith(".tmp")
+    assert list(tmp_path.glob("current_ai_review.json.*.tmp")) == []
+
+
+def test_failed_ai_review_write_preserves_previous_file(
+    monkeypatch,
+    tmp_path,
+):
+    service = ProjectService()
+    review_path = tmp_path / "current_ai_review.json"
+    service.ai_review_file_path = str(review_path)
+    service.save_ai_review({"review_revision": 1})
+    previous_bytes = review_path.read_bytes()
+
+    def fail_dump(data, file, **kwargs):
+        file.write('{"review_revision":')
+        raise OSError("simulated write failure")
+
+    monkeypatch.setattr(
+        project_service_module.json,
+        "dump",
+        fail_dump,
+    )
+
+    with pytest.raises(OSError, match="simulated write failure"):
+        service.save_ai_review({"review_revision": 2})
+
+    assert review_path.read_bytes() == previous_bytes
+    assert list(tmp_path.glob("current_ai_review.json.*.tmp")) == []
 
 
 def test_new_ai_analysis_invalidates_old_review(tmp_path):

@@ -185,17 +185,32 @@ class ProjectService:
                 exist_ok=True,
             )
 
-        with open(
-            self.ai_review_file_path,
-            "w",
-            encoding="utf-8",
-        ) as file:
-            json.dump(
-                data,
-                file,
-                ensure_ascii=False,
-                indent=4,
+        temporary_path = (
+            f"{self.ai_review_file_path}.{uuid4().hex}.tmp"
+        )
+
+        try:
+            with open(
+                temporary_path,
+                "w",
+                encoding="utf-8",
+            ) as file:
+                json.dump(
+                    data,
+                    file,
+                    ensure_ascii=False,
+                    indent=4,
+                )
+                file.flush()
+                os.fsync(file.fileno())
+
+            os.replace(
+                temporary_path,
+                self.ai_review_file_path,
             )
+        finally:
+            if os.path.exists(temporary_path):
+                os.remove(temporary_path)
 
         return {
             "status": "AI-review saved",
