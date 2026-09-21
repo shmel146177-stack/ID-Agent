@@ -5,6 +5,7 @@ from app.models.ai_review import (
     AIReviewDecision,
     ExcludedAutonomousFactReview,
     ExcludedAutonomousFactReviewBinding,
+    ExcludedAutonomousFactReviewHistory,
     ExcludedAutonomousFactReviewUpdate,
 )
 
@@ -265,13 +266,14 @@ class AIExclusionReviewService:
             fact.field for fact in self._parse_excluded_facts(analysis)
         ]
         self._require_current_field(field, excluded_fact_fields)
+        reviewed_at = datetime.now(timezone.utc)
         new_fact_review = ExcludedAutonomousFactReview(
             field=field,
             decision=request.decision,
             corrected_value=request.corrected_value,
             notes=request.notes,
             reviewed_by=request.reviewed_by,
-            reviewed_at=datetime.now(timezone.utc),
+            reviewed_at=reviewed_at,
         )
         saved_review = self.project_service.get_ai_review()
 
@@ -289,12 +291,36 @@ class AIExclusionReviewService:
             item["field"]: item
             for item in review_data["excluded_fact_reviews"]
         }
+        previous_review_data = reviews_by_field.get(field)
+        history_event = ExcludedAutonomousFactReviewHistory(
+            analysis_id=request.analysis_id,
+            field=field,
+            action=(
+                "updated"
+                if previous_review_data is not None
+                else "created"
+            ),
+            previous_review=(
+                ExcludedAutonomousFactReview.model_validate(
+                    previous_review_data
+                )
+                if previous_review_data is not None
+                else None
+            ),
+            current_review=new_fact_review,
+            reviewed_by=request.reviewed_by,
+            reviewed_at=reviewed_at,
+        )
         reviews_by_field[field] = new_fact_review.model_dump(mode="json")
         review_data["excluded_fact_reviews"] = [
             reviews_by_field[current_field]
             for current_field in excluded_fact_fields
             if current_field in reviews_by_field
         ]
+        review_data.setdefault(
+            "excluded_fact_review_history",
+            [],
+        ).append(history_event.model_dump(mode="json"))
         self._copy_knowledge_sources(review_data, analysis)
         self.project_service.save_ai_review(review_data)
         return review_data
@@ -329,11 +355,36 @@ class AIExclusionReviewService:
         if field not in saved_fields:
             self._error(404, "Excluded fact review not found")
 
+        previous_review_data = next(
+            item
+            for item in review_data["excluded_fact_reviews"]
+            if item["field"] == field
+        )
+
+        reviewed_at = datetime.now(timezone.utc)
+        history_event = ExcludedAutonomousFactReviewHistory(
+            analysis_id=request.analysis_id,
+            field=field,
+            action="cleared",
+            previous_review=(
+                ExcludedAutonomousFactReview.model_validate(
+                    previous_review_data
+                )
+            ),
+            current_review=None,
+            reviewed_by=request.reviewed_by,
+            reviewed_at=reviewed_at,
+        )
+
         review_data["excluded_fact_reviews"] = [
             item
             for item in review_data["excluded_fact_reviews"]
             if item["field"] != field
         ]
+        review_data.setdefault(
+            "excluded_fact_review_history",
+            [],
+        ).append(history_event.model_dump(mode="json"))
 
         if review_data["decision"] == "accepted":
             review_data["decision"] = "needs_changes"
@@ -376,6 +427,21 @@ class AIExclusionReviewService:
             )
 
         review_data = review.model_dump(mode="json")
+
+        existing_review = self.project_service.get_ai_review()
+
+        if existing_review is not None:
+            self._validate_saved_binding(existing_review, analysis)
+            existing_data = self._parse_review_data(existing_review)
+            history = existing_data.get(
+                "excluded_fact_review_history",
+                [],
+            )
+
+            if history:
+                review_data["excluded_fact_review_history"] = history
+        else:
+            review_data.pop("excluded_fact_review_history", None)
 
         if "excluded_fact_reviews" not in review.model_fields_set:
             review_data.pop("excluded_fact_reviews", None)

@@ -1,9 +1,12 @@
+from datetime import datetime, timezone
+
 import pytest
 from pydantic import ValidationError
 
 from app.models.ai_review import (
     AIReviewDecision,
     ExcludedAutonomousFactReview,
+    ExcludedAutonomousFactReviewHistory,
     ExcludedAutonomousFactReviewUpdate,
 )
 
@@ -114,4 +117,47 @@ def test_excluded_fact_review_validates_audit_pair():
             field="voltage",
             decision="accepted",
             reviewed_by="Engineer",
+        )
+
+
+def test_excluded_fact_review_history_accepts_created_event():
+    current_review = ExcludedAutonomousFactReview(
+        field="voltage",
+        decision="accepted",
+    )
+    event = ExcludedAutonomousFactReviewHistory(
+        analysis_id="analysis-1",
+        field=" voltage ",
+        action="created",
+        current_review=current_review,
+        reviewed_by=" Engineer ",
+        reviewed_at=datetime.now(timezone.utc),
+    )
+
+    assert event.field == "voltage"
+    assert event.reviewed_by == "Engineer"
+
+
+@pytest.mark.parametrize(
+    "action,previous,current",
+    [
+        ("created", {"field": "voltage", "decision": "rejected"}, None),
+        ("updated", None, {"field": "voltage", "decision": "accepted"}),
+        ("cleared", None, None),
+    ],
+)
+def test_excluded_fact_review_history_rejects_invalid_transition(
+    action,
+    previous,
+    current,
+):
+    with pytest.raises(ValidationError):
+        ExcludedAutonomousFactReviewHistory(
+            analysis_id="analysis-1",
+            field="voltage",
+            action=action,
+            previous_review=previous,
+            current_review=current,
+            reviewed_by="Engineer",
+            reviewed_at=datetime.now(timezone.utc),
         )

@@ -1105,6 +1105,22 @@ def test_single_excluded_fact_review_preserves_existing_decisions(
                 "notes": None,
             },
         ],
+        "excluded_fact_review_history": [
+            {
+                "analysis_id": "analysis-1",
+                "field": "voltage",
+                "action": "created",
+                "previous_review": None,
+                "current_review": {
+                    "field": "voltage",
+                    "decision": "corrected",
+                    "corrected_value": "230 В",
+                    "notes": None,
+                },
+                "reviewed_by": "Engineer B",
+                "reviewed_at": "2026-09-21T10:00:00Z",
+            },
+        ],
     }
 
     monkeypatch.setattr(
@@ -1155,6 +1171,12 @@ def test_single_excluded_fact_review_preserves_existing_decisions(
     )
     assert fact_reviews[1]["reviewed_by"] == "Engineer A"
     assert fact_reviews[1]["reviewed_at"]
+    history = response.json()["excluded_fact_review_history"]
+    assert [item["action"] for item in history] == [
+        "created",
+        "created",
+    ]
+    assert [item["field"] for item in history] == ["voltage", "ip"]
     assert latest_ai["engineering_confirmation"] is False
 
 
@@ -1275,6 +1297,10 @@ def test_single_excluded_fact_review_replaces_existing_decision(
     assert fact_review["notes"] is None
     assert fact_review["reviewed_by"] == "Engineer B"
     assert fact_review["reviewed_at"]
+    history = response.json()["excluded_fact_review_history"]
+    assert history[0]["action"] == "updated"
+    assert history[0]["previous_review"]["decision"] == "rejected"
+    assert history[0]["current_review"]["decision"] == "corrected"
 
 
 def test_single_excluded_fact_review_rejects_stale_analysis(monkeypatch):
@@ -1377,6 +1403,7 @@ def test_clear_excluded_fact_review_returns_field_to_pending(monkeypatch):
         json={
             "source_filename": "passport.pdf",
             "analysis_id": "analysis-1",
+            "reviewed_by": "Engineer C",
         },
     )
 
@@ -1394,6 +1421,11 @@ def test_clear_excluded_fact_review_returns_field_to_pending(monkeypatch):
         "passport-source"
     ]
     assert saved_review == response.json()
+    history = response.json()["excluded_fact_review_history"]
+    assert history[0]["action"] == "cleared"
+    assert history[0]["previous_review"]["field"] == "ip"
+    assert history[0]["current_review"] is None
+    assert history[0]["reviewed_by"] == "Engineer C"
 
 
 def test_clear_excluded_fact_review_rejects_missing_decision(monkeypatch):
@@ -1427,6 +1459,7 @@ def test_clear_excluded_fact_review_rejects_missing_decision(monkeypatch):
         json={
             "source_filename": "passport.pdf",
             "analysis_id": "analysis-1",
+            "reviewed_by": "Engineer A",
         },
     )
 

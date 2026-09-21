@@ -75,6 +75,58 @@ class ExcludedAutonomousFactReview(BaseModel):
         return self
 
 
+class ExcludedAutonomousFactReviewHistory(BaseModel):
+    """Immutable audit event for one excluded fact decision."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    analysis_id: str
+    field: str
+    action: Literal["created", "updated", "cleared"]
+    previous_review: ExcludedAutonomousFactReview | None = None
+    current_review: ExcludedAutonomousFactReview | None = None
+    reviewed_by: str
+    reviewed_at: datetime
+
+    @model_validator(mode="after")
+    def validate_transition(self):
+        self.field = self.field.strip()
+        self.reviewed_by = self.reviewed_by.strip()
+
+        if not self.field:
+            raise ValueError("history field must not be blank")
+
+        if not self.reviewed_by:
+            raise ValueError("history reviewed by must not be blank")
+
+        if self.reviewed_at.tzinfo is None:
+            raise ValueError("history reviewed at must include timezone")
+
+        if self.action == "created" and (
+            self.previous_review is not None
+            or self.current_review is None
+        ):
+            raise ValueError("created history requires only current review")
+
+        if self.action == "updated" and (
+            self.previous_review is None
+            or self.current_review is None
+        ):
+            raise ValueError("updated history requires both reviews")
+
+        if self.action == "cleared" and (
+            self.previous_review is None
+            or self.current_review is not None
+        ):
+            raise ValueError("cleared history requires only previous review")
+
+        for review in (self.previous_review, self.current_review):
+            if review is not None and review.field != self.field:
+                raise ValueError("history review field mismatch")
+
+        return self
+
+
 class AIReviewDecision(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -89,6 +141,12 @@ class AIReviewDecision(BaseModel):
     excluded_fact_reviews: list[
         ExcludedAutonomousFactReview
     ] = Field(default_factory=list)
+    excluded_fact_review_history: list[
+        ExcludedAutonomousFactReviewHistory
+    ] = Field(
+        default_factory=list,
+        exclude_if=lambda value: not value,
+    )
 
     @model_validator(mode="after")
     def validate_excluded_fact_reviews(self):
@@ -143,3 +201,13 @@ class ExcludedAutonomousFactReviewBinding(BaseModel):
 
     source_filename: str
     analysis_id: str
+    reviewed_by: str = Field(min_length=1, max_length=255)
+
+    @model_validator(mode="after")
+    def validate_reviewer(self):
+        self.reviewed_by = self.reviewed_by.strip()
+
+        if not self.reviewed_by:
+            raise ValueError("reviewed by must not be blank")
+
+        return self
