@@ -5,6 +5,7 @@ from functools import wraps
 from hashlib import sha256
 from uuid import uuid4
 
+from app.services.atomic_json import write_json_atomically
 from app.services.interprocess_lock import exclusive_file_lock
 
 
@@ -77,14 +78,6 @@ class ProjectService:
     ):
         self._archive_current_ai_review()
 
-        directory = os.path.dirname(self.ai_file_path)
-
-        if directory:
-            os.makedirs(
-                directory,
-                exist_ok=True,
-            )
-
         data_to_save = dict(data)
         data_to_save["analysis_id"] = str(uuid4())
 
@@ -96,17 +89,7 @@ class ProjectService:
                 knowledge_source_ids
             )
 
-        with open(
-            self.ai_file_path,
-            "w",
-            encoding="utf-8",
-        ) as file:
-            json.dump(
-                data_to_save,
-                file,
-                ensure_ascii=False,
-                indent=4,
-            )
+        write_json_atomically(self.ai_file_path, data_to_save)
 
         if os.path.exists(self.ai_review_file_path):
             os.remove(self.ai_review_file_path)
@@ -177,40 +160,7 @@ class ProjectService:
             return json.load(file)
 
     def save_ai_review(self, data: dict):
-        directory = os.path.dirname(self.ai_review_file_path)
-
-        if directory:
-            os.makedirs(
-                directory,
-                exist_ok=True,
-            )
-
-        temporary_path = (
-            f"{self.ai_review_file_path}.{uuid4().hex}.tmp"
-        )
-
-        try:
-            with open(
-                temporary_path,
-                "w",
-                encoding="utf-8",
-            ) as file:
-                json.dump(
-                    data,
-                    file,
-                    ensure_ascii=False,
-                    indent=4,
-                )
-                file.flush()
-                os.fsync(file.fileno())
-
-            os.replace(
-                temporary_path,
-                self.ai_review_file_path,
-            )
-        finally:
-            if os.path.exists(temporary_path):
-                os.remove(temporary_path)
+        write_json_atomically(self.ai_review_file_path, data)
 
         return {
             "status": "AI-review saved",

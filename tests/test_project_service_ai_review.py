@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-import app.services.project_service as project_service_module
+import app.services.atomic_json as atomic_json_module
 from app.services.project_service import ProjectService
 
 
@@ -57,14 +57,14 @@ def test_project_service_replaces_ai_review_atomically(
     review_path = tmp_path / "current_ai_review.json"
     service.ai_review_file_path = str(review_path)
     replacements = []
-    original_replace = project_service_module.os.replace
+    original_replace = atomic_json_module.os.replace
 
     def record_replace(source, destination):
         replacements.append((source, destination))
         original_replace(source, destination)
 
     monkeypatch.setattr(
-        project_service_module.os,
+        atomic_json_module.os,
         "replace",
         record_replace,
     )
@@ -93,7 +93,7 @@ def test_failed_ai_review_write_preserves_previous_file(
         raise OSError("simulated write failure")
 
     monkeypatch.setattr(
-        project_service_module.json,
+        atomic_json_module.json,
         "dump",
         fail_dump,
     )
@@ -103,6 +103,48 @@ def test_failed_ai_review_write_preserves_previous_file(
 
     assert review_path.read_bytes() == previous_bytes
     assert list(tmp_path.glob("current_ai_review.json.*.tmp")) == []
+
+
+def test_failed_ai_analysis_write_preserves_previous_file(
+    monkeypatch,
+    tmp_path,
+):
+    service = ProjectService()
+    analysis_path = tmp_path / "current_ai_analysis.json"
+    service.ai_file_path = str(analysis_path)
+    service.ai_review_file_path = str(
+        tmp_path / "current_ai_review.json"
+    )
+    first = service.save_ai_analysis(
+        {"summary": "First analysis"},
+        source_filename="drawing.pdf",
+    )["document"]
+    previous_bytes = analysis_path.read_bytes()
+
+    def fail_dump(data, file, **kwargs):
+        file.write('{"analysis_id":')
+        raise OSError("simulated analysis write failure")
+
+    monkeypatch.setattr(
+        atomic_json_module.json,
+        "dump",
+        fail_dump,
+    )
+
+    with pytest.raises(
+        OSError,
+        match="simulated analysis write failure",
+    ):
+        service.save_ai_analysis(
+            {"summary": "Second analysis"},
+            source_filename="drawing.pdf",
+        )
+
+    assert analysis_path.read_bytes() == previous_bytes
+    assert service.get_ai_analysis() == first
+    assert list(
+        tmp_path.glob("current_ai_analysis.json.*.tmp")
+    ) == []
 
 
 def test_new_ai_analysis_invalidates_old_review(tmp_path):
