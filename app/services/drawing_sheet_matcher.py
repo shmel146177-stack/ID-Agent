@@ -459,6 +459,26 @@ class DrawingSheetMatcher:
                 page,
             )
 
+            # Accept a designation in the title block, not a reference in notes.
+            designation = entry.get("designation")
+            if designation:
+                normalized_designation = self._normalize(designation)
+                stamp_text = self._normalize(page.get("text", ""))
+                has_stamp = all(
+                    label in stamp_text for label in ("лист", "подпись", "разработал")
+                )
+                designation_in_stamp = any(
+                    self._normalize(line).endswith(normalized_designation)
+                    and (
+                        self._normalize(line) == normalized_designation
+                        or line.strip().lower().startswith("заказчик:")
+                    )
+                    for line in page.get("text", "").splitlines()
+                )
+                if has_stamp and designation_in_stamp:
+                    score += 200
+                    matched_phrases.append(designation)
+
             if score <= 0:
                 continue
 
@@ -490,6 +510,7 @@ class DrawingSheetMatcher:
 
         result = {
             "sheet_number": (entry.get("sheet_number")),
+            "designation": entry.get("designation"),
             "number_source": (entry.get("number_source")),
             "title": title,
             "found": found,

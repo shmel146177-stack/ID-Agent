@@ -3,6 +3,29 @@
 from app.services.drawing_sheet_matcher import DrawingSheetMatcher
 
 
+def test_designation_in_stamp_matches_changed_title():
+    matcher = DrawingSheetMatcher()
+    entry = {
+        'title': 'Название из ведомости', 'designation': '11240/24-АС-Ч6',
+        'register_filename': 'АС.pdf',
+    }
+    for suffix, found in [
+        ('Заказчик: АО Заказчик 11240/24-АС-Ч6', True),
+        ('11240/24-АС-Ч6', True),
+        ('См. 11240/24-АС-Ч6', False),
+        ('11240/24-АС-Ч60', False),
+    ]:
+        page = {
+            'filename': 'АС.pdf', 'page': 32,
+            'text': 'Лист Подпись Разработал\nДругое название\n' + suffix,
+        }
+        result = matcher._match_entry(entry, [page], set())
+        assert result['found'] is found
+        assert not matcher._match_entry(entry, [page], {('АС.pdf', 32)})['found']
+        page['filename'] = 'ЭП.pdf'
+        assert not matcher._match_entry(entry, [page], set())['found']
+
+
 def test_drawing_sheet_matcher_matches_and_detects_missing(monkeypatch, tmp_path):
 
     matcher = DrawingSheetMatcher()
