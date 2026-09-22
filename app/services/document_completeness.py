@@ -249,10 +249,12 @@ class DocumentCompleteness:
             0,
         )
 
-        completeness_percent = sheet_match.get(
-            "completeness_percent",
-            0.0,
+        determined = sheet_match.get(
+            "determined",
+            required_count > 0,
         )
+
+        completeness_percent = sheet_match.get("completeness_percent")
 
         matches = sheet_match.get(
             "matches",
@@ -305,8 +307,10 @@ class DocumentCompleteness:
         )
 
         status = (
-            "Полный комплект"
-            if (required_count > 0 and missing_count == 0)
+            "Комплектность не определена"
+            if not determined
+            else "Полный комплект"
+            if missing_count == 0
             else "Неполный комплект"
         )
 
@@ -320,6 +324,7 @@ class DocumentCompleteness:
             "found_count": (found_count),
             "missing_count": (missing_count),
             "completeness_percent": (completeness_percent),
+            "determined": determined,
             "documents": documents,
             "missing_sheets": (missing_sheets),
             "sheet_match_status": (sheet_match.get("status")),

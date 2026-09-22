@@ -82,11 +82,70 @@ class ProjectMetadataAnalyzer:
 
         lines = text.splitlines()
 
+        # Титульные листы рабочих проектов часто не используют подписи полей,
+        # принятые в штампах. Сначала собираем их явные реквизиты, а ниже
+        # оставляем специализированные правила для штампов и актов.
+        for line in lines:
+            match = re.search(
+                r"^\s*заказчик\s*[—–-]\s*(.+)$",
+                line,
+                re.IGNORECASE,
+            )
+            if match:
+                result["customer"] = self._clean(match.group(1))
+                break
+
+        title_index = next(
+            (
+                index
+                for index, line in enumerate(lines)
+                if re.search(r"рабочая\s+документация", line, re.IGNORECASE)
+            ),
+            None,
+        )
+
+        if title_index is not None:
+            object_lines = []
+            for line in lines[max(0, title_index - 12):title_index]:
+                clean_line = self._clean(line)
+                if not clean_line:
+                    continue
+                if re.search(r"^строительство\b", clean_line, re.IGNORECASE):
+                    object_lines = [clean_line]
+                elif object_lines:
+                    object_lines.append(clean_line)
+
+            if object_lines:
+                result["object_name"] = self._clean(" ".join(object_lines))
+
+                address_match = re.search(
+                    r"(Московская\s+область\s*,.+?)(?:\s*\([^)]*МВА[^)]*\))?$",
+                    result["object_name"],
+                    re.IGNORECASE,
+                )
+                if address_match:
+                    result["address"] = self._clean(address_match.group(1))
+
+            header = " ".join(
+                self._clean(line) or ""
+                for line in lines[: min(title_index, 12)]
+            )
+            designer_match = re.search(
+                r"Общество\s+с\s+ограниченной\s+ответственностью\s+"
+                r"[«\"]([^»\"]+)[»\"]",
+                header,
+                re.IGNORECASE,
+            )
+            if designer_match:
+                result["designer"] = f'ООО «{designer_match.group(1)}»'
+
         # ---------------------------------------------------------
         # Наименование объекта
         # ---------------------------------------------------------
 
         for index, line in enumerate(lines):
+            if result["object_name"]:
+                break
             if not re.search(r"наименование\s+объекта", line, re.IGNORECASE):
                 continue
 
@@ -142,6 +201,8 @@ class ProjectMetadataAnalyzer:
         # ---------------------------------------------------------
 
         for index, line in enumerate(lines):
+            if result["customer"]:
+                break
             if not re.search(r"^\s*заказчик\s*:?\s*$", line, re.IGNORECASE):
                 continue
 
@@ -216,6 +277,8 @@ class ProjectMetadataAnalyzer:
         # DESIGNER EXTRACTION
         # Project organization
         for line in lines:
+            if result["designer"]:
+                break
             match = re.search(
                 r"\u043f\u0440\u043e\u0435\u043a\u0442\u043d\u0430\u044f\s+"
                 r"\u043e\u0440\u0433\u0430\u043d\u0438\u0437\u0430\u0446\u0438\u044f\s*:\s*(.+)",
@@ -285,6 +348,8 @@ class ProjectMetadataAnalyzer:
         # ---------------------------------------------------------
 
         for index, line in enumerate(lines):
+            if result["address"]:
+                break
             if not re.search(
                 r"местоположение\s*\(адрес\)\s*объекта",
                 line,

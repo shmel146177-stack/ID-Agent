@@ -252,9 +252,10 @@ class ProjectExecutiveGenerator:
             f"Статус: {completeness.get('status', 'Нет данных')}"
         )
 
+        percent = completeness.get("completeness_percent")
         doc.add_paragraph(
-            f"Комплектность: "
-            f"{completeness.get('completeness_percent', 0)}%"
+            "Комплектность: "
+            + (f"{percent}%" if percent is not None else "не определена")
         )
 
         doc.add_paragraph(

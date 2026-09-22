@@ -552,7 +552,7 @@ class DrawingSheetMatcher:
                 1,
             )
             if expected_count
-            else 0.0
+            else None
         )
 
         missing_sheets = [
@@ -572,10 +572,13 @@ class DrawingSheetMatcher:
         result = {
             "project": project_name,
             "status": (
-                "Полный комплект листов"
-                if (expected_count > 0 and missing_count == 0)
+                "Ведомость рабочих чертежей не найдена — комплектность не определена"
+                if expected_count == 0
+                else "Полный комплект листов"
+                if missing_count == 0
                 else "Есть отсутствующие листы"
             ),
+            "determined": expected_count > 0,
             "expected_count": (expected_count),
             "found_count": (found_count),
             "missing_count": (missing_count),

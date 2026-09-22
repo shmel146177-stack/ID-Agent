@@ -401,7 +401,7 @@ class HiddenWorksJournalGenerator:
 
         paragraph = document.add_paragraph()
 
-        run = paragraph.add_run("?????? ?????")
+        run = paragraph.add_run("Реестр актов")
 
         run.bold = True
         run.font.size = Pt(11)

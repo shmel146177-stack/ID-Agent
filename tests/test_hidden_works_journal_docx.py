@@ -95,3 +95,5 @@ def test_hidden_works_journal_generator_creates_real_docx(monkeypatch, tmp_path)
     )
 
     assert "ID-Agent" in full_text
+    assert "Реестр актов" in full_text
+    assert "?????? ?????" not in full_text

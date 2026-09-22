@@ -370,7 +370,11 @@ class DocumentRegistryExcel:
             ),
             (
                 "Комплектность",
-                (f"{completeness.get('completeness_percent', 0)}%"),
+                (
+                    f"{completeness['completeness_percent']}%"
+                    if completeness.get("completeness_percent") is not None
+                    else "Не определена"
+                ),
             ),
         ]
 

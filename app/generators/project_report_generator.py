@@ -554,7 +554,11 @@ class ProjectReportGenerator:
             ),
             (
                 "Комплектность",
-                (f"{completeness.get('completeness_percent', 0)}%"),
+                (
+                    f"{completeness['completeness_percent']}%"
+                    if completeness.get("completeness_percent") is not None
+                    else "Не определена"
+                ),
             ),
         ]
 
@@ -658,6 +662,16 @@ class ProjectReportGenerator:
             "missing_sheets",
             [],
         )
+
+        if not completeness.get(
+            "determined",
+            completeness.get("required_count", 0) > 0,
+        ):
+            document.add_paragraph(
+                "Отсутствующие листы нельзя определить: "
+                "ведомость рабочих чертежей не распознана."
+            )
+            return
 
         if not missing_sheets:
 
@@ -847,10 +861,18 @@ class ProjectReportGenerator:
 
         percent = completeness.get(
             "completeness_percent",
-            0,
         )
 
-        if required_count > 0 and missing_count == 0:
+        if not completeness.get("determined", required_count > 0):
+
+            text = (
+                "Ведомость рабочих чертежей не распознана. "
+                "Количество требуемых листов и комплектность проекта "
+                "автоматически не определены. Необходимо проверить "
+                "ведомость вручную или уточнить её распознавание."
+            )
+
+        elif required_count > 0 and missing_count == 0:
 
             text = (
                 "По результатам автоматического анализа "
