@@ -68,3 +68,22 @@ def test_page_analyzer_priority_ocr_and_unknown():
 
     assert unknown_result["page_type"] == "Не определено"
     assert unknown_result["score"] < 5
+
+
+def test_drawing_title_block_is_not_approval():
+    analyzer = PageAnalyzer()
+    stamp = "Согласовано\nСтадия Р\nЛист 1\nРазработал\nПроверил\nПодпись Дата"
+    cases = {
+        "План выноса КЛ-6 кВ из пятна застройки": "План электроснабжения",
+        "План на отм. 0.000": "Рабочий чертеж",
+        "Общие данные. Ссылочные документы. Технические условия. Ситуационный план": "Общие данные",
+        "Ведомость рабочих чертежей. Общие данные. Контур заземления": "Ведомость рабочих чертежей",
+    }
+    for title, expected in cases.items():
+        assert analyzer.analyze_page(stamp + "\n" + title, 30)["page_type"] == expected
+
+
+def test_real_approval_without_drawing_stamp_is_preserved():
+    analyzer = PageAnalyzer()
+    assert analyzer.analyze_page("Лист согласования к ТЗ. Согласовано начальником", 8)["page_type"] == "Согласование"
+    assert analyzer.analyze_page("Технические условия на присоединение", 9)["page_type"] == "Технические условия"

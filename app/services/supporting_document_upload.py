@@ -1,3 +1,4 @@
+from app.services.safe_paths import safe_project_path
 from pathlib import Path, PurePosixPath
 from typing import BinaryIO
 
@@ -55,27 +56,7 @@ class SupportingDocumentUpload:
         self.max_file_size_bytes = max_file_size_bytes
 
     def _project_path(self, project_name: str) -> Path:
-        value = (project_name or "").strip()
-        normalized = value.replace("\\", "/")
-
-        if (
-            not value
-            or normalized in {".", ".."}
-            or PurePosixPath(normalized).name != normalized
-        ):
-            raise ValueError("Некорректное имя проекта")
-
-        root = self.projects_root.resolve()
-        project_path = self.projects_root / value
-
-        try:
-            project_path.resolve().relative_to(root)
-        except ValueError as error:
-            raise ValueError(
-                "Путь проекта выходит за корень projects"
-            ) from error
-
-        return project_path
+        return safe_project_path(project_name, self.projects_root)
 
     def _get_processor(self):
         if self.processor is None:

@@ -1,3 +1,4 @@
+from app.services.safe_paths import safe_project_path
 from pathlib import Path
 
 from openpyxl import Workbook
@@ -83,7 +84,7 @@ class DocumentRegistryExcel:
         project_name: str,
     ) -> Path:
 
-        return Path("projects") / project_name
+        return safe_project_path(project_name)
 
     def _output_path(
         self,

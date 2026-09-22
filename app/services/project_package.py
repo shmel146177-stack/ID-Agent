@@ -1,3 +1,4 @@
+from app.services.safe_paths import safe_project_path
 import json
 import shutil
 import zipfile
@@ -37,7 +38,7 @@ class ProjectPackage:
         project_name: str,
     ) -> Path:
 
-        return Path("projects") / project_name
+        return safe_project_path(project_name)
 
     def _executive_docs_path(
         self,

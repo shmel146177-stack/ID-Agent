@@ -1,3 +1,4 @@
+from app.services.safe_paths import safe_project_path
 import json
 import os
 
@@ -6,10 +7,7 @@ class DocumentRegistry:
 
     def build(self, project_name: str):
 
-        project_path = os.path.join(
-            "projects",
-            project_name
-        )
+        project_path = str(safe_project_path(project_name))
 
         analysis_path = os.path.join(
             project_path,

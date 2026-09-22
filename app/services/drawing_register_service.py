@@ -1,3 +1,4 @@
+from app.services.safe_paths import safe_project_path
 import json
 from pathlib import Path
 
@@ -23,7 +24,7 @@ class DrawingRegisterService:
         project_name: str,
     ) -> Path:
 
-        return Path("projects") / project_name
+        return safe_project_path(project_name)
 
     def _page_analysis_path(
         self,

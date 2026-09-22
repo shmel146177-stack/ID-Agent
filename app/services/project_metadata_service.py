@@ -1,3 +1,4 @@
+from app.services.safe_paths import safe_project_path
 from pathlib import Path
 
 import fitz
@@ -101,7 +102,7 @@ class ProjectMetadataService:
         По умолчанию уже заполненные поля не перезаписываются.
         """
 
-        project_path = self.projects_root / project_name
+        project_path = safe_project_path(project_name, self.projects_root)
         input_path = project_path / "input"
 
         if not project_path.exists():

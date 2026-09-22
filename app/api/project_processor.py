@@ -1,8 +1,12 @@
+from app.services.safe_paths import safe_project_path, safe_child_path
+from app.services.file_upload import save_upload
 import os
 from urllib.parse import quote
 
 from fastapi import (
     APIRouter,
+    Depends,
+    Request,
     File,
     HTTPException,
     UploadFile
@@ -32,9 +36,19 @@ from app.generators.hidden_works_journal_generator import (
 )
 
 
+def validate_project_request(request: Request):
+    name = request.path_params.get("project_name")
+    if name is not None:
+        try:
+            safe_project_path(name)
+        except ValueError as error:
+            raise HTTPException(400, str(error)) from error
+
+
 router = APIRouter(
     prefix="/projects",
-    tags=["Projects"]
+    tags=["Projects"],
+    dependencies=[Depends(validate_project_request)]
 )
 
 
@@ -173,128 +187,14 @@ def upload_project_file(
             project_name
         )
 
-        if not file.filename:
-            raise HTTPException(
-                status_code=400,
-                detail="Имя файла не указано"
-            )
-
-        filename = os.path.basename(
-            file.filename.replace(
-                "\\",
-                "/"
-            )
+        input_path = safe_child_path(safe_project_path(project_name), "input")
+        file_path, file_size = save_upload(
+            file, input_path,
+            max_size=PROJECT_UPLOAD_MAX_FILE_SIZE_BYTES,
+            chunk_size=PROJECT_UPLOAD_COPY_CHUNK_SIZE,
         )
-
-        if not filename:
-            raise HTTPException(
-                status_code=400,
-                detail="Некорректное имя файла"
-            )
-
-        extension = os.path.splitext(
-            filename
-        )[1].lower()
-
-        allowed_extensions = {
-            ".pdf",
-            ".doc",
-            ".docx",
-            ".xls",
-            ".xlsx",
-            ".jpg",
-            ".jpeg",
-            ".png",
-            ".tif",
-            ".tiff"
-        }
-
-        if extension not in allowed_extensions:
-            raise HTTPException(
-                status_code=400,
-                detail=(
-                    "Неподдерживаемый формат файла: "
-                    f"{extension or 'без расширения'}"
-                )
-            )
-
-        input_path = os.path.join(
-            "projects",
-            project_name,
-            "input"
-        )
-
-        os.makedirs(
-            input_path,
-            exist_ok=True
-        )
-
-        file_path = os.path.join(
-            input_path,
-            filename
-        )
-
-        # ---------------------------------------------
-        # 1. СОХРАНЯЕМ ФАЙЛ
-        # ---------------------------------------------
-
-        try:
-            destination = open(
-                file_path,
-                "xb"
-            )
-
-        except FileExistsError as error:
-            raise HTTPException(
-                status_code=409,
-                detail=f"Файл уже существует: {filename}"
-            ) from error
-
-        try:
-            file_size = 0
-
-            with destination:
-                while True:
-                    chunk = file.file.read(
-                        PROJECT_UPLOAD_COPY_CHUNK_SIZE
-                    )
-
-                    if not chunk:
-                        break
-
-                    file_size += len(chunk)
-
-                    if (
-                        file_size
-                        > PROJECT_UPLOAD_MAX_FILE_SIZE_BYTES
-                    ):
-                        raise HTTPException(
-                            status_code=413,
-                            detail=(
-                                "Файл превышает допустимый размер: "
-                                f"{PROJECT_UPLOAD_MAX_FILE_SIZE_BYTES} байт"
-                            )
-                        )
-
-                    destination.write(
-                        chunk
-                    )
-
-                if file_size == 0:
-                    raise HTTPException(
-                        status_code=400,
-                        detail="Пустой файл не может быть загружен"
-                    )
-
-        except Exception:
-            try:
-                os.remove(
-                    file_path
-                )
-            except FileNotFoundError:
-                pass
-
-            raise
+        filename = os.path.basename(file_path)
+        extension = os.path.splitext(filename)[1].lower()
 
         # ---------------------------------------------
         # 2. АВТОМАТИЧЕСКИ ОБРАБАТЫВАЕМ ПРОЕКТ
@@ -476,7 +376,7 @@ def update_project_card(
     try:
         return project_manager.update_project(
             project_name,
-            card.model_dump(exclude_none=True)
+            card.model_dump(exclude_unset=True, exclude_none=True)
         )
 
     except ValueError as error:
@@ -713,8 +613,7 @@ def download_registry(
 ):
 
     file_path = os.path.join(
-        "projects",
-        project_name,
+        str(safe_project_path(project_name)),
         "output",
         f"Реестр_документов_{project_name}.xlsx"
     )

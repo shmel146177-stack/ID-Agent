@@ -1,3 +1,4 @@
+from app.services.safe_paths import safe_project_path
 import json
 from datetime import datetime
 from pathlib import Path
@@ -198,7 +199,7 @@ class SupportingDocumentsRegistry:
         project_name: str,
     ) -> Path:
 
-        return Path("projects") / project_name
+        return safe_project_path(project_name)
 
     def _analysis_path(
         self,

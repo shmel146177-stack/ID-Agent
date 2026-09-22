@@ -150,6 +150,7 @@ class PageAnalyzer:
     def _detect_priority_type(
         self,
         normalized_text: str,
+        is_drawing: bool = False,
     ) -> str | None:
         """
         Определяет тип страницы по явным заголовкам
@@ -160,10 +161,10 @@ class PageAnalyzer:
         # ТЕХНИЧЕСКИЕ УСЛОВИЯ
         # ---------------------------------------------------------
 
-        if "технические условия" in normalized_text or (
+        if not is_drawing and ("технические условия" in normalized_text or (
             "технологическое присоединение" in normalized_text
             and "россети московский регион" in normalized_text
-        ):
+        )):
             return "Технические условия"
 
         # ---------------------------------------------------------
@@ -175,12 +176,12 @@ class PageAnalyzer:
             "жилищник ярославского района",
         )
 
-        if any(
+        if not is_drawing and any(
             organization in normalized_text for organization in approval_organizations
         ):
             return "Согласование"
 
-        if "государственное бюджетное учреждение" in normalized_text and (
+        if not is_drawing and "государственное бюджетное учреждение" in normalized_text and (
             "согласован" in normalized_text
             or "письмо" in normalized_text
             or "исх." in normalized_text
@@ -190,6 +191,14 @@ class PageAnalyzer:
         # ---------------------------------------------------------
         # ЯВНЫЕ ЗАГОЛОВКИ
         # ---------------------------------------------------------
+
+        if is_drawing:
+            if "ведомость рабочих чертежей" in normalized_text:
+                return "Ведомость рабочих чертежей"
+            if "общие данные" in normalized_text:
+                return "Общие данные"
+            if re.search(r"план (?:выноса|прокладки) (?:кл|кабельн)", normalized_text):
+                return "План электроснабжения"
 
         priority_rules = [
             (
@@ -269,12 +278,20 @@ class PageAnalyzer:
             }
 
         normalized_text = self._normalize(text)
+        # A title block is evidence of a drawing; its approval/signature labels
+        # are not evidence that the page is an approval letter.
+        is_drawing = (
+            "стадия" in normalized_text
+            and "лист" in normalized_text
+            and sum(label in normalized_text for label in
+                    ("разработал", "проверил", "гип", "подпись", "инв.")) >= 2
+        )
 
         # ---------------------------------------------------------
         # 1. ЯВНЫЕ ПРИЗНАКИ
         # ---------------------------------------------------------
 
-        priority_type = self._detect_priority_type(normalized_text)
+        priority_type = self._detect_priority_type(normalized_text, is_drawing=is_drawing)
 
         if priority_type:
 
@@ -293,6 +310,8 @@ class PageAnalyzer:
         scores = {}
 
         for page_type, rules in self.rules.items():
+            if is_drawing and page_type in {"Согласование", "Технические условия", "Титульный лист"}:
+                continue
 
             score = 0
 
@@ -340,7 +359,7 @@ class PageAnalyzer:
                 best_score = title_score
 
         if best_score < 5:
-            best_type = "Не определено"
+            best_type = "Рабочий чертеж" if is_drawing else "Не определено"
 
         return {
             "page": page_number,

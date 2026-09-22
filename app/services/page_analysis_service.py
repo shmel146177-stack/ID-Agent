@@ -1,3 +1,4 @@
+from app.services.safe_paths import safe_project_path
 import json
 from pathlib import Path
 
@@ -149,7 +150,7 @@ class PageAnalysisService:
         project_name: str,
     ) -> dict:
 
-        project_path = self.projects_root / project_name
+        project_path = safe_project_path(project_name, self.projects_root)
 
         input_path = project_path / "input"
 

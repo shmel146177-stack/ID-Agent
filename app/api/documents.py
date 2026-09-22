@@ -1,8 +1,8 @@
+from pathlib import Path
+from app.services.file_upload import save_upload, MAX_FILE_SIZE_BYTES
 from typing import Annotated
 
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
-import shutil
-import os
 
 from app.services.document_service import document_service
 from app.parsers.pdf_parser import pdf_parser
@@ -25,6 +25,7 @@ from app.services.knowledge_context import (
 router = APIRouter()
 
 UPLOAD_DIR = "uploads"
+UPLOAD_MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_BYTES
 
 
 @router.post("/upload")
@@ -48,22 +49,8 @@ async def upload_document(
                 detail="Knowledge context missing source binding",
             )
 
-    os.makedirs(UPLOAD_DIR, exist_ok=True)
-
-    filename = os.path.basename(
-        (file.filename or "").replace(
-            "\\",
-            "/"
-        )
-    )
-
-    file_path = os.path.join(
-        UPLOAD_DIR,
-        filename
-    )
-
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+    file_path, _ = save_upload(file, UPLOAD_DIR, max_size=UPLOAD_MAX_FILE_SIZE_BYTES)
+    filename = Path(file_path).name
 
     result = document_service.analyze(file_path)
 

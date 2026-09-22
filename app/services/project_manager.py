@@ -1,3 +1,4 @@
+from app.services.safe_paths import safe_project_path, safe_child_path
 import json
 import os
 
@@ -20,22 +21,19 @@ class ProjectManager:
         project_name: str
     ) -> str:
 
-        return os.path.join(
-            self.projects_root,
-            project_name
-        )
+        return str(safe_project_path(project_name, self.projects_root))
 
     def _project_file(
         self,
         project_name: str
     ) -> str:
 
-        return os.path.join(
+        return str(safe_child_path(
             self._project_path(
                 project_name
             ),
             "project.json"
-        )
+        ))
 
     def _create_folders(
         self,
@@ -67,7 +65,9 @@ class ProjectManager:
         ]
 
         for folder in folders:
+            safe_child_path(project_path, os.path.relpath(folder, project_path))
 
+        for folder in folders:
             os.makedirs(
                 folder,
                 exist_ok=True
@@ -77,10 +77,6 @@ class ProjectManager:
         self,
         project_name: str
     ):
-
-        project_name = (
-            project_name.strip()
-        )
 
         if not project_name:
             raise ValueError(
@@ -253,10 +249,10 @@ class ProjectManager:
             )
         ):
 
-            project_path = os.path.join(
-                self.projects_root,
-                name
-            )
+            try:
+                project_path = self._project_path(name)
+            except ValueError:
+                continue
 
             if not os.path.isdir(
                 project_path

@@ -1,3 +1,4 @@
+from app.services.safe_paths import safe_project_path
 import json
 import re
 from datetime import datetime
@@ -27,6 +28,8 @@ class ProjectSectionExporter:
     }
 
     WORKING_PAGE_TYPES = {
+        "Общие данные",
+        "Рабочий чертеж",
         "Ведомость рабочих чертежей",
         "Ситуационный план",
         "План электроснабжения",
@@ -41,7 +44,7 @@ class ProjectSectionExporter:
         project_name: str,
     ) -> Path:
 
-        return Path("projects") / project_name
+        return safe_project_path(project_name)
 
     def _input_path(
         self,
@@ -396,16 +399,26 @@ class ProjectSectionExporter:
             working_output,
         )
 
+        review_result = self._export_group(
+            project_name,
+            page_analysis,
+            groups["unclassified_pages"],
+            self._working_folder(project_name) / f"Требуют_проверки_{safe_project_name}.pdf",
+        )
+
         result = {
             "project": (project_name),
             "created_at": (datetime.now().isoformat(timespec="seconds")),
             "status": ("Готово"),
             "source_documents": (source_result),
             "working_drawings": (working_result),
+            "review_documents": review_result,
+            "requires_review": bool(groups["unclassified_pages"]),
             "unclassified_pages_count": (len(groups["unclassified_pages"])),
             "unclassified_pages": (groups["unclassified_pages"]),
             "total_exported_pages": (
                 source_result["pages_count"] + working_result["pages_count"]
+                + review_result["pages_count"]
             ),
         }
 

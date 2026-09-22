@@ -1,3 +1,4 @@
+from app.services.safe_paths import safe_project_path
 import json
 import os
 
@@ -163,10 +164,7 @@ class DocumentScanner:
         project_name: str
     ) -> dict:
 
-        project_path = os.path.join(
-            "projects",
-            project_name
-        )
+        project_path = str(safe_project_path(project_name))
 
         input_path = os.path.join(
             project_path,

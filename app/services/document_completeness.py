@@ -1,4 +1,4 @@
-from pathlib import Path
+from app.services.safe_paths import safe_project_path
 import json
 from app.services.document_registry import document_registry
 from app.services.drawing_sheet_matcher import drawing_sheet_matcher
@@ -66,8 +66,7 @@ class DocumentCompleteness:
     ) -> bool:
 
         analysis_path = (
-            Path("projects")
-            / project_name
+            safe_project_path(project_name)
             / "analysis"
             / "page_analysis.json"
         )

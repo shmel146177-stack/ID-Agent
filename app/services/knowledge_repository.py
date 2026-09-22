@@ -1,3 +1,4 @@
+from app.services.safe_paths import safe_project_path
 import json
 from pathlib import Path
 from typing import Self
@@ -17,20 +18,10 @@ class KnowledgeRepository:
         project_name: str,
         projects_root: str | Path = "projects",
     ) -> Self:
-        root = Path(projects_root).resolve()
-        project_path = (root / project_name).resolve()
-
         try:
-            relative_path = project_path.relative_to(root)
+            project_path = safe_project_path(project_name, projects_root).resolve()
         except ValueError as error:
-            raise ValueError(
-                "project_name must stay within projects_root"
-            ) from error
-
-        if len(relative_path.parts) != 1:
-            raise ValueError(
-                "project_name must identify one project"
-            )
+            raise ValueError("project_name must identify one project within projects_root") from error
 
         return cls(
             project_path
