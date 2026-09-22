@@ -107,3 +107,28 @@ def test_drawing_sheet_matcher_matches_and_detects_missing(monkeypatch, tmp_path
 
     assert saved["found_count"] == 1
     assert saved["missing_count"] == 1
+
+
+def test_register_entries_with_same_number_and_title_stay_separate_by_volume():
+    matcher = DrawingSheetMatcher()
+    drawing_register = {
+        "registers": [
+            {
+                "filename": "АС.pdf",
+                "entries": [
+                    {"sheet_number": 1, "designation": "P-АС-Ч1", "title": "Общие данные"}
+                ],
+            },
+            {
+                "filename": "ЭП.pdf",
+                "entries": [
+                    {"sheet_number": 1, "designation": "P-ЭП-Ч1", "title": "Общие данные"}
+                ],
+            },
+        ]
+    }
+
+    entries = matcher._collect_register_entries(drawing_register)
+
+    assert len(entries) == 2
+    assert {entry["register_filename"] for entry in entries} == {"АС.pdf", "ЭП.pdf"}

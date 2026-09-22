@@ -229,17 +229,10 @@ class DrawingRegisterService:
 
                 total_entries += register_data["entries_count"]
 
-        expected_sheet_count = 0
-
-        if registers:
-
-            expected_sheet_count = max(
-                register.get(
-                    "expected_sheet_count",
-                    0,
-                )
-                for register in registers
-            )
+        expected_sheet_count = sum(
+            register.get("expected_sheet_count", 0)
+            for register in registers
+        )
 
         output_path = self._output_path(project_name)
 

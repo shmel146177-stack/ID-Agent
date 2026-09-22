@@ -300,7 +300,9 @@ class DrawingSheetMatcher:
                 [],
             ):
 
-                key = (
+                register_filename = register.get("filename")
+                key = entry.get("designation") or (
+                    register_filename,
                     entry.get("sheet_number"),
                     entry.get("title"),
                 )
@@ -310,7 +312,9 @@ class DrawingSheetMatcher:
 
                 seen.add(key)
 
-                entries.append(entry)
+                collected_entry = dict(entry)
+                collected_entry["register_filename"] = register_filename
+                entries.append(collected_entry)
 
         entries.sort(
             key=lambda item: (
@@ -325,7 +329,7 @@ class DrawingSheetMatcher:
     def _collect_register_pages(
         self,
         drawing_register: dict,
-    ) -> set[int]:
+    ) -> set[tuple[str | None, int]]:
 
         pages = set()
 
@@ -335,12 +339,13 @@ class DrawingSheetMatcher:
         ):
 
             page_number = register.get("page")
+            filename = register.get("filename")
 
             if isinstance(
                 page_number,
                 int,
             ):
-                pages.add(page_number)
+                pages.add((filename, page_number))
 
         return pages
 
@@ -419,14 +424,18 @@ class DrawingSheetMatcher:
         self,
         entry: dict,
         pages: list[dict],
-        register_pages: set[int],
+        register_pages: set[tuple[str | None, int]],
     ) -> dict:
 
         title = entry.get("title", "") or ""
+        register_filename = entry.get("register_filename")
 
         candidates = []
 
         for page in pages:
+
+            if register_filename and page.get("filename") != register_filename:
+                continue
 
             page_number = page.get("page")
 
@@ -437,7 +446,9 @@ class DrawingSheetMatcher:
             # Для "Общие данные" она является
             # допустимым кандидатом, поскольку
             # ведомость находится именно на этом листе.
-            if title != "Общие данные" and page_number in register_pages:
+            if title != "Общие данные" and (
+                page.get("filename"), page_number
+            ) in register_pages:
                 continue
 
             (
@@ -583,7 +594,7 @@ class DrawingSheetMatcher:
             "found_count": (found_count),
             "missing_count": (missing_count),
             "completeness_percent": (completeness_percent),
-            "register_pages": sorted(register_pages),
+            "register_pages": sorted({page for _, page in register_pages}),
             "missing_sheets": (missing_sheets),
             "matches": matches,
             "output_path": str(output_path),

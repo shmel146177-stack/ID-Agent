@@ -16,6 +16,12 @@ class DrawingRegisterAnalyzer:
     REGISTER_MARKERS = (
         "ведомость рабочих чертежей",
         "ведомость рабочих чертежей основного комплекта",
+        "ведомость документов основного комплекта рабочих чертежей",
+    )
+
+    DESIGNATION_PATTERN = re.compile(
+        r"(?P<designation>\d[\d/.-]*-[А-ЯA-Z]+-Ч(?P<number>\d{1,2}))\b",
+        re.IGNORECASE,
     )
 
     DRAWING_PATTERNS = [
@@ -334,9 +340,20 @@ class DrawingRegisterAnalyzer:
         а продолжаем до конца текста страницы.
         """
 
-        start_index = self._find_register_block_start(
-            lines,
-            allow_title_only=allow_title_only,
+        marker_indexes = [
+            index
+            for index, line in enumerate(lines)
+            if any(
+                marker in self._normalize(line)
+                for marker in self.REGISTER_MARKERS
+            )
+        ]
+
+        start_index = marker_indexes[0] if marker_indexes else (
+            self._find_register_block_start(
+                lines,
+                allow_title_only=allow_title_only,
+            )
         )
 
         if start_index is None:
@@ -373,6 +390,55 @@ class DrawingRegisterAnalyzer:
             )
 
         return entries
+
+    def _extract_designated_entries(
+        self,
+        block: list[str],
+    ) -> list[dict]:
+        """Read rows whose sheet number is encoded in the drawing designation."""
+        entries = []
+        current = None
+
+        for line in block:
+            normalized = self._normalize(line)
+            if current and (
+                "ведомость комплектов рабочих чертежей" in normalized
+                or normalized == "аннотация"
+            ):
+                break
+
+            match = self.DESIGNATION_PATTERN.search(line)
+            if match:
+                if current:
+                    entries.append(current)
+                current = {
+                    "sheet_number": int(match.group("number")),
+                    "number_source": "drawing_designation",
+                    "designation": match.group("designation"),
+                    "title_lines": [],
+                }
+                continue
+
+            if current:
+                if re.fullmatch(r"на\s+\d+-?х?\s+листах", normalized):
+                    continue
+                if normalized in {"наименование", "примечание", "№ листа"}:
+                    continue
+                current["title_lines"].append(line)
+
+        if current:
+            entries.append(current)
+
+        result = []
+        for entry in entries:
+            title = " ".join(entry.pop("title_lines")).strip()
+            if not title:
+                continue
+            entry["title"] = title
+            entry["source_line"] = title
+            result.append(entry)
+
+        return result
 
     def _extract_number_evidence(
         self,
@@ -456,6 +522,20 @@ class DrawingRegisterAnalyzer:
                 "numbering_restored": False,
                 "number_evidence": [],
                 "entries": [],
+            }
+
+        designated_entries = self._extract_designated_entries(block)
+        if designated_entries:
+            numbers = [entry["sheet_number"] for entry in designated_entries]
+            return {
+                "register_detected": register_detected,
+                "register_block_detected": True,
+                "entries_count": len(designated_entries),
+                "numbered_entries_count": len(designated_entries),
+                "numbering_restored": False,
+                "expected_sheet_count": max(numbers),
+                "number_evidence": numbers,
+                "entries": designated_entries,
             }
 
         entries = self._extract_titles(block)

@@ -136,3 +136,41 @@ def test_drawing_register_service_prefers_visible_ocr(monkeypatch, tmp_path):
 
     assert register["analysis_source"] == "visual_ocr"
     assert register["entries"][1]["title"] == "Ситуационный план"
+
+
+def test_drawing_register_service_sums_register_sheet_counts(monkeypatch, tmp_path):
+    service = DrawingRegisterService()
+    fake_page_analysis = {
+        "documents": [
+            {
+                "filename": "project.pdf",
+                "pages": [
+                    {"page": 1, "page_type": "Ведомость рабочих чертежей", "text": "АС"},
+                    {"page": 2, "page_type": "Ведомость рабочих чертежей", "text": "ЭП"},
+                ],
+            }
+        ]
+    }
+    counts = iter((9, 13))
+
+    monkeypatch.setattr(service, "_load_page_analysis", lambda _name: fake_page_analysis)
+    monkeypatch.setattr(service, "_output_path", lambda _name: tmp_path / "register.json")
+    monkeypatch.setattr(
+        service_module.drawing_register_analyzer,
+        "analyze_text",
+        lambda _text: {
+            "register_detected": True,
+            "register_block_detected": True,
+            "entries_count": 0,
+            "numbered_entries_count": 0,
+            "numbering_restored": False,
+            "expected_sheet_count": next(counts),
+            "number_evidence": [],
+            "entries": [],
+        },
+    )
+
+    result = service.analyze_project("TEST_PROJECT")
+
+    assert result["registers_count"] == 2
+    assert result["expected_sheet_count"] == 22

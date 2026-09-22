@@ -109,6 +109,33 @@ def test_drawing_register_analyzer_reads_numbered_visual_ocr_rows():
     )
 
 
+def test_drawing_register_analyzer_extracts_designated_entries():
+    analyzer = DrawingRegisterAnalyzer()
+    text = """
+Ведомость документов основного комплекта рабочих чертежей марки "АС"
+11240/24-АС-Ч1
+Общие данные
+11240/24-АС-Ч2
+Ситуационный план расположения проектируемой БКТП
+и кабельных линий
+11240/24-АС-Ч3
+План благоустройства
+Ведомость комплектов рабочих чертежей
+"""
+
+    result = analyzer.analyze_text(text)
+
+    assert result["register_detected"] is True
+    assert result["expected_sheet_count"] == 3
+    assert [entry["sheet_number"] for entry in result["entries"]] == [1, 2, 3]
+    assert result["entries"][1]["designation"] == "11240/24-АС-Ч2"
+    assert result["entries"][1]["number_source"] == "drawing_designation"
+    assert result["entries"][1]["title"] == (
+        "Ситуационный план расположения проектируемой БКТП "
+        "и кабельных линий"
+    )
+
+
 def test_drawing_register_analyzer_can_read_visual_titles_without_numbers():
 
     analyzer = DrawingRegisterAnalyzer()
