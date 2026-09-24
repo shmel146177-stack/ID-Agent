@@ -1,5 +1,6 @@
 from app.services.safe_paths import safe_project_path
 import json
+import re
 from datetime import datetime
 from pathlib import Path
 
@@ -92,6 +93,60 @@ class HiddenWorksRegistry:
             ),
         },
     ]
+
+    # Design quantities identify review candidates, not completed work or signed acts.
+    WORK_REVIEW_RULES = [
+        {
+            "code": "cable_trench",
+            "title": "Кабельная линия в траншее",
+            "section": "АС",
+            "items": {
+                "1.3": "постели из песка для кабельной линии",
+                "1.5": "укрытие кабельных линий защитными плитами",
+            },
+        },
+        {
+            "code": "foundation_base",
+            "title": "Основание и армирование фундаментной плиты",
+            "section": "АС",
+            "items": {
+                "2.3": "песчаной подсыпки",
+                "2.8": "армирование фундаментной плиты",
+            },
+        },
+        {
+            "code": "foundation_waterproofing",
+            "title": "Гидроизоляция подземных конструкций",
+            "section": "АС",
+            "items": {
+                "2.5": "бетонной подготовки битумным праймером",
+                "2.6": "бетонной подготовки битумной мастикой",
+            },
+        },
+        {
+            "code": "embedded_cable_pipes",
+            "title": "Закладные трубы и заделка кабельных проходок",
+            "section": "АС",
+            "items": {
+                "2.16": "укладка труб полимерных термостойких",
+                "2.21": "заделка труб и пазух цементным раствором",
+            },
+        },
+        {
+            "code": "apron_layers",
+            "title": "Скрываемые слои и армирование отмостки",
+            "section": "АС",
+            "items": {
+                "2.36": "гидроизоляции горизонтальной",
+                "2.39": "укладка сварной сетки",
+            },
+        },
+    ]
+
+    WORK_ITEM_PATTERN = re.compile(r"(?m)^\s*(\d+\.\d+)\.\s*")
+    WORK_SECTION_PATTERN = re.compile(
+        r"(?m)^\s*\d[\d/.-]*-(АС|ЭП)\.ВОР\s*$", re.IGNORECASE
+    )
 
     def _project_path(
         self,
@@ -245,6 +300,78 @@ class HiddenWorksRegistry:
 
         return result
 
+    def _load_work_review_candidates(self, project_name: str) -> list[dict]:
+        """Find project-backed work groups without proposing signed acts."""
+
+        data = self._load_json(self._analysis_path(project_name) / "page_analysis.json")
+        work_items_by_document = {}
+
+        for document in data.get("documents", []):
+            filename = document.get("filename", "")
+            for page in document.get("pages", []):
+                if self._normalize(page.get("page_type", "")) not in {
+                    "ведомость объемов работ",
+                }:
+                    continue
+
+                text = page.get("text") or ""
+                section_match = self.WORK_SECTION_PATTERN.search(text)
+                if not section_match:
+                    continue
+
+                section = section_match.group(1).upper()
+                work_items = work_items_by_document.setdefault((filename, section), {})
+                matches = list(self.WORK_ITEM_PATTERN.finditer(text))
+                for index, match in enumerate(matches):
+                    end = (
+                        matches[index + 1].start()
+                        if index + 1 < len(matches)
+                        else len(text)
+                    )
+                    work_items[match.group(1)] = {
+                        "text": self._normalize(
+                            re.sub(r"\s+", " ", text[match.end() : end])
+                        ),
+                        "filename": filename,
+                        "page": page.get("page"),
+                    }
+
+        candidates = []
+        for rule in self.WORK_REVIEW_RULES:
+            evidence = []
+            for (filename, section), work_items in work_items_by_document.items():
+                if section != rule["section"]:
+                    continue
+
+                document_evidence = []
+                for number, phrase in rule["items"].items():
+                    item = work_items.get(number)
+                    if not item or self._normalize(phrase) not in item["text"]:
+                        break
+                    document_evidence.append(
+                        {
+                            "document": filename,
+                            "page": item["page"],
+                            "work_item": number,
+                            "matched_phrase": phrase,
+                        }
+                    )
+                else:
+                    evidence.extend(document_evidence)
+
+            if evidence:
+                candidates.append(
+                    {
+                        "code": rule["code"],
+                        "title": rule["title"],
+                        "status": "Требует проверки по факту",
+                        "confirmation_required": True,
+                        "evidence": evidence,
+                    }
+                )
+
+        return candidates
+
     def _find_register_evidence(
         self,
         entries: list[dict],
@@ -360,6 +487,7 @@ class HiddenWorksRegistry:
         entries = self._extract_register_entries(project_name)
 
         page_types = self._load_page_types(project_name)
+        review_candidates = self._load_work_review_candidates(project_name)
 
         acts = []
 
@@ -383,12 +511,21 @@ class HiddenWorksRegistry:
             "status": (
                 "Сформирован предварительный перечень"
                 if acts
-                else "АОСР автоматически не определены"
+                else (
+                    "Найдены работы для проверки; АОСР автоматически не определены"
+                    if review_candidates
+                    else "АОСР автоматически не определены"
+                )
             ),
-            "method": ("Анализ ведомости рабочих чертежей " "и типов страниц проекта"),
+            "method": (
+                "Анализ ведомости рабочих чертежей, "
+                "типов страниц и ведомостей объемов работ"
+            ),
             "acts_count": len(acts),
+            "review_candidates_count": len(review_candidates),
+            "review_candidates": review_candidates,
             "high_priority_count": (high_priority_count),
-            "requires_field_confirmation": (bool(acts)),
+            "requires_field_confirmation": bool(acts or review_candidates),
             "acts": acts,
             "note": (
                 "Перечень сформирован автоматически "
@@ -427,4 +564,3 @@ class HiddenWorksRegistry:
 
 
 hidden_works_registry = HiddenWorksRegistry()
-
