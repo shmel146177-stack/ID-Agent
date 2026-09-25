@@ -1,8 +1,15 @@
 from app.services.safe_paths import safe_project_path, safe_child_path
 import json
+import logging
 import os
 
 from app.models.project_card import ProjectCard
+from app.services.atomic_json import write_json_atomically
+from app.services.interprocess_lock import exclusive_file_lock
+from app.services.project_service import ProjectStateCorruptionError
+
+
+logger = logging.getLogger(__name__)
 
 
 class ProjectManager:
@@ -73,165 +80,121 @@ class ProjectManager:
                 exist_ok=True
             )
 
-    def create_project(
-        self,
-        project_name: str
-    ):
+    def create_project(self, project_name: str):
 
         if not project_name:
-            raise ValueError(
-                "Имя проекта не указано"
-            )
+            raise ValueError("Имя проекта не указано")
 
-        project_file = self._project_file(
-            project_name
-        )
+        project_file = self._project_file(project_name)
 
         # Создаём полную структуру проекта
-        self._create_folders(
-            project_name
+        self._create_folders(project_name)
+
+        lock_file = str(
+            safe_child_path(self._project_path(project_name), "project.json.lock")
         )
+        with exclusive_file_lock(lock_file):
+            # Recheck under the lock so concurrent creation cannot reset a card.
+            if os.path.exists(project_file):
 
-        # Если карточка уже существует,
-        # не перезаписываем её
-        if os.path.exists(
-            project_file
-        ):
+                return self.get_project(project_name)
 
-            return self.get_project(
-                project_name
-            )
+            card = ProjectCard(project_name=project_name)
 
-        card = ProjectCard(
-            project_name=project_name
-        )
+            data = {
+                "project_name": card.project_name,
+                "project_mode": card.project_mode,
+                "project_note": card.project_note,
+                "object_name": card.object_name,
+                "address": card.address,
+                "customer": card.customer,
+                "contractor": card.contractor,
+                "designer": card.designer,
+                "contract_number": card.contract_number,
+                "start_date": card.start_date,
+                "finish_date": card.finish_date,
+                "chief_engineer": card.chief_engineer,
+            }
 
-        data = {
-            "project_name": card.project_name,
-            "project_mode": card.project_mode,
-            "project_note": card.project_note,
-            "object_name": card.object_name,
-            "address": card.address,
-            "customer": card.customer,
-            "contractor": card.contractor,
-            "designer": card.designer,
-            "contract_number": card.contract_number,
-            "start_date": card.start_date,
-            "finish_date": card.finish_date,
-            "chief_engineer": card.chief_engineer
-        }
+            write_json_atomically(project_file, data)
 
-        with open(
-            project_file,
-            "w",
-            encoding="utf-8"
-        ) as file:
+            return data
 
-            json.dump(
-                data,
-                file,
-                ensure_ascii=False,
-                indent=4
-            )
+    def get_project(self, project_name: str):
 
-        return data
+        project_file = self._project_file(project_name)
 
-    def get_project(
-        self,
-        project_name: str
-    ):
+        if not os.path.exists(project_file):
+            raise FileNotFoundError(f"Проект не найден: {project_name}")
 
-        project_file = self._project_file(
-            project_name
-        )
+        state_name = f"project card: {project_name}"
+        try:
+            with open(project_file, "r", encoding="utf-8") as file:
+                project = json.load(file)
+        except json.JSONDecodeError as error:
+            raise ProjectStateCorruptionError(
+                state_name,
+                f"invalid JSON at line {error.lineno}, column {error.colno}",
+            ) from error
+        except UnicodeDecodeError as error:
+            raise ProjectStateCorruptionError(
+                state_name, "invalid UTF-8 encoding"
+            ) from error
 
-        if not os.path.exists(
-            project_file
-        ):
-            raise FileNotFoundError(
-                f"Проект не найден: {project_name}"
-            )
-
-        with open(
-            project_file,
-            "r",
-            encoding="utf-8"
-        ) as file:
-
-            return json.load(
-                file
-            )
-
-    def update_project(
-        self,
-        project_name: str,
-        data: dict
-    ):
-
-        project_file = self._project_file(
-            project_name
-        )
-
-        if not os.path.exists(
-            project_file
-        ):
-            raise FileNotFoundError(
-                f"Проект не найден: {project_name}"
-            )
-
-        project = self.get_project(
-            project_name
-        )
-
-        allowed_fields = [
-            "project_mode",
-            "project_note",
-            "object_name",
-            "address",
-            "customer",
-            "contractor",
-            "designer",
-            "contract_number",
-            "start_date",
-            "finish_date",
-            "chief_engineer"
-        ]
-
-        for field in allowed_fields:
-
-            if field in data:
-
-                if (
-                    field == "project_mode"
-                    and data[field] not in {"production", "training"}
-                ):
-                    raise ValueError(
-                        "Режим проекта должен быть production или training"
-                    )
-
-                project[field] = (
-                    data[field]
-                )
-
-        # Имя проекта всегда сохраняем
-        project["project_name"] = (
-            project_name
-        )
-
-        with open(
-            project_file,
-            "w",
-            encoding="utf-8"
-        ) as file:
-
-            json.dump(
-                project,
-                file,
-                ensure_ascii=False,
-                indent=4
+        if not isinstance(project, dict):
+            raise ProjectStateCorruptionError(
+                state_name, "top-level JSON value must be an object"
             )
 
         return project
+
+    def update_project(self, project_name: str, data: dict):
+
+        project_file = self._project_file(project_name)
+
+        if not os.path.exists(project_file):
+            raise FileNotFoundError(f"Проект не найден: {project_name}")
+
+        lock_file = str(
+            safe_child_path(self._project_path(project_name), "project.json.lock")
+        )
+        with exclusive_file_lock(lock_file):
+            project = self.get_project(project_name)
+
+            allowed_fields = [
+                "project_mode",
+                "project_note",
+                "object_name",
+                "address",
+                "customer",
+                "contractor",
+                "designer",
+                "contract_number",
+                "start_date",
+                "finish_date",
+                "chief_engineer",
+            ]
+
+            for field in allowed_fields:
+
+                if field in data:
+
+                    if field == "project_mode" and data[field] not in {
+                        "production",
+                        "training",
+                    }:
+                        raise ValueError(
+                            "Режим проекта должен быть production или training"
+                        )
+
+                    project[field] = data[field]
+
+            # Preserve the identity and all fields absent from this update.
+            project["project_name"] = project_name
+
+            write_json_atomically(project_file, project)
+
+            return project
 
     def list_projects(self):
 
@@ -259,33 +222,13 @@ class ProjectManager:
             ):
                 continue
 
-            project_file = os.path.join(
-                project_path,
-                "project.json"
-            )
-
-            if not os.path.exists(
-                project_file
-            ):
-                continue
-
             try:
-
-                with open(
-                    project_file,
-                    "r",
-                    encoding="utf-8"
-                ) as file:
-
-                    project = json.load(
-                        file
-                    )
-
-            except (
-                json.JSONDecodeError,
-                OSError
-            ):
-
+                project = self.get_project(name)
+            except FileNotFoundError:
+                # Folders without a card are not registered projects.
+                continue
+            except (ProjectStateCorruptionError, OSError, ValueError) as error:
+                logger.warning("Skipping unreadable project card %r: %s", name, error)
                 continue
 
             input_path = os.path.join(

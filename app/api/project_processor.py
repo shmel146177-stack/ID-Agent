@@ -17,6 +17,7 @@ from pydantic import BaseModel
 from app.services.project_processor import project_processor
 from app.services.project_package import project_package
 from app.services.project_manager import project_manager
+from app.services.project_service import ProjectStateCorruptionError
 from app.services.hidden_works_registry import hidden_works_registry
 from app.services.supporting_documents_registry import supporting_documents_registry
 from app.services.supporting_document_upload import (
@@ -155,6 +156,9 @@ def create_project(
             "status": "Проект готов",
             "project": project
         }
+
+    except ProjectStateCorruptionError:
+        raise
 
     except ValueError as error:
         raise HTTPException(
@@ -354,6 +358,9 @@ def get_project_card(
             project_name
         )
 
+    except ProjectStateCorruptionError:
+        raise
+
     except FileNotFoundError as error:
         raise HTTPException(
             status_code=404,
@@ -378,6 +385,9 @@ def update_project_card(
             project_name,
             card.model_dump(exclude_unset=True, exclude_none=True)
         )
+
+    except ProjectStateCorruptionError:
+        raise
 
     except ValueError as error:
         raise HTTPException(
