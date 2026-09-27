@@ -2,7 +2,7 @@ import re
 
 
 class ProjectMetadataAnalyzer:
-    """Извлечение основных реквизитов строительного проекта из текста PDF."""
+    """Extract construction project metadata from PDF text."""
 
     def _clean(self, value: str | None) -> str | None:
         if not value:
@@ -12,7 +12,6 @@ class ProjectMetadataAnalyzer:
         value = value.replace("\xa0", " ")
         value = re.sub(r"\s+", " ", value)
         value = value.strip(" \t\r\n:;_-")
-
         return value or None
 
     def _previous_text(
@@ -21,17 +20,12 @@ class ProjectMetadataAnalyzer:
         index: int,
         count: int = 2,
     ) -> str | None:
-        """Берёт несколько содержательных строк перед названием поля."""
-
+        """Collect content before a stamp label, omitting neighboring labels."""
         values = []
-
         for pos in range(index - 1, max(-1, index - count - 1), -1):
             line = self._clean(lines[pos])
-
             if not line:
                 continue
-
-            # Отсекаем служебные строки штампа чертежа.
             if line.lower() in {
                 "изм.",
                 "лист",
@@ -41,14 +35,13 @@ class ProjectMetadataAnalyzer:
                 "разработал",
                 "проверил",
                 "стадия",
+                "заказчик",
             }:
                 continue
-
             values.insert(0, line)
 
         if not values:
             return None
-
         return self._clean(" ".join(values))
 
     def _value_after_label(
@@ -56,45 +49,32 @@ class ProjectMetadataAnalyzer:
         line: str,
         label_pattern: str,
     ) -> str | None:
-        """Извлекает значение, если оно находится в той же строке после метки."""
-
         match = re.search(
             rf"{label_pattern}\s*:?\s*(.+)$",
             line,
             re.IGNORECASE,
         )
-
         if not match:
             return None
-
         return self._clean(match.group(1))
 
-    def analyze_text(self, text: str) -> dict:
-        result = {
+    def _first_match(self, lines: list[str], pattern: str) -> str | None:
+        for line in lines:
+            match = re.search(pattern, line, re.IGNORECASE)
+            if match:
+                return self._clean(match.group(1))
+        return None
+
+    def _title_page_metadata(self, lines: list[str]) -> dict[str, str | None]:
+        metadata = {
             "object_name": None,
             "address": None,
-            "customer": None,
-            "contractor": None,
-            "designer": None,
-            "chief_engineer": None,
-            "contract_number": None,
-        }
-
-        lines = text.splitlines()
-
-        # Титульные листы рабочих проектов часто не используют подписи полей,
-        # принятые в штампах. Сначала собираем их явные реквизиты, а ниже
-        # оставляем специализированные правила для штампов и актов.
-        for line in lines:
-            match = re.search(
+            "customer": self._first_match(
+                lines,
                 r"^\s*заказчик\s*[—–-]\s*(.+)$",
-                line,
-                re.IGNORECASE,
-            )
-            if match:
-                result["customer"] = self._clean(match.group(1))
-                break
-
+            ),
+            "designer": None,
+        }
         title_index = next(
             (
                 index
@@ -103,75 +83,56 @@ class ProjectMetadataAnalyzer:
             ),
             None,
         )
+        if title_index is None:
+            return metadata
 
-        if title_index is not None:
-            object_lines = []
-            for line in lines[max(0, title_index - 12):title_index]:
-                clean_line = self._clean(line)
-                if not clean_line:
-                    continue
-                if re.search(r"^строительство\b", clean_line, re.IGNORECASE):
-                    object_lines = [clean_line]
-                elif object_lines:
-                    object_lines.append(clean_line)
+        object_lines = []
+        for line in lines[max(0, title_index - 12) : title_index]:
+            clean_line = self._clean(line)
+            if not clean_line:
+                continue
+            if re.search(r"^строительство\b", clean_line, re.IGNORECASE):
+                object_lines = [clean_line]
+            elif object_lines:
+                object_lines.append(clean_line)
 
-            if object_lines:
-                result["object_name"] = self._clean(" ".join(object_lines))
-
-                address_match = re.search(
-                    r"(Московская\s+область\s*,.+?)(?:\s*\([^)]*МВА[^)]*\))?$",
-                    result["object_name"],
-                    re.IGNORECASE,
-                )
-                if address_match:
-                    result["address"] = self._clean(address_match.group(1))
-
-            header = " ".join(
-                self._clean(line) or ""
-                for line in lines[: min(title_index, 12)]
-            )
-            designer_match = re.search(
-                r"Общество\s+с\s+ограниченной\s+ответственностью\s+"
-                r"[«\"]([^»\"]+)[»\"]",
-                header,
+        if object_lines:
+            metadata["object_name"] = self._clean(" ".join(object_lines))
+            address_match = re.search(
+                r"(Московская\s+область\s*,.+?)(?:\s*\([^)]*МВА[^)]*\))?$",
+                metadata["object_name"],
                 re.IGNORECASE,
             )
-            if designer_match:
-                result["designer"] = f'ООО «{designer_match.group(1)}»'
+            if address_match:
+                metadata["address"] = self._clean(address_match.group(1))
 
-        # ---------------------------------------------------------
-        # Наименование объекта
-        # ---------------------------------------------------------
+        header = " ".join(
+            self._clean(line) or "" for line in lines[: min(title_index, 12)]
+        )
+        designer_match = re.search(
+            r"Общество\s+с\s+ограниченной\s+ответственностью\s+" r'[«"]([^»"]+)[»"]',
+            header,
+            re.IGNORECASE,
+        )
+        if designer_match:
+            metadata["designer"] = f"ООО «{designer_match.group(1)}»"
+        return metadata
 
+    def _stamp_object_name(self, lines: list[str]) -> str | None:
         for index, line in enumerate(lines):
-            if result["object_name"]:
-                break
             if not re.search(r"наименование\s+объекта", line, re.IGNORECASE):
                 continue
 
-            # В некоторых PDF значение стоит после названия поля.
-            value = self._value_after_label(
-                line,
-                r"наименование\s+объекта",
-            )
-
+            value = self._value_after_label(line, r"наименование\s+объекта")
             if value and len(value) > 15:
-                # Наименование может продолжаться через несколько строк.
                 for offset in range(1, 4):
                     if index + offset >= len(lines):
                         break
-
                     next_line = self._clean(lines[index + offset])
-
                     if not next_line:
                         continue
-
-                    # Пропускаем рамки и другой графический мусор.
-                    letters_count = sum(char.isalpha() for char in next_line)
-
-                    if letters_count < 8:
+                    if sum(char.isalpha() for char in next_line) < 8:
                         continue
-
                     if next_line.lower() in {
                         "изм.",
                         "лист",
@@ -182,211 +143,121 @@ class ProjectMetadataAnalyzer:
                         "проверил",
                     }:
                         continue
-
                     value = self._clean(f"{value} {next_line}")
                     break
+                return value
 
-                result["object_name"] = value
-                break
-
-            # В штампах значение часто находится перед надписью.
             value = self._previous_text(lines, index, count=2)
-
             if value and len(value) > 15:
-                result["object_name"] = value
-                break
+                return value
+        return None
 
-        # ---------------------------------------------------------
-        # Заказчик
-        # ---------------------------------------------------------
-
+    def _stamp_customer(self, lines: list[str]) -> str | None:
         for index, line in enumerate(lines):
-            if result["customer"]:
-                break
             if not re.search(r"^\s*заказчик\s*:?\s*$", line, re.IGNORECASE):
                 continue
-
             value = self._previous_text(lines, index, count=1)
-
-            if value and (
-                "ООО" in value
-                or "АО " in value
-                or "ПАО " in value
-                or "ИП " in value
-                or "ГБУ " in value
+            if value and any(
+                marker in value for marker in ("ООО", "АО ", "ПАО ", "ИП ", "ГБУ ")
             ):
-                result["customer"] = value
-                break
+                return value
+        return self._first_match(lines, r"организация\s+заказчика\s*:\s*(.+)")
 
-        # Если основной штамп не найден — используем альтернативное поле.
-        if not result["customer"]:
-            for line in lines:
-                match = re.search(
-                    r"организация\s+заказчика\s*:\s*(.+)",
-                    line,
-                    re.IGNORECASE,
-                )
+    def _contractor(self, lines: list[str]) -> str | None:
+        return self._first_match(
+            lines,
+            r"(?:генеральн\w*\s+подрядчик|"
+            r"подрядн\w*\s+организаци\w*|"
+            r"организаци\w*\s+подрядчика|"
+            r"подрядчик)\s*:\s*(.+)",
+        )
 
-                if match:
-                    result["customer"] = self._clean(match.group(1))
-                    break
+    def _contract_number(self, lines: list[str]) -> str | None:
+        return self._first_match(
+            lines,
+            r"(?:договор(?:\s+подряда)?|контракт)"
+            r"\s*(?:№|N(?:o)?\.?)\s*"
+            r"([0-9A-Za-zА-Яа-яЁё][0-9A-Za-zА-Яа-яЁё./_-]*)",
+        )
 
-        # ---------------------------------------------------------
-        # CONTRACTOR EXTRACTION
-
+    def _stamp_designer(self, lines: list[str]) -> str | None:
         for line in lines:
             match = re.search(
-                r"(?:\u0433\u0435\u043d\u0435\u0440\u0430\u043b\u044c\u043d\w*"
-                r"\s+\u043f\u043e\u0434\u0440\u044f\u0434\u0447\u0438\u043a|"
-                r"\u043f\u043e\u0434\u0440\u044f\u0434\u043d\w*\s+"
-                r"\u043e\u0440\u0433\u0430\u043d\u0438\u0437\u0430\u0446\u0438\w*|"
-                r"\u043e\u0440\u0433\u0430\u043d\u0438\u0437\u0430\u0446\u0438\w*"
-                r"\s+\u043f\u043e\u0434\u0440\u044f\u0434\u0447\u0438\u043a\u0430|"
-                r"\u043f\u043e\u0434\u0440\u044f\u0434\u0447\u0438\u043a)"
-                r"\s*:\s*(.+)",
+                r"проектная\s+организация\s*:\s*(.+)",
                 line,
                 re.IGNORECASE,
             )
-
-            if match:
-                result["contractor"] = self._clean(
-                    match.group(1)
-                )
-                break
-
-        # CONTRACT NUMBER EXTRACTION
-
-        for line in lines:
-            match = re.search(
-                r"(?:\u0434\u043e\u0433\u043e\u0432\u043e\u0440"
-                r"(?:\s+\u043f\u043e\u0434\u0440\u044f\u0434\u0430)?|"
-                r"\u043a\u043e\u043d\u0442\u0440\u0430\u043a\u0442)"
-                r"\s*(?:\u2116|N(?:o)?\.?)\s*"
-                r"([0-9A-Za-z\u0410-\u042f\u0430-\u044f\u0401\u0451]"
-                r"[0-9A-Za-z\u0410-\u042f\u0430-\u044f\u0401\u0451./_-]*)",
-                line,
-                re.IGNORECASE,
-            )
-
-            if match:
-                result["contract_number"] = self._clean(
-                    match.group(1)
-                )
-                break
-
-        # DESIGNER EXTRACTION
-        # Project organization
-        for line in lines:
-            if result["designer"]:
-                break
-            match = re.search(
-                r"\u043f\u0440\u043e\u0435\u043a\u0442\u043d\u0430\u044f\s+"
-                r"\u043e\u0440\u0433\u0430\u043d\u0438\u0437\u0430\u0446\u0438\u044f\s*:\s*(.+)",
-                line,
-                re.IGNORECASE,
-            )
-
             if not match:
                 continue
-
             value = self._clean(match.group(1))
-
             if not value:
                 continue
 
             ip_match = re.match(
-                r"^(\u0418\u041f\s+"
-                r"[\u0410-\u042f\u0401][\u0410-\u044f\u0401\u0451-]+"
-                r"(?:\s+[\u0410-\u042f\u0401]\.[\u0410-\u042f\u0401]\.)?)",
+                r"^(ИП\s+[А-ЯЁ][А-яЁё-]+" r"(?:\s+[А-ЯЁ]\.[А-ЯЁ]\.)?)",
                 value,
             )
-
             if ip_match:
-                result["designer"] = self._clean(ip_match.group(1))
-                break
+                return self._clean(ip_match.group(1))
 
             org_match = re.match(
-                r"^((?:\u041e\u041e\u041e|\u0410\u041e|\u041f\u0410\u041e|"
-                r"\u041e\u0410\u041e|\u0417\u0410\u041e|\u0413\u0411\u0423|"
-                r"\u0413\u0423\u041f|\u0424\u0413\u0423\u041f)\s+"
+                r"^((?:ООО|АО|ПАО|ОАО|ЗАО|ГБУ|ГУП|ФГУП)\s+"
                 r"(?:\"[^\"]+\"|[^;|]{2,80}))",
                 value,
             )
-
             if org_match:
-                result["designer"] = self._clean(org_match.group(1))
-                break
+                return self._clean(org_match.group(1))
+        return None
 
-        # ---------------------------------------------------------
-        # CHIEF ENGINEER EXTRACTION
+    def _chief_engineer(self, lines: list[str]) -> str | None:
         for line in lines:
             if not re.search(
-                r"\u0433\u043b\u0430\u0432\u043d\w*\s+"
-                r"\u0438\u043d\u0436\u0435\u043d\u0435\u0440\s+"
-                r"\u043f\u0440\u043e\u0435\u043a\u0442\u0430",
+                r"главн\w*\s+инженер\s+проекта",
                 line,
                 re.IGNORECASE,
             ):
                 continue
-
             match = re.search(
-                r"([\u0410-\u042f\u0401]"
-                r"[\u0410-\u044f\u0401\u0451-]+\s+"
-                r"[\u0410-\u042f\u0401]\."
-                r"[\u0410-\u042f\u0401]\.)",
+                r"([А-ЯЁ][А-яЁё-]+\s+[А-ЯЁ]\.[А-ЯЁ]\.)",
                 line,
             )
-
             if match:
-                result["chief_engineer"] = self._clean(
-                    match.group(1)
-                )
-                break
+                return self._clean(match.group(1))
+        return None
 
-        # ---------------------------------------------------------
-        # Адрес объекта
-        # ---------------------------------------------------------
-
+    def _stamp_address(self, lines: list[str]) -> str | None:
+        label_pattern = r"местоположение\s*\(адрес\)\s*объекта"
         for index, line in enumerate(lines):
-            if result["address"]:
-                break
-            if not re.search(
-                r"местоположение\s*\(адрес\)\s*объекта",
-                line,
-                re.IGNORECASE,
-            ):
+            if not re.search(label_pattern, line, re.IGNORECASE):
                 continue
-
-            value = self._value_after_label(
-                line,
-                r"местоположение\s*\(адрес\)\s*объекта",
-            )
-
+            value = self._value_after_label(line, label_pattern)
             if value and len(value) > 15:
-                result["address"] = value
-                break
-
-            # В реальных штампах адрес может располагаться перед названием поля.
+                return value
             value = self._previous_text(lines, index, count=2)
-
             if value and len(value) > 15:
-                result["address"] = value
-                break
+                return value
+        return self._first_match(lines, r"адрес\s+работ\s*:\s*(.+)")
 
-        # Резервный вариант — строка "Адрес работ".
-        if not result["address"]:
-            for line in lines:
-                match = re.search(
-                    r"адрес\s+работ\s*:\s*(.+)",
-                    line,
-                    re.IGNORECASE,
-                )
+    def analyze_text(self, text: str) -> dict:
+        lines = text.splitlines()
+        title = self._title_page_metadata(lines)
+        object_name = title["object_name"] or self._stamp_object_name(lines)
+        customer = title["customer"] or self._stamp_customer(lines)
+        contractor = self._contractor(lines)
+        contract_number = self._contract_number(lines)
+        designer = title["designer"] or self._stamp_designer(lines)
+        chief_engineer = self._chief_engineer(lines)
+        address = title["address"] or self._stamp_address(lines)
 
-                if match:
-                    result["address"] = self._clean(match.group(1))
-                    break
-
-        return result
+        return {
+            "object_name": object_name,
+            "address": address,
+            "customer": customer,
+            "contractor": contractor,
+            "designer": designer,
+            "chief_engineer": chief_engineer,
+            "contract_number": contract_number,
+        }
 
 
 project_metadata_analyzer = ProjectMetadataAnalyzer()
