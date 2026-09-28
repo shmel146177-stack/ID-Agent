@@ -92,6 +92,14 @@ Before proposing a code change:
 6. Run the full pytest suite.
 7. Review the diff before committing.
 ## Git safety
+User workflow updated on 2026-09-28:
+- Keep one current local checkout. Use Git history instead of full project copies.
+- After validating ID-Agent code changes, commit the scoped changes and push to
+  the configured GitHub remote, as authorized by the user. Never force-push.
+- Before removing an old copy, verify that its source files exist in Git history
+  or the current checkout. Preserve unique source documents and reports.
+- Use temporary test directories instead of cloning the project for each test run.
+
 - Do not run destructive Git commands.
 - Do not reset, clean, force-push, rebase, or delete branches unless explicitly requested.
 - Do not commit automatically unless explicitly requested.

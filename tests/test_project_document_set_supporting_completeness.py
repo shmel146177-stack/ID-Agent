@@ -68,7 +68,8 @@ def test_project_document_set_calculates_supporting_document_completeness(
     detected = section["detected"]
 
     assert detected["required_count"] == 2
-    assert detected["found_count"] == 1
+    assert detected["found_count"] == 0
+    assert detected["review_count"] == 1
     assert detected["missing_count"] == 1
     assert section["status"] == "Неполный комплект"
 
@@ -183,7 +184,10 @@ def test_project_document_set_does_not_count_wrong_supporting_document(
     assert detected["required_count"] == 1
     assert detected["found_count"] == 0
     assert detected["missing_count"] == 1
-    assert sections[0]["status"] == "\u041d\u0435\u043f\u043e\u043b\u043d\u044b\u0439 \u043a\u043e\u043c\u043f\u043b\u0435\u043a\u0442"
+    assert (
+        sections[0]["status"]
+        == "\u041d\u0435\u043f\u043e\u043b\u043d\u044b\u0439 \u043a\u043e\u043c\u043f\u043b\u0435\u043a\u0442"
+    )
 
 
 def test_project_document_set_counts_matching_supporting_document(
@@ -296,7 +300,10 @@ def test_project_document_set_counts_matching_supporting_document(
     assert detected["required_count"] == 1
     assert detected["found_count"] == 1
     assert detected["missing_count"] == 0
-    assert sections[0]["status"] == "\u041a\u043e\u043c\u043f\u043b\u0435\u043a\u0442 \u0441\u0444\u043e\u0440\u043c\u0438\u0440\u043e\u0432\u0430\u043d"
+    assert (
+        sections[0]["status"]
+        == "\u041a\u043e\u043c\u043f\u043b\u0435\u043a\u0442 \u0441\u0444\u043e\u0440\u043c\u0438\u0440\u043e\u0432\u0430\u043d"
+    )
 
 
 def test_project_document_set_does_not_count_unrelated_quality_documents(
@@ -553,8 +560,12 @@ def test_project_document_set_counts_matching_quality_document(
     assert section["actual_files_count"] == 1
     assert detected["required_count"] == 1
     assert detected["found_count"] == 1
+    assert detected["review_count"] == 0
     assert detected["missing_count"] == 0
-    assert section["status"] == "\u041a\u043e\u043c\u043f\u043b\u0435\u043a\u0442 \u0441\u0444\u043e\u0440\u043c\u0438\u0440\u043e\u0432\u0430\u043d"
+    assert (
+        section["status"]
+        == "\u041a\u043e\u043c\u043f\u043b\u0435\u043a\u0442 \u0441\u0444\u043e\u0440\u043c\u0438\u0440\u043e\u0432\u0430\u043d"
+    )
 
 
 def test_project_document_set_counts_matching_cable_test_protocol(
@@ -670,7 +681,10 @@ def test_project_document_set_counts_matching_cable_test_protocol(
     assert detected["required_count"] == 1
     assert detected["found_count"] == 1
     assert detected["missing_count"] == 0
-    assert section["status"] == "\u041a\u043e\u043c\u043f\u043b\u0435\u043a\u0442 \u0441\u0444\u043e\u0440\u043c\u0438\u0440\u043e\u0432\u0430\u043d"
+    assert (
+        section["status"]
+        == "\u041a\u043e\u043c\u043f\u043b\u0435\u043a\u0442 \u0441\u0444\u043e\u0440\u043c\u0438\u0440\u043e\u0432\u0430\u043d"
+    )
 
 
 def test_project_document_set_rejects_wrong_cable_test_protocol(
@@ -786,7 +800,10 @@ def test_project_document_set_rejects_wrong_cable_test_protocol(
     assert detected["required_count"] == 1
     assert detected["found_count"] == 0
     assert detected["missing_count"] == 1
-    assert section["status"] == "\u041d\u0435\u043f\u043e\u043b\u043d\u044b\u0439 \u043a\u043e\u043c\u043f\u043b\u0435\u043a\u0442"
+    assert (
+        section["status"]
+        == "\u041d\u0435\u043f\u043e\u043b\u043d\u044b\u0439 \u043a\u043e\u043c\u043f\u043b\u0435\u043a\u0442"
+    )
 
 
 def test_project_document_set_counts_matching_cable_entry_scheme(
@@ -903,7 +920,10 @@ def test_project_document_set_counts_matching_cable_entry_scheme(
     assert detected["required_count"] == 1
     assert detected["found_count"] == 1
     assert detected["missing_count"] == 0
-    assert section["status"] == "\u041a\u043e\u043c\u043f\u043b\u0435\u043a\u0442 \u0441\u0444\u043e\u0440\u043c\u0438\u0440\u043e\u0432\u0430\u043d"
+    assert (
+        section["status"]
+        == "\u041a\u043e\u043c\u043f\u043b\u0435\u043a\u0442 \u0441\u0444\u043e\u0440\u043c\u0438\u0440\u043e\u0432\u0430\u043d"
+    )
 
 
 def test_project_document_set_rejects_wrong_cable_entry_scheme(
@@ -1020,7 +1040,10 @@ def test_project_document_set_rejects_wrong_cable_entry_scheme(
     assert detected["required_count"] == 1
     assert detected["found_count"] == 0
     assert detected["missing_count"] == 1
-    assert section["status"] == "\u041d\u0435\u043f\u043e\u043b\u043d\u044b\u0439 \u043a\u043e\u043c\u043f\u043b\u0435\u043a\u0442"
+    assert (
+        section["status"]
+        == "\u041d\u0435\u043f\u043e\u043b\u043d\u044b\u0439 \u043a\u043e\u043c\u043f\u043b\u0435\u043a\u0442"
+    )
 
 
 def test_project_document_set_counts_matching_supports_scheme(
@@ -1137,7 +1160,10 @@ def test_project_document_set_counts_matching_supports_scheme(
     assert detected["required_count"] == 1
     assert detected["found_count"] == 1
     assert detected["missing_count"] == 0
-    assert section["status"] == "\u041a\u043e\u043c\u043f\u043b\u0435\u043a\u0442 \u0441\u0444\u043e\u0440\u043c\u0438\u0440\u043e\u0432\u0430\u043d"
+    assert (
+        section["status"]
+        == "\u041a\u043e\u043c\u043f\u043b\u0435\u043a\u0442 \u0441\u0444\u043e\u0440\u043c\u0438\u0440\u043e\u0432\u0430\u043d"
+    )
 
 
 def test_project_document_set_rejects_wrong_supports_scheme(
@@ -1254,7 +1280,10 @@ def test_project_document_set_rejects_wrong_supports_scheme(
     assert detected["required_count"] == 1
     assert detected["found_count"] == 0
     assert detected["missing_count"] == 1
-    assert section["status"] == "\u041d\u0435\u043f\u043e\u043b\u043d\u044b\u0439 \u043a\u043e\u043c\u043f\u043b\u0435\u043a\u0442"
+    assert (
+        section["status"]
+        == "\u041d\u0435\u043f\u043e\u043b\u043d\u044b\u0439 \u043a\u043e\u043c\u043f\u043b\u0435\u043a\u0442"
+    )
 
 
 def test_project_document_set_counts_matching_supports_quality_document(

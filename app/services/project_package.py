@@ -471,6 +471,11 @@ class ProjectPackage:
                     0,
                 )
 
+                section_data["review_count"] = detected.get(
+                    "review_count",
+                    0,
+                )
+
                 section_data["missing_count"] = detected.get(
                     "missing_count",
                     0,
@@ -509,6 +514,7 @@ class ProjectPackage:
         hidden_works_journal: dict,
         supporting_documents: dict,
         project_mode: str = "production",
+        document_sections: list[dict] | None = None,
     ) -> str:
 
         if project_mode == "training":
@@ -561,13 +567,22 @@ class ProjectPackage:
             if section.get("status") in incomplete_section_statuses:
                 return incomplete_status
 
+        if any(
+            (section.get("missing_count") or 0) > 0
+            for section in (document_sections or [])
+            if section.get("code")
+            in {"executive_schemes", "tests", "quality_documents"}
+        ):
+            return incomplete_status
+
         journal_status = hidden_works_journal.get("status")
 
         if (
             generated_acts.get(
                 "acts_detected",
                 0,
-            ) > 0
+            )
+            > 0
             and journal_status == not_formed_status
         ):
             return incomplete_status
@@ -582,13 +597,14 @@ class ProjectPackage:
                 False,
             )
             or journal_status == draft_status
+            or any(
+                (section.get("review_count") or 0) > 0
+                for section in (document_sections or [])
+            )
         ):
             return draft_status
 
-        return (
-            processor_result.get("status")
-            or "\u0413\u043e\u0442\u043e\u0432\u043e"
-        )
+        return processor_result.get("status") or "\u0413\u043e\u0442\u043e\u0432\u043e"
 
     def _create_manifest(
         self,
@@ -638,6 +654,7 @@ class ProjectPackage:
             hidden_works_journal,
             supporting_documents,
             project_mode=project_mode,
+            document_sections=document_sections,
         )
 
         files = inventory.get(
@@ -982,8 +999,6 @@ class ProjectPackage:
             "copied_files": (copied_files),
         }
 
-
-
     def create_zip(
         self,
         project_name: str,
@@ -991,24 +1006,16 @@ class ProjectPackage:
 
         package_result = self.create(project_name)
 
-        package_folder = Path(
-            package_result["package_folder"]
-        )
+        package_folder = Path(package_result["package_folder"])
 
-        output_folder = (
-            self._project_path(project_name)
-            / "output"
-        )
+        output_folder = self._project_path(project_name) / "output"
 
         output_folder.mkdir(
             parents=True,
             exist_ok=True,
         )
 
-        zip_path = (
-            output_folder
-            / f"Комплект_{project_name}.zip"
-        )
+        zip_path = output_folder / f"Комплект_{project_name}.zip"
 
         with zipfile.ZipFile(
             zip_path,
@@ -1016,18 +1023,14 @@ class ProjectPackage:
             zipfile.ZIP_DEFLATED,
         ) as archive:
 
-            for file_path in sorted(
-                package_folder.rglob("*")
-            ):
+            for file_path in sorted(package_folder.rglob("*")):
 
                 if not file_path.is_file():
                     continue
 
                 archive.write(
                     file_path,
-                    arcname=file_path.relative_to(
-                        package_folder
-                    ),
+                    arcname=file_path.relative_to(package_folder),
                 )
 
         return str(zip_path)

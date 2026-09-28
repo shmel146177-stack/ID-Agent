@@ -1,7 +1,9 @@
 from app.generators.project_report_generator import ProjectReportGenerator
 
 
-def test_report_enriches_supporting_sections_with_actual_file_counts(tmp_path, monkeypatch):
+def test_report_enriches_supporting_sections_with_actual_file_counts(
+    tmp_path, monkeypatch
+):
     generator = ProjectReportGenerator()
 
     executive_root = tmp_path / "executive_docs" / "Исполнительная_документация"
@@ -36,5 +38,6 @@ def test_report_enriches_supporting_sections_with_actual_file_counts(tmp_path, m
     section = result["sections"][0]
 
     assert section["required_count"] == 2
-    assert section["found_count"] == 1
+    assert section["found_count"] == 0
+    assert section["review_count"] == 1
     assert section["missing_count"] == 1

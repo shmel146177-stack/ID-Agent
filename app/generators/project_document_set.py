@@ -407,6 +407,121 @@ class ProjectDocumentSet:
 
         return files
 
+    def _supporting_section_completeness(
+        self,
+        project_name: str,
+        supporting_section: dict,
+        actual_files: list[dict],
+    ) -> dict:
+        """Separate matched requirements from files awaiting inspection."""
+        required_count = supporting_section.get("required_count", 0)
+        requirements = supporting_section.get("documents", [])
+        verifiable = [
+            requirement
+            for requirement in requirements
+            if any(
+                requirement.get(key)
+                for key in ("document_types", "match_keywords", "match_any_keywords")
+            )
+        ]
+        found_count = 0
+        review_limit = required_count
+
+        if verifiable and actual_files:
+            analysis_path = self._analysis_path(project_name)
+            project_analysis = self._load_json(analysis_path / "project_analysis.json")
+            page_analysis = self._load_json(analysis_path / "page_analysis.json")
+            if project_analysis.get("documents") and page_analysis.get("documents"):
+                actual_names = {item.get("name") for item in actual_files}
+                candidates = [
+                    document
+                    for document in supporting_document_matcher.build_documents(
+                        project_analysis, page_analysis
+                    )
+                    if document.get("filename") in actual_names
+                ]
+                matching = supporting_document_matcher.match_requirements(
+                    verifiable, candidates
+                )
+                found_count = matching["found_count"]
+                review_limit = max(required_count - len(verifiable), 0)
+
+        review_count = min(max(len(actual_files) - found_count, 0), review_limit)
+        missing_count = max(required_count - found_count - review_count, 0)
+
+        return {
+            "required_count": required_count,
+            "found_count": found_count,
+            "review_count": review_count,
+            "missing_count": missing_count,
+            "high_priority_count": supporting_section.get("high_priority_count", 0),
+            "documents": requirements,
+        }
+
+    def _new_section(self, folder: dict, actual_files: list[dict]) -> dict:
+        return {
+            "number": folder["number"],
+            "code": folder["code"],
+            "title": folder["title"],
+            "folder": folder["folder"],
+            "path": folder["path"],
+            "description": folder["description"],
+            "status": "Ожидает документов",
+            "detected": {},
+            "actual_files_count": len(actual_files),
+            "actual_files": actual_files,
+        }
+
+    def _add_hidden_works_section(
+        self, section: dict, hidden_works_result: dict, actual_files: list[dict]
+    ) -> None:
+        hidden_data = self._build_hidden_works_data(hidden_works_result)
+        hidden_data["created_files_count"] = len(actual_files)
+        hidden_data["created_files"] = actual_files
+        section["detected"] = hidden_data
+
+        if hidden_data.get("acts_count", 0) > 0:
+            section["status"] = (
+                "Черновики сформированы. Требует подтверждения"
+                if actual_files
+                else "Требует подтверждения"
+            )
+        elif actual_files:
+            section["status"] = "Документы обнаружены"
+        else:
+            section["status"] = "АОСР автоматически не определены"
+
+    def _add_supporting_section(
+        self,
+        project_name: str,
+        section: dict,
+        supporting_section: dict,
+        actual_files: list[dict],
+    ) -> None:
+        if supporting_section:
+            detected = self._supporting_section_completeness(
+                project_name, supporting_section, actual_files
+            )
+            if actual_files:
+                detected["files_count"] = len(actual_files)
+                detected["files"] = actual_files
+            section["detected"] = detected
+
+            if detected["missing_count"] > 0:
+                section["status"] = "Неполный комплект"
+            elif detected["review_count"] > 0:
+                section["status"] = "Требует проверки"
+            elif detected["required_count"] > 0:
+                section["status"] = "Комплект сформирован"
+            elif actual_files:
+                section["status"] = "Документы обнаружены"
+        elif actual_files:
+            section["detected"] = {
+                "files_count": len(actual_files),
+                "files": actual_files,
+            }
+            section["status"] = "Документы обнаружены"
+
     def _build_sections(
         self,
         project_name: str,
@@ -414,14 +529,11 @@ class ProjectDocumentSet:
         hidden_works_result: dict,
         supporting_documents_result: dict | None = None,
     ) -> list[dict]:
-
         detected = self._detected_documents(project_name)
-
         if supporting_documents_result is None:
             supporting_documents_result = supporting_documents_registry.analyze_project(
                 project_name
             )
-
         supporting_by_code = {
             item.get("code"): item
             for item in supporting_documents_result.get("sections", [])
@@ -429,243 +541,39 @@ class ProjectDocumentSet:
         }
 
         sections = []
-
         for folder in folders:
-
             code = folder["code"]
-
             actual_files = self._list_section_files(folder["path"])
-
-            section = {
-                "number": (folder["number"]),
-                "code": code,
-                "title": (folder["title"]),
-                "folder": (folder["folder"]),
-                "path": (folder["path"]),
-                "description": (folder["description"]),
-                "status": ("Ожидает документов"),
-                "detected": {},
-                "actual_files_count": (len(actual_files)),
-                "actual_files": (actual_files),
-            }
-
-            # -----------------------------------------------------
-            # 01. ИСХОДНЫЕ ДОКУМЕНТЫ
-            # 02. РАБОЧАЯ ДОКУМЕНТАЦИЯ
-            # -----------------------------------------------------
+            section = self._new_section(folder, actual_files)
 
             if code in detected:
-
                 section["detected"] = detected[code]
-
                 if section["detected"]:
-
                     section["status"] = "Документы обнаружены"
-
-            # -----------------------------------------------------
-            # 03. АОСР
-            # -----------------------------------------------------
-
-            if code == "hidden_works_acts":
-
-                hidden_data = self._build_hidden_works_data(hidden_works_result)
-
-                hidden_data["created_files_count"] = len(actual_files)
-
-                hidden_data["created_files"] = actual_files
-
-                section["detected"] = hidden_data
-
-                acts_count = hidden_data.get(
-                    "acts_count",
-                    0,
+            elif code == "hidden_works_acts":
+                self._add_hidden_works_section(
+                    section, hidden_works_result, actual_files
                 )
-
-                if acts_count > 0 and actual_files:
-
-                    section["status"] = (
-                        "Черновики сформированы. " "Требует подтверждения"
-                    )
-
-                elif acts_count > 0:
-
-                    section["status"] = "Требует подтверждения"
-
-                elif actual_files:
-
-                    section["status"] = "Документы обнаружены"
-
-                else:
-
-                    section["status"] = "АОСР автоматически " "не определены"
-
-            # -----------------------------------------------------
-            # 04-07. ФАКТИЧЕСКИЕ ФАЙЛЫ
-            # -----------------------------------------------------
-
-            if code in {
-                "executive_schemes",
-                "tests",
-                "quality_documents",
-                "journals",
-            }:
-
-                supporting_section = supporting_by_code.get(code, {})
-
-                if code != "journals" and supporting_section:
-
-                    required_count = supporting_section.get(
-                        "required_count",
-                        0,
-                    )
-
-                    requirements = supporting_section.get(
-                        "documents",
-                        [],
-                    )
-
-                    verifiable_requirements = [
-                        requirement
-                        for requirement in requirements
-                        if requirement.get("document_types")
-                        or requirement.get("match_keywords")
-                    ]
-
-                    project_analysis = self._load_json(
-                        self._analysis_path(project_name)
-                        / "project_analysis.json"
-                    )
-
-                    page_analysis = self._load_json(
-                        self._analysis_path(project_name)
-                        / "page_analysis.json"
-                    )
-
-                    analysis_available = bool(
-                        project_analysis.get("documents")
-                        and page_analysis.get("documents")
-                    )
-
-                    if verifiable_requirements and analysis_available:
-
-                        analysis_documents = (
-                            supporting_document_matcher.build_documents(
-                                project_analysis,
-                                page_analysis,
-                            )
-                        )
-
-                        actual_file_names = {
-                            item.get("name")
-                            for item in actual_files
-                            if item.get("name")
-                        }
-
-                        candidate_documents = [
-                            document
-                            for document in analysis_documents
-                            if document.get("filename")
-                            in actual_file_names
-                        ]
-
-                        match_result = (
-                            supporting_document_matcher.match_requirements(
-                                verifiable_requirements,
-                                candidate_documents,
-                            )
-                        )
-
-                        exact_found_count = match_result.get(
-                            "found_count",
-                            0,
-                        )
-
-                        unverified_required_count = max(
-                            required_count
-                            - len(verifiable_requirements),
-                            0,
-                        )
-
-                        remaining_file_count = max(
-                            len(actual_files)
-                            - exact_found_count,
-                            0,
-                        )
-
-                        fallback_found_count = min(
-                            remaining_file_count,
-                            unverified_required_count,
-                        )
-
-                        found_count = (
-                            exact_found_count
-                            + fallback_found_count
-                        )
-
-                    else:
-
-                        found_count = min(
-                            len(actual_files),
-                            required_count,
-                        )
-
-                    missing_count = max(
-                        required_count - found_count,
-                        0,
-                    )
-
-                    section["detected"] = {
-                        "required_count": required_count,
-                        "found_count": found_count,
-                        "missing_count": missing_count,
-                        "high_priority_count": (
-                            supporting_section.get("high_priority_count", 0)
-                        ),
-                        "documents": (
-                            supporting_section.get("documents", [])
-                        ),
-                    }
-
-                    if actual_files:
-                        section["detected"]["files_count"] = len(actual_files)
-                        section["detected"]["files"] = actual_files
-
-                    if missing_count > 0:
-                        section["status"] = "Неполный комплект"
-
-                    elif required_count > 0:
-                        section["status"] = "Комплект сформирован"
-
-                    elif actual_files:
-                        section["status"] = "Документы обнаружены"
-
-                elif actual_files:
-
-                    section["detected"] = {
-                        "files_count": len(actual_files),
-                        "files": actual_files,
-                    }
-
-                    if code == "journals":
-                        section["status"] = "Документы сформированы"
-                    else:
-                        section["status"] = "Документы обнаружены"
-
-            # -----------------------------------------------------
-            # 08. ИТОГОВЫЕ ДОКУМЕНТЫ
-            # -----------------------------------------------------
-
-            if code == "final_documents":
-
-                final_files = self._output_documents(project_name)
-
+            elif code in {"executive_schemes", "tests", "quality_documents"}:
+                self._add_supporting_section(
+                    project_name,
+                    section,
+                    supporting_by_code.get(code, {}),
+                    actual_files,
+                )
+            elif code == "journals" and actual_files:
                 section["detected"] = {
-                    "files_count": (len(final_files)),
-                    "files": (final_files),
+                    "files_count": len(actual_files),
+                    "files": actual_files,
                 }
-
+                section["status"] = "Документы сформированы"
+            elif code == "final_documents":
+                final_files = self._output_documents(project_name)
+                section["detected"] = {
+                    "files_count": len(final_files),
+                    "files": final_files,
+                }
                 if final_files:
-
                     section["status"] = "Документы сформированы"
 
             sections.append(section)

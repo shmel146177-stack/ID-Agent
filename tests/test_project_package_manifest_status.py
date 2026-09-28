@@ -1,6 +1,5 @@
 from app.services.project_package import ProjectPackage
 
-
 READY = "\u0413\u043e\u0442\u043e\u0432\u043e"
 
 INCOMPLETE = (
@@ -20,8 +19,7 @@ WAITING_DOCUMENTS = (
 )
 
 NOT_FORMED = (
-    "\u041d\u0435 "
-    "\u0441\u0444\u043e\u0440\u043c\u0438\u0440\u043e\u0432\u0430\u043d"
+    "\u041d\u0435 " "\u0441\u0444\u043e\u0440\u043c\u0438\u0440\u043e\u0432\u0430\u043d"
 )
 
 
@@ -53,9 +51,7 @@ def resolve_status(
             "status": journal_status,
         },
         {
-            "requires_field_confirmation": (
-                supporting_confirmation
-            ),
+            "requires_field_confirmation": (supporting_confirmation),
             "sections": supporting_sections or [],
         },
         project_mode=project_mode,
@@ -68,6 +64,34 @@ def test_manifest_status_is_incomplete_when_sheet_is_missing():
         missing_count=1,
     )
 
+    assert status == INCOMPLETE
+
+
+def test_manifest_status_reflects_document_section_review():
+    package = ProjectPackage()
+    status = package._resolve_manifest_status(
+        {"status": READY, "completeness": {}},
+        {},
+        {"status": READY},
+        {},
+        document_sections=[
+            {"code": "executive_schemes", "review_count": 1, "missing_count": 0}
+        ],
+    )
+    assert status == DRAFT
+
+
+def test_manifest_status_prioritizes_missing_documents_over_review():
+    package = ProjectPackage()
+    status = package._resolve_manifest_status(
+        {"status": READY, "completeness": {}},
+        {},
+        {"status": READY},
+        {},
+        document_sections=[
+            {"code": "executive_schemes", "review_count": 1, "missing_count": 1}
+        ],
+    )
     assert status == INCOMPLETE
 
 

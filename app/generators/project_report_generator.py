@@ -704,8 +704,7 @@ class ProjectReportGenerator:
         document_set = ProjectDocumentSet()
 
         folder_by_code = {
-            section["code"]: section["folder"]
-            for section in document_set.SECTIONS
+            section["code"]: section["folder"] for section in document_set.SECTIONS
         }
 
         executive_root = (
@@ -733,18 +732,12 @@ class ProjectReportGenerator:
                         executive_root / folder_name
                     )
 
-                required_count = section.get("required_count", 0)
-                found_count = min(
-                    len(actual_files),
-                    required_count,
+                completeness = document_set._supporting_section_completeness(
+                    project_name, section, actual_files
                 )
-                missing_count = max(
-                    required_count - found_count,
-                    0,
-                )
-
-                enriched["found_count"] = found_count
-                enriched["missing_count"] = missing_count
+                enriched["found_count"] = completeness["found_count"]
+                enriched["review_count"] = completeness["review_count"]
+                enriched["missing_count"] = completeness["missing_count"]
 
             enriched_sections.append(enriched)
 
@@ -796,6 +789,7 @@ class ProjectReportGenerator:
             required_count = section.get("required_count", 0)
 
             found_count = section.get("found_count")
+            review_count = section.get("review_count")
             missing_count = section.get("missing_count")
 
             paragraph = document.add_paragraph()
@@ -805,7 +799,8 @@ class ProjectReportGenerator:
 
             if found_count is not None and missing_count is not None:
                 run.add_text(
-                    f", \u043d\u0430\u0439\u0434\u0435\u043d\u043e: {found_count}, "
+                    f", \u0441\u043e\u0432\u043f\u0430\u0434\u0435\u043d\u0438\u0439 \u043f\u043e \u0430\u043d\u0430\u043b\u0438\u0437\u0443: {found_count}, "
+                    f"\u0442\u0440\u0435\u0431\u0443\u0435\u0442 \u043f\u0440\u043e\u0432\u0435\u0440\u043a\u0438: {review_count or 0}, "
                     f"\u043e\u0442\u0441\u0443\u0442\u0441\u0442\u0432\u0443\u0435\u0442: {missing_count}"
                 )
             run.bold = True
@@ -831,7 +826,6 @@ class ProjectReportGenerator:
                     text,
                     style="List Bullet",
                 )
-
 
     def _add_conclusion(
         self,
