@@ -100,6 +100,89 @@ def test_supporting_section_separates_matches_review_and_missing(
     ) == expected
 
 
+@pytest.mark.parametrize(
+    (
+        "project_filenames",
+        "page_filenames",
+        "failed_filename",
+        "extra_requirement",
+        "expected",
+    ),
+    [
+        (["cable.pdf"], ["cable.pdf"], None, False, (1, 1, 0)),
+        (["cable.pdf", "ground.pdf"], ["cable.pdf"], None, False, (1, 1, 0)),
+        (["cable.pdf", "ground.pdf"], [], None, False, (0, 2, 0)),
+        (
+            ["cable.pdf", "ground.pdf"],
+            ["cable.pdf", "ground.pdf"],
+            "ground.pdf",
+            False,
+            (1, 1, 0),
+        ),
+        (["cable.pdf"], ["cable.pdf"], None, True, (1, 1, 1)),
+        (
+            ["cable.pdf", "ground.pdf"],
+            ["cable.pdf", "ground.pdf"],
+            None,
+            False,
+            (2, 0, 0),
+        ),
+    ],
+)
+def test_partial_analysis_keeps_unanalysed_files_for_review(
+    monkeypatch,
+    tmp_path,
+    project_filenames,
+    page_filenames,
+    failed_filename,
+    extra_requirement,
+    expected,
+):
+    document_set = ProjectDocumentSet()
+    monkeypatch.setattr(document_set, "_analysis_path", lambda name: tmp_path)
+
+    def load_analysis(path):
+        if path.name == "project_analysis.json":
+            return {
+                "documents": [
+                    {
+                        "filename": filename,
+                        "classification": "Схема",
+                        "status": (
+                            "Ошибка" if filename == failed_filename else "Обработан"
+                        ),
+                    }
+                    for filename in project_filenames
+                ]
+            }
+        return {
+            "documents": [
+                {"filename": filename, "pages": [{"text": filename.split(".")[0]}]}
+                for filename in page_filenames
+            ]
+        }
+
+    monkeypatch.setattr(document_set, "_load_json", load_analysis)
+    requirements = [
+        {"code": "cable", "match_keywords": ["cable"]},
+        {"code": "ground", "match_keywords": ["ground"]},
+    ]
+    if extra_requirement:
+        requirements.append({"code": "third", "match_keywords": ["third"]})
+    section = {"required_count": len(requirements), "documents": requirements}
+    files = [{"name": "cable.pdf"}, {"name": "ground.pdf"}]
+
+    result = document_set._supporting_section_completeness(
+        "TEST_PROJECT", section, files
+    )
+
+    assert (
+        result["found_count"],
+        result["review_count"],
+        result["missing_count"],
+    ) == expected
+
+
 def test_report_uses_same_review_count(monkeypatch, tmp_path):
     report = ProjectReportGenerator()
     monkeypatch.setattr(report, "_project_path", lambda name: tmp_path)

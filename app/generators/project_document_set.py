@@ -431,22 +431,39 @@ class ProjectDocumentSet:
             analysis_path = self._analysis_path(project_name)
             project_analysis = self._load_json(analysis_path / "project_analysis.json")
             page_analysis = self._load_json(analysis_path / "page_analysis.json")
-            if project_analysis.get("documents") and page_analysis.get("documents"):
-                actual_names = {item.get("name") for item in actual_files}
-                candidates = [
-                    document
-                    for document in supporting_document_matcher.build_documents(
-                        project_analysis, page_analysis
-                    )
-                    if document.get("filename") in actual_names
-                ]
-                matching = supporting_document_matcher.match_requirements(
-                    verifiable, candidates
+            page_names = {
+                document.get("filename")
+                for document in page_analysis.get("documents", [])
+                if document.get("filename")
+            }
+            analyzed_names = {
+                document.get("filename")
+                for document in project_analysis.get("documents", [])
+                if document.get("filename") in page_names
+                and document.get("status", "Обработан") == "Обработан"
+            }
+            actual_names = {item.get("name") for item in actual_files}
+            candidates = [
+                document
+                for document in supporting_document_matcher.build_documents(
+                    project_analysis, page_analysis
                 )
-                found_count = matching["found_count"]
-                review_limit = max(required_count - len(verifiable), 0)
+                if document.get("filename") in analyzed_names
+                and document.get("filename") in actual_names
+            ]
+            found_count = supporting_document_matcher.match_requirements(
+                verifiable, candidates
+            )["found_count"]
+            unanalysed_count = sum(
+                item.get("name") not in analyzed_names for item in actual_files
+            )
+            review_limit = max(required_count - len(verifiable), 0) + unanalysed_count
 
-        review_count = min(max(len(actual_files) - found_count, 0), review_limit)
+        review_count = min(
+            max(len(actual_files) - found_count, 0),
+            max(required_count - found_count, 0),
+            review_limit,
+        )
         missing_count = max(required_count - found_count - review_count, 0)
 
         return {
