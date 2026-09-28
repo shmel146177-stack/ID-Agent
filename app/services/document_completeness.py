@@ -66,20 +66,14 @@ class DocumentCompleteness:
     ) -> bool:
 
         analysis_path = (
-            safe_project_path(project_name)
-            / "analysis"
-            / "page_analysis.json"
+            safe_project_path(project_name) / "analysis" / "page_analysis.json"
         )
 
         if not analysis_path.exists():
             return False
 
         try:
-            data = json.loads(
-                analysis_path.read_text(
-                    encoding="utf-8"
-                )
-            )
+            data = json.loads(analysis_path.read_text(encoding="utf-8"))
         except (
             OSError,
             json.JSONDecodeError,
@@ -112,10 +106,7 @@ class DocumentCompleteness:
             ):
                 continue
 
-            if (
-                set(page_types.keys())
-                & project_page_markers
-            ):
+            if set(page_types.keys()) & project_page_markers:
                 return True
 
         return False
@@ -171,6 +162,14 @@ class DocumentCompleteness:
 
         classifications = self._collect_classifications(registry)
 
+        files_by_type = {}
+        for registry_document in registry.get("documents", []):
+            classification = registry_document.get("classification")
+            if classification and registry_document.get("filename"):
+                files_by_type.setdefault(classification, []).append(
+                    registry_document.get("filename")
+                )
+
         documents = []
 
         found_count = 0
@@ -188,6 +187,12 @@ class DocumentCompleteness:
                     "document_type": (document_type),
                     "present": present,
                     "status": ("Есть" if present else "Отсутствует"),
+                    "basis": {
+                        "required_type": document_type,
+                        "matched_files": files_by_type.get(document_type, []),
+                        "rule": "Точное совпадение классификации документа",
+                        "engineer_confirmation_required": True,
+                    },
                 }
             )
 
@@ -298,6 +303,17 @@ class DocumentCompleteness:
                             "Нет",
                         )
                     ),
+                    "basis": {
+                        "register_file": match.get("register_filename"),
+                        "register_sheet": match.get("sheet_number"),
+                        "matched_file": match.get("matched_filename"),
+                        "matched_page": match.get("matched_page"),
+                        "matched_source": match.get("matched_source"),
+                        "matched_phrases": match.get("matched_phrases", []),
+                        "score": match.get("score", 0),
+                        "minimum_score": drawing_sheet_matcher.MIN_MATCH_SCORE,
+                        "engineer_confirmation_required": True,
+                    },
                 }
             )
 
@@ -309,9 +325,7 @@ class DocumentCompleteness:
         status = (
             "Комплектность не определена"
             if not determined
-            else "Полный комплект"
-            if missing_count == 0
-            else "Неполный комплект"
+            else "Полный комплект" if missing_count == 0 else "Неполный комплект"
         )
 
         return {

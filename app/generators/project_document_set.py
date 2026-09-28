@@ -426,8 +426,10 @@ class ProjectDocumentSet:
         ]
         found_count = 0
         review_limit = required_count
+        matched_by_code = {}
+        analyzed_names = set()
 
-        if verifiable and actual_files:
+        if actual_files:
             analysis_path = self._analysis_path(project_name)
             project_analysis = self._load_json(analysis_path / "project_analysis.json")
             page_analysis = self._load_json(analysis_path / "page_analysis.json")
@@ -443,17 +445,22 @@ class ProjectDocumentSet:
                 and document.get("status", "Обработан") == "Обработан"
             }
             actual_names = {item.get("name") for item in actual_files}
-            candidates = [
-                document
-                for document in supporting_document_matcher.build_documents(
-                    project_analysis, page_analysis
+            if verifiable:
+                candidates = [
+                    document
+                    for document in supporting_document_matcher.build_documents(
+                        project_analysis, page_analysis
+                    )
+                    if document.get("filename") in analyzed_names
+                    and document.get("filename") in actual_names
+                ]
+                matching = supporting_document_matcher.match_requirements(
+                    verifiable, candidates
                 )
-                if document.get("filename") in analyzed_names
-                and document.get("filename") in actual_names
-            ]
-            found_count = supporting_document_matcher.match_requirements(
-                verifiable, candidates
-            )["found_count"]
+                found_count = matching["found_count"]
+                matched_by_code = {
+                    item["requirement_code"]: item for item in matching["matched"]
+                }
             unanalysed_count = sum(
                 item.get("name") not in analyzed_names for item in actual_files
             )
@@ -465,6 +472,60 @@ class ProjectDocumentSet:
             review_limit,
         )
         missing_count = max(required_count - found_count - review_count, 0)
+        files_by_name = {item.get("name"): item for item in actual_files}
+        unanalysed_files = [
+            item for item in actual_files if item.get("name") not in analyzed_names
+        ]
+        matched_names = {item["filename"] for item in matched_by_code.values()}
+        review_candidates = [
+            item for item in actual_files if item.get("name") not in matched_names
+        ]
+        assessments = []
+        for requirement in requirements:
+            matched = matched_by_code.get(requirement.get("code"))
+            basis = {
+                "requirement_reason": requirement.get("reason"),
+                "source_act": requirement.get("source_act"),
+                "source_evidence": requirement.get("evidence", []),
+                "match_rule": {
+                    key: requirement[key]
+                    for key in (
+                        "document_types",
+                        "match_keywords",
+                        "match_any_keywords",
+                    )
+                    if requirement.get(key)
+                },
+            }
+            if matched:
+                basis["matched_file"] = files_by_name.get(matched["filename"])
+                basis["classification"] = matched.get("classification")
+                status = "Совпадение по анализу"
+            elif unanalysed_files or (not basis["match_rule"] and review_candidates):
+                basis["review_candidates"] = (
+                    unanalysed_files if basis["match_rule"] else review_candidates
+                )
+                basis["note"] = (
+                    "Соответствие этому требованию не установлено. "
+                    "Кандидаты не закреплены за требованиями."
+                )
+                status = "Не подтверждено; требуется проверка"
+            else:
+                basis["note"] = (
+                    "Среди файлов раздела совпадение по заданному правилу не найдено."
+                    if actual_files
+                    else "В разделе нет файлов."
+                )
+                status = "Не обнаружено"
+            assessments.append(
+                {
+                    "requirement_code": requirement.get("code"),
+                    "title": requirement.get("title"),
+                    "status": status,
+                    "engineer_confirmation_required": True,
+                    "basis": basis,
+                }
+            )
 
         return {
             "required_count": required_count,
@@ -473,6 +534,15 @@ class ProjectDocumentSet:
             "missing_count": missing_count,
             "high_priority_count": supporting_section.get("high_priority_count", 0),
             "documents": requirements,
+            "requirement_assessments": assessments,
+            "review_candidates": review_candidates,
+            "count_basis": {
+                "matched_requirements": found_count,
+                "unanalysed_files": len(unanalysed_files),
+                "unconfirmed_requirement_slots": review_count,
+                "minimum_missing_requirements": missing_count,
+                "note": "Кандидаты не сопоставлены с конкретными требованиями.",
+            },
         }
 
     def _new_section(self, folder: dict, actual_files: list[dict]) -> dict:

@@ -446,9 +446,10 @@ class DrawingSheetMatcher:
             # Для "Общие данные" она является
             # допустимым кандидатом, поскольку
             # ведомость находится именно на этом листе.
-            if title != "Общие данные" and (
-                page.get("filename"), page_number
-            ) in register_pages:
+            if (
+                title != "Общие данные"
+                and (page.get("filename"), page_number) in register_pages
+            ):
                 continue
 
             (
@@ -510,6 +511,7 @@ class DrawingSheetMatcher:
 
         result = {
             "sheet_number": (entry.get("sheet_number")),
+            "register_filename": register_filename,
             "designation": entry.get("designation"),
             "number_source": (entry.get("number_source")),
             "title": title,
@@ -606,9 +608,11 @@ class DrawingSheetMatcher:
             "status": (
                 "Ведомость рабочих чертежей не найдена — комплектность не определена"
                 if expected_count == 0
-                else "Полный комплект листов"
-                if missing_count == 0
-                else "Есть отсутствующие листы"
+                else (
+                    "Полный комплект листов"
+                    if missing_count == 0
+                    else "Есть отсутствующие листы"
+                )
             ),
             "determined": expected_count > 0,
             "expected_count": (expected_count),

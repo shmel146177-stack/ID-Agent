@@ -647,6 +647,25 @@ class ProjectReportGenerator:
                 )
             )
 
+        for item in documents:
+            basis = item.get("basis") or {}
+            if not basis:
+                continue
+            source = basis.get("register_file") or "ведомость"
+            sheet = basis.get("register_sheet")
+            target = basis.get("matched_file") or "не найден"
+            page = basis.get("matched_page")
+            phrases = ", ".join(basis.get("matched_phrases") or []) or "нет"
+            document.add_paragraph(
+                f'Лист {item.get("sheet_number")}: основание — {source}, '
+                f"позиция {sheet}; PDF — {target}, страница "
+                f'{page if page is not None else "не определена"}; '
+                f"совпавшие признаки — {phrases}; "
+                f'оценка {basis.get("score", 0)} при пороге '
+                f'{basis.get("minimum_score")}. Требуется проверка инженером.',
+                style="List Bullet",
+            )
+
     def _add_missing_sheets(
         self,
         document: Document,
@@ -738,6 +757,11 @@ class ProjectReportGenerator:
                 enriched["found_count"] = completeness["found_count"]
                 enriched["review_count"] = completeness["review_count"]
                 enriched["missing_count"] = completeness["missing_count"]
+                enriched["requirement_assessments"] = completeness[
+                    "requirement_assessments"
+                ]
+                enriched["review_candidates"] = completeness["review_candidates"]
+                enriched["count_basis"] = completeness["count_basis"]
 
             enriched_sections.append(enriched)
 
@@ -825,6 +849,48 @@ class ProjectReportGenerator:
                 document.add_paragraph(
                     text,
                     style="List Bullet",
+                )
+
+            for assessment in section.get("requirement_assessments", []):
+                basis = assessment["basis"]
+                parts = [
+                    f'{assessment.get("title") or assessment.get("requirement_code")}: '
+                    f'{assessment["status"]}'
+                ]
+                if basis.get("requirement_reason"):
+                    parts.append(
+                        f'основание требования — {basis["requirement_reason"]}'
+                    )
+                source_act = basis.get("source_act") or {}
+                if source_act.get("code"):
+                    parts.append(f'исходный акт — {source_act["code"]}')
+                source_sheets = [
+                    str(evidence["sheet_number"])
+                    for evidence in basis.get("source_evidence", [])
+                    if evidence.get("sheet_number") is not None
+                ]
+                if source_sheets:
+                    parts.append(f'листы исходных данных — {", ".join(source_sheets)}')
+                matched_file = basis.get("matched_file") or {}
+                if matched_file.get("name"):
+                    parts.append(f'файл — {matched_file["name"]}')
+                if basis.get("classification"):
+                    parts.append(f'классификация — {basis["classification"]}')
+                if basis.get("match_rule"):
+                    parts.append(f'правило — {basis["match_rule"]}')
+                if basis.get("note"):
+                    parts.append(basis["note"])
+                document.add_paragraph("; ".join(parts), style="List Bullet")
+
+            count_basis = section.get("count_basis")
+            if count_basis:
+                document.add_paragraph(
+                    "Основание итоговых чисел: "
+                    f'совпадений — {count_basis["matched_requirements"]}; '
+                    f'файлов без полного анализа — {count_basis["unanalysed_files"]}; '
+                    f'позиций для проверки — {count_basis["unconfirmed_requirement_slots"]}; '
+                    f'минимум отсутствующих — {count_basis["minimum_missing_requirements"]}. '
+                    "Совпадения требуют подтверждения инженером."
                 )
 
     def _add_conclusion(

@@ -490,6 +490,13 @@ class ProjectPackage:
                     "documents",
                     [],
                 )
+                section_data["requirement_assessments"] = detected.get(
+                    "requirement_assessments", []
+                )
+                section_data["review_candidates"] = detected.get(
+                    "review_candidates", []
+                )
+                section_data["count_basis"] = detected.get("count_basis", {})
 
             elif code == "final_documents":
 
