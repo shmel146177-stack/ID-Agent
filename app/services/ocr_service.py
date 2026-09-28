@@ -1,4 +1,3 @@
-import io
 import os
 
 import fitz
@@ -93,9 +92,7 @@ class OCRService:
             alpha=False,
         )
 
-        image_bytes = pixmap.tobytes("png")
-
-        return Image.open(io.BytesIO(image_bytes))
+        return Image.frombytes("RGB", (pixmap.width, pixmap.height), pixmap.samples)
 
     def recognize_page(
         self,
@@ -207,10 +204,7 @@ class OCRService:
 
         left, top, right, bottom = region
 
-        if not (
-            0 <= left < right <= 1
-            and 0 <= top < bottom <= 1
-        ):
+        if not (0 <= left < right <= 1 and 0 <= top < bottom <= 1):
             raise ValueError("Область OCR должна находиться в пределах страницы")
 
         document = fitz.open(file_path)
