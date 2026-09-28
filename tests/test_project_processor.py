@@ -5,16 +5,24 @@ from app.services.project_processor import ProjectProcessor
 def test_project_processor_pipeline(monkeypatch):
     project_name = "TEST_PROJECT"
 
+    def scan(name):
+        assert processor_module.ocr_service._run_pages.get() is not None
+        return {"status": "scan_ok"}
+
+    def analyze_pages(name):
+        assert processor_module.ocr_service._run_pages.get() is not None
+        return {"status": "page_analysis_ok"}
+
     monkeypatch.setattr(
         processor_module.document_scanner,
         "analyze_project",
-        lambda name: {"status": "scan_ok"},
+        scan,
     )
 
     monkeypatch.setattr(
         processor_module.page_analysis_service,
         "analyze_project",
-        lambda name: {"status": "page_analysis_ok"},
+        analyze_pages,
     )
 
     monkeypatch.setattr(

@@ -10,6 +10,7 @@ from app.services.executive_document_router import executive_document_router
 from app.services.document_scanner import document_scanner
 from app.services.drawing_register_service import drawing_register_service
 from app.services.page_analysis_service import page_analysis_service
+from app.services.ocr_service import ocr_service
 from app.services.project_metadata_service import project_metadata_service
 from app.services.project_section_exporter import project_section_exporter
 from app.services.supporting_documents_registry import supporting_documents_registry
@@ -31,16 +32,11 @@ class ProjectProcessor:
         # 1. СКАНИРОВАНИЕ И АНАЛИЗ ДОКУМЕНТОВ
         # ---------------------------------------------------------
 
-        scan_result = document_scanner.analyze_project(project_name)
+        with ocr_service.reuse_pages_within_run():
+            scan_result = document_scanner.analyze_project(project_name)
+            page_analysis_result = page_analysis_service.analyze_project(project_name)
 
         result["scan"] = scan_result
-
-        # ---------------------------------------------------------
-        # 2. ПОСТРАНИЧНЫЙ АНАЛИЗ + OCR
-        # ---------------------------------------------------------
-
-        page_analysis_result = page_analysis_service.analyze_project(project_name)
-
         result["page_analysis"] = page_analysis_result
 
         # ---------------------------------------------------------
@@ -86,7 +82,6 @@ class ProjectProcessor:
 
         result["completeness"] = completeness_result
 
-
         # ---------------------------------------------------------
         # ROUTE DOCUMENTS TO EXECUTIVE DOCUMENTATION SECTIONS
         # ---------------------------------------------------------
@@ -95,7 +90,9 @@ class ProjectProcessor:
 
         result["document_routing"] = routing_result
 
-        supporting_documents_result = supporting_documents_registry.analyze_project(project_name)
+        supporting_documents_result = supporting_documents_registry.analyze_project(
+            project_name
+        )
 
         result["supporting_documents"] = supporting_documents_result
 

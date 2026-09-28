@@ -1,4 +1,7 @@
 import os
+from contextlib import contextmanager
+from contextvars import ContextVar
+from hashlib import sha256
 
 import fitz
 import pytesseract
@@ -11,9 +14,29 @@ class OCRService:
     def __init__(self):
 
         self.tesseract_path = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+        self._run_pages = ContextVar("ocr_run_pages", default=None)
 
         if os.path.exists(self.tesseract_path):
             pytesseract.pytesseract.tesseract_cmd = self.tesseract_path
+
+    @contextmanager
+    def reuse_pages_within_run(self):
+        """Keep OCR results only for one processing run."""
+        token = self._run_pages.set({})
+        try:
+            yield
+        finally:
+            self._run_pages.reset(token)
+
+    def _source_digest(self, file_path: str) -> str | None:
+        digest = sha256()
+        try:
+            with open(file_path, "rb") as source:
+                for chunk in iter(lambda: source.read(1024 * 1024), b""):
+                    digest.update(chunk)
+        except OSError:
+            return None
+        return digest.hexdigest()
 
     def _detect_rotation(
         self,
@@ -114,6 +137,25 @@ class OCRService:
         if not file_path.lower().endswith(".pdf"):
             raise ValueError("OCR пока поддерживает только PDF")
 
+        run_pages = self._run_pages.get()
+        source_digest = (
+            self._source_digest(file_path) if run_pages is not None else None
+        )
+        cache_key = (
+            os.path.abspath(file_path),
+            source_digest,
+            page_number,
+            language,
+            dpi,
+            psm,
+        )
+        if (
+            source_digest is not None
+            and run_pages is not None
+            and cache_key in run_pages
+        ):
+            return dict(run_pages[cache_key])
+
         document = fitz.open(file_path)
 
         try:
@@ -171,7 +213,7 @@ class OCRService:
 
             text = (text or "").strip()
 
-            return {
+            result = {
                 "file": os.path.basename(file_path),
                 "page": page_number,
                 "rotation": rotation,
@@ -180,6 +222,13 @@ class OCRService:
                 "ocr": True,
                 "language": language,
             }
+            if (
+                run_pages is not None
+                and source_digest is not None
+                and self._source_digest(file_path) == source_digest
+            ):
+                run_pages[cache_key] = result
+            return result
 
         finally:
 
@@ -293,6 +342,11 @@ class OCRService:
         if not file_path.lower().endswith(".pdf"):
             raise ValueError("OCR пока поддерживает только PDF")
 
+        run_pages = self._run_pages.get()
+        source_digest = (
+            self._source_digest(file_path) if run_pages is not None else None
+        )
+
         document = fitz.open(file_path)
 
         pages = []
@@ -365,6 +419,27 @@ class OCRService:
         finally:
 
             document.close()
+
+        if (
+            run_pages is not None
+            and source_digest is not None
+            and self._source_digest(file_path) == source_digest
+        ):
+            for page in pages:
+                cache_key = (
+                    os.path.abspath(file_path),
+                    source_digest,
+                    page["page"],
+                    language,
+                    dpi,
+                    6,
+                )
+                run_pages[cache_key] = {
+                    "file": os.path.basename(file_path),
+                    **page,
+                    "ocr": True,
+                    "language": language,
+                }
 
         combined_text = "\n\n".join(full_text)
 
