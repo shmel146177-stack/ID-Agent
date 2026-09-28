@@ -19,6 +19,9 @@ Main responsibilities include:
 - knowledge search and source-bound context generation
 
 ## Development rules
+- Prioritize correct engineering results, reliable error handling, and evidence
+  over small performance gains. Optimize only when the output is verified to
+  remain correct on representative documents.
 
 - Use Python and follow the existing project architecture.
 - Do not perform large refactors unless explicitly requested.
