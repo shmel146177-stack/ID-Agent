@@ -48,9 +48,7 @@ def test_matcher_rejects_wrong_document_type_even_with_keywords():
 def test_real_grounding_requirement_matches_only_grounding_protocol():
     matcher = SupportingDocumentMatcher()
 
-    requirement = SupportingDocumentsRegistry.REQUIREMENTS[
-        "grounding_device"
-    ][1]
+    requirement = SupportingDocumentsRegistry.REQUIREMENTS["grounding_device"][1]
 
     grounding_document = {
         "filename": "grounding_protocol.pdf",
@@ -71,9 +69,7 @@ def test_real_grounding_requirement_matches_only_grounding_protocol():
 def test_real_grounding_scheme_requirement_rejects_cable_scheme():
     matcher = SupportingDocumentMatcher()
 
-    requirement = SupportingDocumentsRegistry.REQUIREMENTS[
-        "grounding_device"
-    ][0]
+    requirement = SupportingDocumentsRegistry.REQUIREMENTS["grounding_device"][0]
 
     grounding_scheme = {
         "filename": "grounding_scheme.pdf",
@@ -94,9 +90,7 @@ def test_real_grounding_scheme_requirement_rejects_cable_scheme():
 def test_real_cable_scheme_requirement_rejects_grounding_scheme():
     matcher = SupportingDocumentMatcher()
 
-    requirement = SupportingDocumentsRegistry.REQUIREMENTS[
-        "cable_entry"
-    ][0]
+    requirement = SupportingDocumentsRegistry.REQUIREMENTS["cable_entry"][0]
 
     cable_scheme = {
         "filename": "cable_entry_scheme.pdf",
@@ -117,9 +111,7 @@ def test_real_cable_scheme_requirement_rejects_grounding_scheme():
 def test_real_cable_protocol_requirement_rejects_grounding_protocol():
     matcher = SupportingDocumentMatcher()
 
-    requirement = SupportingDocumentsRegistry.REQUIREMENTS[
-        "cable_entry"
-    ][1]
+    requirement = SupportingDocumentsRegistry.REQUIREMENTS["cable_entry"][1]
 
     cable_protocol = {
         "filename": "cable_protocol.pdf",
@@ -167,10 +159,7 @@ def test_matcher_matches_requirements_to_distinct_documents():
     assert result["found_count"] == 2
     assert result["missing_count"] == 0
 
-    matched = {
-        item["requirement_code"]: item["filename"]
-        for item in result["matched"]
-    }
+    matched = {item["requirement_code"]: item["filename"] for item in result["matched"]}
 
     assert matched["grounding_executive_scheme"] == "grounding_scheme.pdf"
     assert matched["cable_entry_executive_scheme"] == "cable_entry_scheme.pdf"
@@ -210,6 +199,52 @@ def test_matcher_does_not_reuse_one_document_for_two_requirements():
     assert result["missing_count"] == 1
     assert len(result["matched"]) == 1
     assert len(result["missing"]) == 1
+
+
+def test_matcher_does_not_accept_keyword_from_filename_alone():
+    matcher = SupportingDocumentMatcher()
+    requirement = {
+        "code": "grounding_protocol",
+        "document_types": ["Протокол"],
+        "match_keywords": ["заземл"],
+    }
+    document = {
+        "filename": "протокол заземления.pdf",
+        "classification": "Протокол",
+        "text": "Протокол испытаний кабельной линии",
+    }
+
+    assert matcher.matches(requirement, document) is False
+    assert matcher.matches(requirement, {**document, "text": ""}) is False
+    assert (
+        matcher.matches(
+            requirement,
+            {**document, "text": "Протокол измерения сопротивления заземления"},
+        )
+        is True
+    )
+
+
+def test_matcher_reassigns_broad_match_to_preserve_specific_match():
+    matcher = SupportingDocumentMatcher()
+    requirements = [
+        {"code": "broad", "match_keywords": ["cable"]},
+        {"code": "specific", "match_keywords": ["cable", "protocol"]},
+    ]
+    documents = [
+        {"filename": "both.pdf", "classification": "", "text": "cable protocol"},
+        {"filename": "broad.pdf", "classification": "", "text": "cable"},
+    ]
+
+    result = matcher.match_requirements(requirements, documents)
+
+    assert result["found_count"] == 2
+    assert {
+        item["requirement_code"]: item["filename"] for item in result["matched"]
+    } == {
+        "broad": "broad.pdf",
+        "specific": "both.pdf",
+    }
 
 
 def test_matcher_builds_documents_from_project_and_page_analysis():
@@ -300,7 +335,9 @@ def test_matcher_matches_real_requirements_from_analysis_data():
             {
                 "filename": "grounding_protocol.pdf",
                 "pages": [
-                    {"text": "Протокол измерения сопротивления заземляющего устройства"},
+                    {
+                        "text": "Протокол измерения сопротивления заземляющего устройства"
+                    },
                 ],
             },
             {
@@ -322,10 +359,7 @@ def test_matcher_matches_real_requirements_from_analysis_data():
     assert result["found_count"] == 3
     assert result["missing_count"] == 1
 
-    missing_codes = {
-        item["requirement_code"]
-        for item in result["missing"]
-    }
+    missing_codes = {item["requirement_code"] for item in result["missing"]}
 
     assert missing_codes == {"cable_entry_executive_scheme"}
 
@@ -333,9 +367,7 @@ def test_matcher_matches_real_requirements_from_analysis_data():
 def test_real_supports_scheme_requirement_rejects_cable_scheme():
     matcher = SupportingDocumentMatcher()
 
-    requirement = SupportingDocumentsRegistry.REQUIREMENTS[
-        "support_foundations"
-    ][0]
+    requirement = SupportingDocumentsRegistry.REQUIREMENTS["support_foundations"][0]
 
     supports_scheme = {
         "filename": "supports_scheme.pdf",
@@ -385,9 +417,7 @@ def test_matcher_supports_any_keyword_group():
 def test_real_grounding_quality_requirement_rejects_cable_certificate():
     matcher = SupportingDocumentMatcher()
 
-    requirement = SupportingDocumentsRegistry.REQUIREMENTS[
-        "grounding_device"
-    ][2]
+    requirement = SupportingDocumentsRegistry.REQUIREMENTS["grounding_device"][2]
 
     grounding_certificate = {
         "filename": "grounding_strip_certificate.pdf",
@@ -447,7 +477,7 @@ def test_real_supports_quality_requirement_rejects_cable_certificate():
     assert matcher.matches(requirement, cable_certificate) is False
 
 
-def test_matcher_matches_real_quality_filenames_from_project_analysis():
+def test_matcher_matches_quality_documents_with_page_text():
     matcher = SupportingDocumentMatcher()
 
     requirements = [
@@ -467,9 +497,7 @@ def test_matcher_matches_real_quality_filenames_from_project_analysis():
             "document_types": [
                 "\u041f\u0430\u0441\u043f\u043e\u0440\u0442 \u043e\u0431\u043e\u0440\u0443\u0434\u043e\u0432\u0430\u043d\u0438\u044f"
             ],
-            "match_keywords": [
-                "\u043f\u0430\u0441\u043f\u043e\u0440\u0442"
-            ],
+            "match_keywords": ["\u043f\u0430\u0441\u043f\u043e\u0440\u0442"],
         },
     ]
 
@@ -492,11 +520,11 @@ def test_matcher_matches_real_quality_filenames_from_project_analysis():
         "documents": [
             {
                 "filename": "\u0421\u0435\u0440\u0442\u0438\u0444\u0438\u043a\u0430\u0442.pdf",
-                "pages": [],
+                "pages": [{"text": "Сертификат соответствия"}],
             },
             {
                 "filename": "\u043f\u0430\u0441\u043f\u043e\u0440\u0442.pdf",
-                "pages": [],
+                "pages": [{"text": "Паспорт оборудования"}],
             },
         ]
     }
@@ -512,19 +540,29 @@ def test_matcher_matches_real_quality_filenames_from_project_analysis():
     assert result["missing_count"] == 0
     assert result["missing"] == []
 
-    assert result["matched"][0]["filename"] == "\u0421\u0435\u0440\u0442\u0438\u0444\u0438\u043a\u0430\u0442.pdf"
-    assert result["matched"][0]["classification"] == "\u0421\u0435\u0440\u0442\u0438\u0444\u0438\u043a\u0430\u0442"
+    assert (
+        result["matched"][0]["filename"]
+        == "\u0421\u0435\u0440\u0442\u0438\u0444\u0438\u043a\u0430\u0442.pdf"
+    )
+    assert (
+        result["matched"][0]["classification"]
+        == "\u0421\u0435\u0440\u0442\u0438\u0444\u0438\u043a\u0430\u0442"
+    )
 
-    assert result["matched"][1]["filename"] == "\u043f\u0430\u0441\u043f\u043e\u0440\u0442.pdf"
-    assert result["matched"][1]["classification"] == "\u041f\u0430\u0441\u043f\u043e\u0440\u0442 \u043e\u0431\u043e\u0440\u0443\u0434\u043e\u0432\u0430\u043d\u0438\u044f"
+    assert (
+        result["matched"][1]["filename"]
+        == "\u043f\u0430\u0441\u043f\u043e\u0440\u0442.pdf"
+    )
+    assert (
+        result["matched"][1]["classification"]
+        == "\u041f\u0430\u0441\u043f\u043e\u0440\u0442 \u043e\u0431\u043e\u0440\u0443\u0434\u043e\u0432\u0430\u043d\u0438\u044f"
+    )
 
 
 def test_quality_keyword_does_not_match_inside_compound_word():
     matcher = SupportingDocumentMatcher()
 
-    requirement = SupportingDocumentsRegistry.REQUIREMENTS[
-        "cable_entry"
-    ][2]
+    requirement = SupportingDocumentsRegistry.REQUIREMENTS["cable_entry"][2]
 
     false_certificate = {
         "filename": "\u0421\u0435\u0440\u0442\u0438\u0444\u0438\u043a\u0430\u0442.pdf",
@@ -536,18 +574,19 @@ def test_quality_keyword_does_not_match_inside_compound_word():
         ),
     }
 
-    assert matcher.matches(
-        requirement,
-        false_certificate,
-    ) is False
+    assert (
+        matcher.matches(
+            requirement,
+            false_certificate,
+        )
+        is False
+    )
 
 
 def test_real_cable_quality_requirement_rejects_generic_passage_word():
     matcher = SupportingDocumentMatcher()
 
-    requirement = SupportingDocumentsRegistry.REQUIREMENTS[
-        "cable_entry"
-    ][2]
+    requirement = SupportingDocumentsRegistry.REQUIREMENTS["cable_entry"][2]
 
     unrelated_certificate = {
         "filename": "equipment_certificate.pdf",
@@ -563,7 +602,10 @@ def test_real_cable_quality_requirement_rejects_generic_passage_word():
         ),
     }
 
-    assert matcher.matches(
-        requirement,
-        unrelated_certificate,
-    ) is False
+    assert (
+        matcher.matches(
+            requirement,
+            unrelated_certificate,
+        )
+        is False
+    )

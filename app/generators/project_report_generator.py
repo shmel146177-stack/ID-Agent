@@ -876,6 +876,8 @@ class ProjectReportGenerator:
                     parts.append(f'файл — {matched_file["name"]}')
                 if basis.get("classification"):
                     parts.append(f'классификация — {basis["classification"]}')
+                if basis.get("match_source") == "extracted_page_text":
+                    parts.append("источник совпадения — текст страниц документа")
                 if basis.get("match_rule"):
                     parts.append(f'правило — {basis["match_rule"]}')
                 if basis.get("note"):

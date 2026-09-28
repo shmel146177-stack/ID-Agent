@@ -241,3 +241,56 @@ def test_manifest_preserves_review_count(tmp_path):
     )
     assert result[0]["status"] == "Требует проверки"
     assert result[0]["review_count"] == 1
+
+
+@pytest.mark.parametrize(
+    ("page_text", "expected"),
+    [
+        ("", (0, 1, 0)),
+        ("Протокол испытаний кабельной линии", (0, 0, 1)),
+    ],
+)
+def test_filename_only_is_not_a_confirmed_supporting_match(
+    monkeypatch, tmp_path, page_text, expected
+):
+    document_set = ProjectDocumentSet()
+    monkeypatch.setattr(document_set, "_analysis_path", lambda name: tmp_path)
+
+    def load_analysis(path):
+        if path.name == "project_analysis.json":
+            return {
+                "documents": [
+                    {
+                        "filename": "протокол заземления.pdf",
+                        "classification": "Протокол",
+                        "status": "Обработан",
+                    }
+                ]
+            }
+        return {
+            "documents": [
+                {"filename": "протокол заземления.pdf", "pages": [{"text": page_text}]}
+            ]
+        }
+
+    monkeypatch.setattr(document_set, "_load_json", load_analysis)
+    result = document_set._supporting_section_completeness(
+        "TEST_PROJECT",
+        {
+            "required_count": 1,
+            "documents": [
+                {
+                    "code": "grounding",
+                    "document_types": ["Протокол"],
+                    "match_keywords": ["заземл"],
+                }
+            ],
+        },
+        [{"name": "протокол заземления.pdf"}],
+    )
+
+    assert (
+        result["found_count"],
+        result["review_count"],
+        result["missing_count"],
+    ) == expected

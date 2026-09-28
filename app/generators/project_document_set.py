@@ -433,15 +433,19 @@ class ProjectDocumentSet:
             analysis_path = self._analysis_path(project_name)
             project_analysis = self._load_json(analysis_path / "project_analysis.json")
             page_analysis = self._load_json(analysis_path / "page_analysis.json")
-            page_names = {
+            page_names_with_text = {
                 document.get("filename")
                 for document in page_analysis.get("documents", [])
                 if document.get("filename")
+                and any(
+                    (page.get("text") or "").strip()
+                    for page in document.get("pages", [])
+                )
             }
             analyzed_names = {
                 document.get("filename")
                 for document in project_analysis.get("documents", [])
-                if document.get("filename") in page_names
+                if document.get("filename") in page_names_with_text
                 and document.get("status", "Обработан") == "Обработан"
             }
             actual_names = {item.get("name") for item in actual_files}
@@ -500,6 +504,7 @@ class ProjectDocumentSet:
             if matched:
                 basis["matched_file"] = files_by_name.get(matched["filename"])
                 basis["classification"] = matched.get("classification")
+                basis["match_source"] = "extracted_page_text"
                 status = "Совпадение по анализу"
             elif unanalysed_files or (not basis["match_rule"] and review_candidates):
                 basis["review_candidates"] = (

@@ -58,6 +58,7 @@ def test_requirement_evidence_separates_match_candidate_and_missing(
     matched, pending_ground, pending_test = result["requirement_assessments"]
     assert matched["status"] == "Совпадение по анализу"
     assert matched["basis"]["matched_file"] == files[0]
+    assert matched["basis"]["match_source"] == "extracted_page_text"
     assert matched["basis"]["source_act"] == {"code": "act-1"}
     assert matched["basis"]["source_evidence"] == [{"sheet_number": "2"}]
     assert matched["basis"]["match_rule"] == {
