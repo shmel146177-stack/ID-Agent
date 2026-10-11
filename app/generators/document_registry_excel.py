@@ -440,19 +440,12 @@ class DocumentRegistryExcel:
             column=2,
         )
 
-        if (
-            completeness.get(
-                "missing_count",
-                0,
-            )
-            == 0
-        ):
-
+        if completeness.get("status") == "Полный комплект":
             status_cell.fill = self.success_fill
-
-        else:
-
+        elif completeness.get("missing_count", 0):
             status_cell.fill = self.error_fill
+        else:
+            status_cell.fill = self.warning_fill
 
         # ---------------------------------------------------------
         # ТАБЛИЦА ЛИСТОВ
@@ -570,7 +563,7 @@ class DocumentRegistryExcel:
         worksheet.cell(
             row=missing_start,
             column=1,
-            value="Отсутствующие листы",
+            value="Несопоставленные позиции",
         )
 
         worksheet.cell(
@@ -629,13 +622,41 @@ class DocumentRegistryExcel:
             worksheet.cell(
                 row=missing_start + 1,
                 column=1,
-                value="Отсутствующие листы не обнаружены",
+                value="Несопоставленные позиции не обнаружены",
             )
 
             worksheet.cell(
                 row=missing_start + 1,
                 column=1,
             ).fill = self.success_fill
+
+        attachment_warnings = (completeness.get("attachment_audit") or {}).get(
+            "warnings", []
+        )
+        if attachment_warnings:
+            warning_start = missing_start + max(len(missing_sheets), 1) + 3
+            worksheet.merge_cells(
+                start_row=warning_start,
+                start_column=1,
+                end_row=warning_start,
+                end_column=8,
+            )
+            heading = worksheet.cell(
+                row=warning_start,
+                column=1,
+                value="Прилагаемые документы — требуется проверка",
+            )
+            heading.font = self.bold_font
+            heading.fill = self.warning_fill
+            for index, warning in enumerate(attachment_warnings, start=1):
+                row = warning_start + index
+                worksheet.merge_cells(
+                    start_row=row, start_column=1, end_row=row, end_column=8
+                )
+                cell = worksheet.cell(row=row, column=1, value=warning["message"])
+                cell.fill = self.warning_fill
+                cell.alignment = Alignment(wrap_text=True, vertical="top")
+                worksheet.row_dimensions[row].height = 42
 
         worksheet.freeze_panes = f"A{table_row + 1}"
 

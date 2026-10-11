@@ -97,3 +97,44 @@ def test_document_registry_excel_creates_real_xlsx(monkeypatch, tmp_path):
     assert completeness_sheet["A8"].value == "Не сопоставлено позиций"
 
     workbook.close()
+
+
+def test_document_registry_excel_shows_attachment_warning(monkeypatch, tmp_path):
+    generator = DocumentRegistryExcel()
+    monkeypatch.setattr(
+        excel_module.document_registry, "build", lambda name: {"documents": []}
+    )
+    monkeypatch.setattr(
+        excel_module.document_completeness,
+        "check",
+        lambda name: {
+            "status": "Требует проверки: расхождения в прилагаемых документах",
+            "profile": "project",
+            "required_count": 1,
+            "found_count": 1,
+            "missing_count": 0,
+            "completeness_percent": None,
+            "documents": [],
+            "missing_sheets": [],
+            "attachment_audit": {
+                "warnings": [
+                    {
+                        "message": "Ведомость: 98765/26-КЖ.СП2; "
+                        "кандидат в штампе: 98766/26-КЖ.СП2 (PDF 4)"
+                    }
+                ]
+            },
+        },
+    )
+    output_path = tmp_path / "registry.xlsx"
+    monkeypatch.setattr(generator, "_output_path", lambda name: output_path)
+
+    generator.create("OTHER_PROJECT")
+
+    workbook = load_workbook(output_path)
+    sheet = workbook["Комплектность"]
+    values = [cell.value for row in sheet.iter_rows() for cell in row if cell.value]
+    assert "Прилагаемые документы — требуется проверка" in values
+    assert any("98766/26-КЖ.СП2 (PDF 4)" in str(value) for value in values)
+    assert sheet["B5"].fill.fgColor.rgb == "00FFF2CC"
+    workbook.close()

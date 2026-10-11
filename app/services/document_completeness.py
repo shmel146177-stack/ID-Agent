@@ -261,6 +261,7 @@ class DocumentCompleteness:
 
         completeness_percent = sheet_match.get("completeness_percent")
         analysis_coverage = sheet_match.get("analysis_coverage", {"status": "unknown"})
+        attachment_audit = sheet_match.get("attachment_audit", {"warnings": []})
 
         matches = sheet_match.get(
             "matches",
@@ -329,6 +330,8 @@ class DocumentCompleteness:
             status = "Требует проверки: анализ страниц неполон"
         elif missing_count:
             status = "Есть ненайденные позиции ведомости"
+        elif attachment_audit.get("warnings"):
+            status = "Требует проверки: расхождения в прилагаемых документах"
         else:
             status = "Позиции ведомости найдены; полнота листов требует проверки"
 
@@ -346,6 +349,7 @@ class DocumentCompleteness:
                 "position_completeness_percent", completeness_percent
             ),
             "analysis_coverage": analysis_coverage,
+            "attachment_audit": attachment_audit,
             "determined": determined,
             "documents": documents,
             "missing_sheets": (missing_sheets),

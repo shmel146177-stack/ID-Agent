@@ -685,6 +685,7 @@ class ProjectDocumentSet:
             "found_count": (completeness.get("found_count")),
             "missing_count": (completeness.get("missing_count")),
             "completeness_percent": (completeness.get("completeness_percent")),
+            "attachment_audit": completeness.get("attachment_audit"),
             "missing_sheets": (
                 completeness.get(
                     "missing_sheets",

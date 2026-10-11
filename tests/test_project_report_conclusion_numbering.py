@@ -64,3 +64,29 @@ def test_equipment_conclusion_counts_document_categories():
     assert "2" in document.paragraphs[1].text
     assert "категорий документов" in document.paragraphs[1].text
     assert "позиций ведомости" not in document.paragraphs[1].text
+
+
+def test_project_report_lists_attachment_warning_evidence():
+    document = Document()
+    ProjectReportGenerator()._add_conclusion(
+        document,
+        {
+            "determined": True,
+            "required_count": 1,
+            "found_count": 1,
+            "missing_count": 0,
+            "analysis_coverage": {"status": "complete"},
+            "attachment_audit": {
+                "warnings": [
+                    {
+                        "message": "Ведомость: 98765/26-КЖ.СП2; "
+                        "кандидат в штампе: 98766/26-КЖ.СП2 (PDF 4)"
+                    }
+                ]
+            },
+        },
+    )
+
+    full_text = "\n".join(paragraph.text for paragraph in document.paragraphs)
+    assert "Прилагаемые документы: обнаружены расхождения" in full_text
+    assert "98766/26-КЖ.СП2 (PDF 4)" in full_text

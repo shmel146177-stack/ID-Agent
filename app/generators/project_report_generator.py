@@ -996,6 +996,17 @@ class ProjectReportGenerator:
 
         document.add_paragraph(text)
 
+        attachment_warnings = (completeness.get("attachment_audit") or {}).get(
+            "warnings", []
+        )
+        if attachment_warnings:
+            document.add_paragraph(
+                "Прилагаемые документы: обнаружены расхождения, требующие "
+                "проверки инженером."
+            )
+            for warning in attachment_warnings:
+                document.add_paragraph(warning["message"], style="List Bullet")
+
         paragraph = document.add_paragraph()
 
         run = paragraph.add_run("Примечание: ")

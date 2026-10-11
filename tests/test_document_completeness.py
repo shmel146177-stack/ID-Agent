@@ -81,3 +81,29 @@ def test_project_completeness_keeps_found_positions_under_review(monkeypatch):
     assert result["position_completeness_percent"] == 100.0
     assert result["completeness_percent"] is None
     assert result["status"] == "Требует проверки: анализ страниц неполон"
+
+
+def test_project_completeness_exposes_attachment_warnings(monkeypatch):
+    warning = {
+        "code": "designation_mismatch_candidate",
+        "message": "Ведомость: A; кандидат в штампе: B (PDF 4)",
+    }
+    monkeypatch.setattr(
+        completeness_module.drawing_sheet_matcher,
+        "analyze_project",
+        lambda name: {
+            "determined": True,
+            "expected_count": 1,
+            "found_count": 1,
+            "missing_count": 0,
+            "completeness_percent": None,
+            "analysis_coverage": {"status": "complete", "documents": []},
+            "attachment_audit": {"status": "warnings", "warnings": [warning]},
+            "matches": [{"sheet_number": 1, "title": "Чертеж", "found": True}],
+        },
+    )
+
+    result = DocumentCompleteness().check("TEST_PROJECT", profile="project")
+
+    assert result["status"] == "Требует проверки: расхождения в прилагаемых документах"
+    assert result["attachment_audit"]["warnings"] == [warning]

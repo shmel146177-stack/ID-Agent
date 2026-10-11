@@ -5,6 +5,8 @@ from pathlib import Path
 
 import fitz
 
+from app.services.drawing_attachment_audit import drawing_attachment_audit
+
 
 class DrawingSheetMatcher:
     """
@@ -682,6 +684,9 @@ class DrawingSheetMatcher:
         analysis_coverage = self._analysis_coverage(
             project_name, drawing_register, page_analysis
         )
+        attachment_audit = drawing_attachment_audit.analyze(
+            project_name, drawing_register
+        )
 
         position_completeness_percent = (
             round(
@@ -720,7 +725,11 @@ class DrawingSheetMatcher:
                     else (
                         "Анализ страниц требует проверки"
                         if analysis_coverage["status"] != "complete"
-                        else "Все позиции ведомости найдены; полнота листов требует проверки"
+                        else (
+                            "Есть расхождения в прилагаемых документах"
+                            if attachment_audit["warnings"]
+                            else "Все позиции ведомости найдены; полнота листов требует проверки"
+                        )
                     )
                 )
             ),
@@ -731,6 +740,7 @@ class DrawingSheetMatcher:
             "completeness_percent": (completeness_percent),
             "position_completeness_percent": position_completeness_percent,
             "analysis_coverage": analysis_coverage,
+            "attachment_audit": attachment_audit,
             "register_pages": sorted({page for _, page in register_pages}),
             "missing_sheets": (missing_sheets),
             "matches": matches,
