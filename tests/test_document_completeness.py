@@ -5,9 +5,7 @@ import app.services.document_completeness as completeness_module
 def test_document_completeness_equipment_profile():
     completeness = DocumentCompleteness()
 
-    required = list(
-        completeness.EQUIPMENT_REQUIRED_DOCUMENTS
-    )
+    required = list(completeness.EQUIPMENT_REQUIRED_DOCUMENTS)
 
     fake_registry = {
         "documents": [
@@ -57,3 +55,29 @@ def test_project_completeness_is_unknown_without_drawing_register(monkeypatch):
     assert result["determined"] is False
     assert result["completeness_percent"] is None
     assert result["missing_count"] == 0
+
+
+def test_project_completeness_keeps_found_positions_under_review(monkeypatch):
+    completeness = DocumentCompleteness()
+    monkeypatch.setattr(
+        completeness_module.drawing_sheet_matcher,
+        "analyze_project",
+        lambda name: {
+            "determined": True,
+            "expected_count": 1,
+            "found_count": 1,
+            "missing_count": 0,
+            "completeness_percent": None,
+            "position_completeness_percent": 100.0,
+            "analysis_coverage": {"status": "incomplete", "documents": []},
+            "matches": [{"sheet_number": 1, "title": "Чертеж", "found": True}],
+            "missing_sheets": [],
+        },
+    )
+
+    result = completeness.check("TEST_PROJECT", profile="project")
+
+    assert result["found_count"] == 1
+    assert result["position_completeness_percent"] == 100.0
+    assert result["completeness_percent"] is None
+    assert result["status"] == "Требует проверки: анализ страниц неполон"

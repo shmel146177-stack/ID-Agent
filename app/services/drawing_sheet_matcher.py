@@ -3,6 +3,8 @@ import json
 import re
 from pathlib import Path
 
+import fitz
+
 
 class DrawingSheetMatcher:
     """
@@ -280,6 +282,103 @@ class DrawingSheetMatcher:
                 )
 
         return pages
+
+    def _analysis_coverage(
+        self,
+        project_name: str,
+        drawing_register: dict,
+        page_analysis: dict,
+    ) -> dict:
+        """Check that every source PDF page has one analysis record."""
+        filenames = {
+            register.get("filename")
+            for register in drawing_register.get("registers", [])
+            if register.get("filename")
+        }
+        if not filenames:
+            filenames = {
+                document.get("filename")
+                for document in page_analysis.get("documents", [])
+                if document.get("filename")
+            }
+
+        documents = []
+        for filename in sorted(filenames):
+            records = [
+                document
+                for document in page_analysis.get("documents", [])
+                if document.get("filename") == filename
+            ]
+            detail = {
+                "filename": filename,
+                "source_pages": None,
+                "analyzed_pages": sum(
+                    len(record.get("pages", [])) for record in records
+                ),
+                "missing_pages": [],
+                "duplicate_pages": [],
+                "status": "unknown",
+                "reason": None,
+            }
+            if not isinstance(filename, str) or Path(filename).name != filename:
+                detail["reason"] = "invalid_filename"
+            elif len(records) != 1:
+                detail["status"] = "incomplete"
+                detail["reason"] = "missing_or_duplicate_document_analysis"
+            else:
+                source_path = self._project_path(project_name) / "input" / filename
+                if not source_path.is_file():
+                    detail["reason"] = "source_pdf_unavailable"
+                else:
+                    try:
+                        with fitz.open(source_path) as source_pdf:
+                            source_pages = len(source_pdf)
+                    except (OSError, RuntimeError, ValueError):
+                        detail["reason"] = "source_pdf_unreadable"
+                    else:
+                        detail["source_pages"] = source_pages
+                        page_numbers = [
+                            page.get("page") for page in records[0].get("pages", [])
+                        ]
+                        valid_numbers = [
+                            number
+                            for number in page_numbers
+                            if type(number) is int and 1 <= number <= source_pages
+                        ]
+                        detail["missing_pages"] = sorted(
+                            set(range(1, source_pages + 1)) - set(valid_numbers)
+                        )
+                        detail["duplicate_pages"] = sorted(
+                            number
+                            for number in set(valid_numbers)
+                            if valid_numbers.count(number) > 1
+                        )
+                        reported_pages = records[0].get("pages_count")
+                        if (
+                            source_pages == 0
+                            or len(valid_numbers) != len(page_numbers)
+                            or detail["missing_pages"]
+                            or detail["duplicate_pages"]
+                            or (
+                                reported_pages is not None
+                                and reported_pages != source_pages
+                            )
+                        ):
+                            detail["status"] = "incomplete"
+                            detail["reason"] = "page_records_do_not_cover_source"
+                        else:
+                            detail["status"] = "complete"
+            documents.append(detail)
+
+        statuses = {document["status"] for document in documents}
+        return {
+            "status": (
+                "incomplete"
+                if "incomplete" in statuses
+                else "complete" if documents and statuses == {"complete"} else "unknown"
+            ),
+            "documents": documents,
+        }
 
     def _collect_register_entries(
         self,
@@ -580,7 +679,11 @@ class DrawingSheetMatcher:
 
         missing_count = expected_count - found_count
 
-        completeness_percent = (
+        analysis_coverage = self._analysis_coverage(
+            project_name, drawing_register, page_analysis
+        )
+
+        position_completeness_percent = (
             round(
                 (found_count / expected_count * 100),
                 1,
@@ -588,6 +691,9 @@ class DrawingSheetMatcher:
             if expected_count
             else None
         )
+
+        # Matching register positions cannot establish overall sheet completeness.
+        completeness_percent = None
 
         missing_sheets = [
             {
@@ -609,9 +715,13 @@ class DrawingSheetMatcher:
                 "Ведомость рабочих чертежей не найдена — комплектность не определена"
                 if expected_count == 0
                 else (
-                    "Полный комплект листов"
-                    if missing_count == 0
-                    else "Есть отсутствующие листы"
+                    "Есть отсутствующие позиции ведомости"
+                    if missing_count
+                    else (
+                        "Анализ страниц требует проверки"
+                        if analysis_coverage["status"] != "complete"
+                        else "Все позиции ведомости найдены; полнота листов требует проверки"
+                    )
                 )
             ),
             "determined": expected_count > 0,
@@ -619,6 +729,8 @@ class DrawingSheetMatcher:
             "found_count": (found_count),
             "missing_count": (missing_count),
             "completeness_percent": (completeness_percent),
+            "position_completeness_percent": position_completeness_percent,
+            "analysis_coverage": analysis_coverage,
             "register_pages": sorted({page for _, page in register_pages}),
             "missing_sheets": (missing_sheets),
             "matches": matches,

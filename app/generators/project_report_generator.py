@@ -516,6 +516,13 @@ class ProjectReportGenerator:
             level=1,
         )
 
+        is_project = completeness.get("profile", "project") == "project"
+        count_labels = (
+            ("Позиций в ведомости", "Сопоставлено позиций", "Не сопоставлено позиций")
+            if is_project
+            else ("Требуется категорий", "Найдено категорий", "Отсутствует категорий")
+        )
+
         rows = [
             (
                 "Метод проверки",
@@ -532,21 +539,21 @@ class ProjectReportGenerator:
                 ),
             ),
             (
-                "Требуется листов",
+                count_labels[0],
                 completeness.get(
                     "required_count",
                     0,
                 ),
             ),
             (
-                "Найдено листов",
+                count_labels[1],
                 completeness.get(
                     "found_count",
                     0,
                 ),
             ),
             (
-                "Отсутствует листов",
+                count_labels[2],
                 completeness.get(
                     "missing_count",
                     0,
@@ -921,15 +928,25 @@ class ProjectReportGenerator:
             0,
         )
 
-        percent = completeness.get(
-            "completeness_percent",
-        )
+        percent = completeness.get("completeness_percent")
+        position_percent = completeness.get("position_completeness_percent")
 
-        if not completeness.get("determined", required_count > 0):
+        if completeness.get("profile") == "equipment":
+            text = (
+                f"Из {required_count} обязательных категорий документов "
+                f"найдено {found_count}, отсутствует {missing_count}. "
+                + (
+                    f"Доля найденных категорий составляет {percent}%."
+                    if percent is not None
+                    else "Доля найденных категорий не определена."
+                )
+            )
+
+        elif not completeness.get("determined", required_count > 0):
 
             text = (
                 "Ведомость рабочих чертежей не распознана. "
-                "Количество требуемых листов и комплектность проекта "
+                "Количество позиций ведомости и комплектность проекта "
                 "автоматически не определены. Необходимо проверить "
                 "ведомость вручную или уточнить её распознавание."
             )
@@ -937,28 +954,45 @@ class ProjectReportGenerator:
         elif required_count > 0 and missing_count == 0:
 
             text = (
-                "По результатам автоматического анализа "
-                f"обнаружены все {required_count} листов, "
-                "указанные в ведомости рабочих чертежей. "
-                "Комплект проектной документации "
-                "определён как полный. "
-                f"Комплектность составляет {percent}%."
+                f"Автоматически сопоставлены все {required_count} позиций "
+                "ведомости рабочих чертежей. Это не подтверждает наличие "
+                "всех листов многолистовых чертежей. "
+                "Общая комплектность автоматически не определена."
             )
 
         else:
 
             text = (
                 "По результатам автоматического анализа "
-                f"из {required_count} листов, указанных "
-                "в ведомости рабочих чертежей, "
-                f"обнаружено {found_count}. "
-                f"Не обнаружено {missing_count}. "
-                f"Расчётная комплектность составляет "
-                f"{percent}%. "
-                "Проект требует проверки отсутствующих "
-                "листов перед использованием комплекта "
-                "как полного."
+                f"сопоставлено {found_count} из {required_count} позиций "
+                "ведомости рабочих чертежей. "
+                f"Не сопоставлено {missing_count} позиций. "
+                + (
+                    f"Доля сопоставленных позиций составляет {position_percent}%. "
+                    if position_percent is not None
+                    else "Доля сопоставленных позиций не определена. "
+                )
+                + "Отсутствующие позиции требуют проверки."
             )
+
+        coverage = completeness.get("analysis_coverage") or {}
+        if (
+            completeness.get("profile", "project") == "project"
+            and coverage.get("status") != "complete"
+            and required_count > 0
+        ):
+            missing_pages = [
+                f"{item['filename']}: {', '.join(map(str, item['missing_pages']))}"
+                for item in coverage.get("documents", [])
+                if item.get("missing_pages")
+            ]
+            text += " Постраничный анализ неполон или не подтверждён."
+            if missing_pages:
+                text += (
+                    " Нет записей анализа для страниц PDF: "
+                    + "; ".join(missing_pages)
+                    + "."
+                )
 
         document.add_paragraph(text)
 

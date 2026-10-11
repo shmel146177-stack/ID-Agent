@@ -260,6 +260,7 @@ class DocumentCompleteness:
         )
 
         completeness_percent = sheet_match.get("completeness_percent")
+        analysis_coverage = sheet_match.get("analysis_coverage", {"status": "unknown"})
 
         matches = sheet_match.get(
             "matches",
@@ -322,22 +323,29 @@ class DocumentCompleteness:
             [],
         )
 
-        status = (
-            "Комплектность не определена"
-            if not determined
-            else "Полный комплект" if missing_count == 0 else "Неполный комплект"
-        )
+        if not determined:
+            status = "Комплектность не определена"
+        elif analysis_coverage["status"] != "complete":
+            status = "Требует проверки: анализ страниц неполон"
+        elif missing_count:
+            status = "Есть ненайденные позиции ведомости"
+        else:
+            status = "Позиции ведомости найдены; полнота листов требует проверки"
 
         return {
             "project": project_name,
             "status": status,
             "profile": "project",
             "profile_name": ("Проектная документация"),
-            "check_method": ("Ведомость рабочих чертежей " "↔ реальные страницы PDF"),
+            "check_method": ("Позиции ведомости рабочих чертежей " "↔ страницы PDF"),
             "required_count": (required_count),
             "found_count": (found_count),
             "missing_count": (missing_count),
             "completeness_percent": (completeness_percent),
+            "position_completeness_percent": sheet_match.get(
+                "position_completeness_percent", completeness_percent
+            ),
+            "analysis_coverage": analysis_coverage,
             "determined": determined,
             "documents": documents,
             "missing_sheets": (missing_sheets),

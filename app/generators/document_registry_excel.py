@@ -329,6 +329,13 @@ class DocumentRegistryExcel:
         # СВОДКА
         # ---------------------------------------------------------
 
+        is_project = completeness.get("profile", "project") == "project"
+        count_labels = (
+            ("Позиций в ведомости", "Сопоставлено позиций", "Не сопоставлено позиций")
+            if is_project
+            else ("Требуется категорий", "Найдено категорий", "Отсутствует категорий")
+        )
+
         summary = [
             (
                 "Метод проверки",
@@ -348,21 +355,21 @@ class DocumentRegistryExcel:
                 ),
             ),
             (
-                "Требуется листов",
+                count_labels[0],
                 completeness.get(
                     "required_count",
                     0,
                 ),
             ),
             (
-                "Найдено листов",
+                count_labels[1],
                 completeness.get(
                     "found_count",
                     0,
                 ),
             ),
             (
-                "Отсутствует листов",
+                count_labels[2],
                 completeness.get(
                     "missing_count",
                     0,

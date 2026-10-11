@@ -92,5 +92,8 @@ def test_document_registry_excel_creates_real_xlsx(monkeypatch, tmp_path):
     assert completeness_sheet["B7"].value == 1
     assert completeness_sheet["B8"].value == 0
     assert completeness_sheet["B9"].value == "100.0%"
+    assert completeness_sheet["A6"].value == "Позиций в ведомости"
+    assert completeness_sheet["A7"].value == "Сопоставлено позиций"
+    assert completeness_sheet["A8"].value == "Не сопоставлено позиций"
 
     workbook.close()
