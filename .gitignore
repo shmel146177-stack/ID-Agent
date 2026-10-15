@@ -17,6 +17,17 @@ patch_*.py
 .env.*
 !.env.example
 
+# Рабочие и служебные каталоги (временные материалы, не исходники)
+tmp/
+transfer/
+
+# Внешние инструменты: libredwg и подобные бинарники ставятся отдельно
+tools/
+
+# Эталонные PDF в templates: крупные, в репозиторий не кладём.
+# Текст и скрипты эталона (RULES.md, manifest.csv, algorithm-examples) хранятся в Git.
+templates/**/*.pdf
+
 # Test coverage
 .coverage
 .coverage.*
