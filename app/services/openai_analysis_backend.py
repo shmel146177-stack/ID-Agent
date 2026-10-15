@@ -25,9 +25,7 @@ class OpenAIResponsesBackend:
         max_input_chars: int = DEFAULT_MAX_INPUT_CHARS,
     ):
         if max_input_chars <= 0:
-            raise ValueError(
-                "Максимальный размер AI-входа должен быть положительным"
-            )
+            raise ValueError("Максимальный размер AI-входа должен быть положительным")
 
         self.ai_client = ai_client or AIClient()
         self.max_input_chars = max_input_chars
@@ -42,9 +40,7 @@ class OpenAIResponsesBackend:
         document_text = (text or "").strip()
 
         if not document_text:
-            raise ValueError(
-                "Для OpenAI-анализа требуется текст документа"
-            )
+            raise ValueError("Для OpenAI-анализа требуется текст документа")
 
         was_truncated = len(document_text) > self.max_input_chars
         input_text = document_text[: self.max_input_chars]
@@ -103,9 +99,7 @@ class OpenAIResponsesBackend:
             )
 
         if not isinstance(result, AIAnalysisResult):
-            raise TypeError(
-                "OpenAI должен вернуть AIAnalysisResult"
-            )
+            raise TypeError("OpenAI должен вернуть AIAnalysisResult")
 
         if was_truncated:
             result = result.model_copy(

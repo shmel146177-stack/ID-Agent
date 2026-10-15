@@ -7,9 +7,40 @@ from app.models.ai_analysis import (
     AutonomousFactExclusionReason,
 )
 from app.services.ai_client import AIClient, AIUnavailableError
+from app.services.ai_settings import AISettings, PROTOCOL_CHAT_COMPLETIONS
 from app.services.autonomous_analysis_backend import (
     AutonomousAnalysisBackend,
 )
+
+
+def build_analysis_backend(
+    ai_client: AIClient,
+    max_input_chars: int,
+) -> Callable[..., AIAnalysisResult]:
+    """Выбрать бэкенд по протоколу провайдера.
+
+    Responses API поддерживает только OpenAI, поэтому DeepSeek, локальная Qwen
+    и прочие совместимые эндпоинты работают через Chat Completions.
+    """
+
+    if ai_client.settings.protocol == PROTOCOL_CHAT_COMPLETIONS:
+        from app.services.chat_completions_backend import (
+            ChatCompletionsBackend,
+        )
+
+        return ChatCompletionsBackend(
+            ai_client=ai_client,
+            max_input_chars=max_input_chars,
+        )
+
+    from app.services.openai_analysis_backend import (
+        OpenAIResponsesBackend,
+    )
+
+    return OpenAIResponsesBackend(
+        ai_client=ai_client,
+        max_input_chars=max_input_chars,
+    )
 
 
 class AIDocumentAnalysisService:
@@ -29,23 +60,35 @@ class AIDocumentAnalysisService:
         )
 
     @classmethod
+    def with_settings(
+        cls,
+        settings: AISettings | None = None,
+        ai_client: AIClient | None = None,
+        max_input_chars: int = 40_000,
+    ) -> "AIDocumentAnalysisService":
+        """Собрать сервис по настройкам провайдера."""
+
+        client = ai_client or AIClient(settings=settings)
+
+        return cls(
+            ai_client=client,
+            analysis_backend=build_analysis_backend(
+                client,
+                max_input_chars=max_input_chars,
+            ),
+        )
+
+    @classmethod
     def with_openai(
         cls,
         ai_client: AIClient | None = None,
         max_input_chars: int = 40_000,
     ) -> "AIDocumentAnalysisService":
-        from app.services.openai_analysis_backend import (
-            OpenAIResponsesBackend,
-        )
+        """Прежнее имя фабрики: провайдер берётся из настроек окружения."""
 
-        client = ai_client or AIClient()
-
-        return cls(
-            ai_client=client,
-            analysis_backend=OpenAIResponsesBackend(
-                ai_client=client,
-                max_input_chars=max_input_chars,
-            ),
+        return cls.with_settings(
+            ai_client=ai_client,
+            max_input_chars=max_input_chars,
         )
 
     def _build_execution_result(
