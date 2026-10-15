@@ -1,4 +1,4 @@
-﻿import pytest
+import pytest
 from pydantic import ValidationError
 
 from app.models.ai_analysis import AIAnalysisResult, AIFactSuggestion
@@ -117,14 +117,28 @@ def test_ai_execution_result_rejects_autonomous_mode_without_reason():
         )
 
 
-def test_ai_execution_result_rejects_unknown_provider():
+def test_ai_execution_result_accepts_configured_provider():
+    from app.models.ai_analysis import AIAnalysisExecutionResult
+
+    result = AIAnalysisExecutionResult(
+        summary="Autonomous result.",
+        analysis_mode="autonomous",
+        ai_provider="deepseek",
+        ai_model="deepseek-flash",
+        fallback_reason="provider_unavailable",
+    )
+
+    assert result.ai_provider == "deepseek"
+
+
+def test_ai_execution_result_rejects_blank_provider():
     from app.models.ai_analysis import AIAnalysisExecutionResult
 
     with pytest.raises(ValidationError):
         AIAnalysisExecutionResult(
             summary="Autonomous result.",
             analysis_mode="autonomous",
-            ai_provider="unknown-provider",
+            ai_provider="   ",
             ai_model="test-model",
             fallback_reason="provider_unavailable",
         )

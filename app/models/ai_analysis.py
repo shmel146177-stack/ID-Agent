@@ -204,7 +204,7 @@ class AIAnalysisExecutionResult(AIAnalysisResult):
     """Result with trusted runtime diagnostics."""
 
     analysis_mode: Literal["openai", "autonomous"]
-    ai_provider: Literal["openai"]
+    ai_provider: str
     ai_model: str
     fallback_reason: AIFallbackReason | None = None
     excluded_autonomous_fact_fields: list[str] = Field(default_factory=list)
@@ -227,6 +227,11 @@ class AIAnalysisExecutionResult(AIAnalysisResult):
 
     @model_validator(mode="after")
     def validate_execution_diagnostics(self):
+        self.ai_provider = self.ai_provider.strip()
+
+        if not self.ai_provider:
+            raise ValueError("ai_provider must not be blank")
+
         if not self.ai_model.strip():
             raise ValueError("ai_model must not be blank")
 

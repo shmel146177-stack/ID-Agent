@@ -296,3 +296,21 @@ def test_with_settings_selects_responses_backend_for_openai():
     service = AIDocumentAnalysisService.with_settings(ai_client=ai_client)
 
     assert isinstance(service.analysis_backend, OpenAIResponsesBackend)
+
+
+def test_analysis_reports_configured_provider_and_model():
+    expected = AIAnalysisResult(summary="Документ проанализирован.")
+    ai_client = AIClient(
+        settings=create_settings(),
+        client_factory=ClientFactoryStub(
+            OpenAIClientStub([CompletionStub(MessageStub(parsed=expected))])
+        ),
+    )
+
+    service = AIDocumentAnalysisService.with_settings(ai_client=ai_client)
+    result = service.analyze_text("document.pdf", "Текст документа.")
+
+    assert result.ai_provider == "deepseek"
+    assert result.ai_model == "deepseek-flash"
+    assert result.analysis_mode == "openai"
+    assert result.fallback_reason is None

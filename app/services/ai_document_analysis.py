@@ -107,7 +107,7 @@ class AIDocumentAnalysisService:
         return AIAnalysisExecutionResult(
             **result.model_dump(),
             analysis_mode=analysis_mode,
-            ai_provider="openai",
+            ai_provider=self.ai_client.settings.provider,
             ai_model=self.ai_client.settings.model,
             fallback_reason=fallback_reason,
             excluded_autonomous_fact_fields=(excluded_autonomous_fact_fields or []),
