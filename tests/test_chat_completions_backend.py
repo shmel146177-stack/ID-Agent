@@ -203,24 +203,35 @@ def test_chat_backend_retries_in_json_object_mode_after_bad_request():
 
 
 def test_chat_backend_rejects_unstructured_answer():
-    backend, _, _ = create_backend(
-        [CompletionStub(MessageStub(content="Извините, не могу."))]
+    backend, openai_stub, _ = create_backend(
+        [
+            CompletionStub(MessageStub(content="Извините, не могу.")),
+            CompletionStub(MessageStub(content="Извините, не могу.")),
+        ]
     )
 
     with pytest.raises(AIUnavailableError) as error:
         backend("document.pdf", "Текст документа.")
 
     assert error.value.reason == "invalid_provider_response"
+    assert len(openai_stub.chat.completions.calls) == 2
 
 
 def test_chat_backend_rejects_empty_choices():
-    backend, _, _ = create_backend([CompletionStub(None)])
+    backend, openai_stub, _ = create_backend(
+        [
+            CompletionStub(None),
+            CompletionStub(None),
+        ]
+    )
 
     with pytest.raises(
         AIUnavailableError,
         match="структурированный результат",
     ):
         backend("document.pdf", "Текст документа.")
+
+    assert len(openai_stub.chat.completions.calls) == 2
 
 
 def test_chat_backend_limits_input_and_adds_warning():
@@ -335,3 +346,63 @@ def test_chat_backend_reports_rejected_key():
 
     assert error.value.reason == "invalid_credential"
     assert "ID_AGENT_AI_API_KEY" in str(error.value)
+
+
+def test_chat_backend_repeats_once_after_empty_answer():
+    expected = AIAnalysisResult(summary="Ответ со второй попытки.")
+    backend, openai_stub, _ = create_backend(
+        [
+            CompletionStub(MessageStub(content="")),
+            CompletionStub(MessageStub(parsed=expected)),
+        ]
+    )
+
+    result = backend("document.pdf", "Текст документа.")
+
+    assert result is expected
+    assert len(openai_stub.chat.completions.calls) == 2
+
+
+def test_chat_backend_fails_after_two_empty_answers():
+    backend, openai_stub, _ = create_backend(
+        [
+            CompletionStub(MessageStub(content="")),
+            CompletionStub(MessageStub(content="   ")),
+        ]
+    )
+
+    with pytest.raises(AIUnavailableError) as error:
+        backend("document.pdf", "Текст документа.")
+
+    assert error.value.reason == "invalid_provider_response"
+    assert len(openai_stub.chat.completions.calls) == 2
+
+
+def test_chat_backend_remembers_rejected_schema():
+    def bad_request():
+        error = BadRequestError.__new__(BadRequestError)
+        Exception.__init__(error, "response_format json_schema is unsupported")
+        return error
+
+    answer = '{"summary": "Ответ в режиме json_object."}'
+
+    backend, openai_stub, _ = create_backend(
+        [
+            bad_request(),
+            CompletionStub(MessageStub(content=answer)),
+            CompletionStub(MessageStub(content=answer)),
+        ]
+    )
+
+    first = backend("document.pdf", "Текст документа.")
+    second = backend("second.pdf", "Текст второго документа.")
+
+    assert first.summary == "Ответ в режиме json_object."
+    assert second.summary == "Ответ в режиме json_object."
+
+    calls = openai_stub.chat.completions.calls
+
+    assert len(calls) == 3
+    assert calls[0]["response_format"] is AIAnalysisResult
+    assert calls[1]["response_format"] == {"type": "json_object"}
+    assert calls[2]["response_format"] == {"type": "json_object"}

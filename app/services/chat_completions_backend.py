@@ -3,8 +3,11 @@
 Нужен провайдерам, которые не поддерживают Responses API: DeepSeek, локальный
 сервер LM Studio и другие OpenAI-совместимые эндпоинты. Сначала запрос идёт
 со строгой схемой; если провайдер её не принимает, запрос повторяется в режиме
-json_object со схемой в тексте. Текстовый ответ разбирается, а при неудаче
-поднимается AIUnavailableError с причиной invalid_provider_response.
+json_object со схемой в тексте, и отказ запоминается — следующие документы
+сразу идут запасным путём. Пустой ответ повторяется один раз: DeepSeek
+предупреждает о таких случаях в своей документации. Текстовый ответ
+разбирается, а при неудаче поднимается AIUnavailableError с причиной
+invalid_provider_response.
 """
 
 from openai import BadRequestError
@@ -41,6 +44,9 @@ class ChatCompletionsBackend:
         self.ai_client = ai_client or AIClient()
         self.max_input_chars = max_input_chars
 
+        # Поддерживает ли провайдер строгую схему. None — ещё неизвестно.
+        self._schema_supported: bool | None = None
+
     @property
     def label(self) -> str:
         return provider_label(self.ai_client.settings.provider)
@@ -64,11 +70,27 @@ class ChatCompletionsBackend:
         )
 
         client = self.ai_client.get_client()
-        label = self.label
+
+        result = self._attempt(client, user_content)
+
+        if result is None:
+            # Провайдер иногда отвечает пустым содержимым — повторяем один раз.
+            result = self._attempt(client, user_content)
+
+        structured = ensure_structured_result(result, self.label)
+
+        return apply_truncation_warning(
+            structured,
+            was_truncated,
+            self.max_input_chars,
+        )
+
+    def _attempt(self, client, user_content: str) -> AIAnalysisResult | None:
+        """Одно обращение к провайдеру: структура из ответа либо из текста."""
 
         completion = run_provider_call(
             lambda: self._request(client, user_content),
-            label,
+            self.label,
         )
 
         message = _first_message(completion)
@@ -77,49 +99,49 @@ class ChatCompletionsBackend:
         if result is None:
             result = parse_structured_text(getattr(message, "content", None))
 
-        structured = ensure_structured_result(result, label)
-
-        return apply_truncation_warning(
-            structured,
-            was_truncated,
-            self.max_input_chars,
-        )
+        return result
 
     def _request(self, client, user_content: str):
         """Запрос со строгой схемой, а при её неприятии — в режиме json_object."""
 
-        model = self.ai_client.settings.model
+        if self._schema_supported is False:
+            return self._json_object_request(client, user_content)
 
         try:
-            return client.chat.completions.parse(
-                model=model,
-                messages=[
-                    {
-                        "role": "system",
-                        "content": self.SYSTEM_PROMPT,
-                    },
-                    {
-                        "role": "user",
-                        "content": user_content,
-                    },
-                ],
+            completion = client.chat.completions.parse(
+                model=self.ai_client.settings.model,
+                messages=self._messages(user_content),
                 response_format=AIAnalysisResult,
             )
         except BadRequestError:
-            return client.chat.completions.create(
-                model=model,
-                messages=[
-                    {
-                        "role": "system",
-                        "content": self.SYSTEM_PROMPT,
-                    },
-                    {
-                        "role": "user",
-                        "content": f"{user_content}\n\n{build_json_instruction()}",
-                    },
-                ],
-                response_format={"type": "json_object"},
-            )
+            self._schema_supported = False
+
+            return self._json_object_request(client, user_content)
+
+        self._schema_supported = True
+
+        return completion
+
+    def _json_object_request(self, client, user_content: str):
+        """Запрос в режиме json_object со схемой в тексте сообщения."""
+
+        return client.chat.completions.create(
+            model=self.ai_client.settings.model,
+            messages=self._messages(f"{user_content}\n\n{build_json_instruction()}"),
+            response_format={"type": "json_object"},
+        )
+
+    def _messages(self, user_content: str) -> list[dict]:
+        return [
+            {
+                "role": "system",
+                "content": self.SYSTEM_PROMPT,
+            },
+            {
+                "role": "user",
+                "content": user_content,
+            },
+        ]
 
 
 def _first_message(completion):
