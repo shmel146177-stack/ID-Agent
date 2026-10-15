@@ -90,10 +90,7 @@ def test_project_document_set_adds_supporting_requirements_to_sections(
         supporting_documents,
     )
 
-    by_code = {
-        section["code"]: section
-        for section in sections
-    }
+    by_code = {section["code"]: section for section in sections}
 
     assert by_code["executive_schemes"]["detected"]["required_count"] == 1
     assert by_code["tests"]["detected"]["required_count"] == 1

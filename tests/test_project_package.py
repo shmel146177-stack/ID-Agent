@@ -134,8 +134,8 @@ def test_project_package_create_builds_package_summary(monkeypatch, tmp_path):
 
         manifest_path.write_text(
             (
-                "{\"status\": \"\u041d\u0435\u043f\u043e\u043b\u043d\u044b\u0439 "
-                "\u043a\u043e\u043c\u043f\u043b\u0435\u043a\u0442\"}"
+                '{"status": "\u041d\u0435\u043f\u043e\u043b\u043d\u044b\u0439 '
+                '\u043a\u043e\u043c\u043f\u043b\u0435\u043a\u0442"}'
             ),
             encoding="utf-8",
         )

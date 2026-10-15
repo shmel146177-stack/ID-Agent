@@ -37,7 +37,9 @@ class SupportingDocumentsRegistry:
                 "section_number": "04",
                 "section_title": "Исполнительные схемы",
                 "title": ("Исполнительная схема " "заземляющего устройства"),
-                "document_types": ["\u0418\u0441\u043f\u043e\u043b\u043d\u0438\u0442\u0435\u043b\u044c\u043d\u0430\u044f \u0441\u0445\u0435\u043c\u0430"],
+                "document_types": [
+                    "\u0418\u0441\u043f\u043e\u043b\u043d\u0438\u0442\u0435\u043b\u044c\u043d\u0430\u044f \u0441\u0445\u0435\u043c\u0430"
+                ],
                 "match_keywords": [
                     "\u0437\u0430\u0437\u0435\u043c\u043b",
                 ],
@@ -74,7 +76,11 @@ class SupportingDocumentsRegistry:
                 "section_number": "06",
                 "section_title": "Паспорта и сертификаты",
                 "title": ("Документы качества на материалы " "заземляющего устройства"),
-                "document_types": ["\u041f\u0430\u0441\u043f\u043e\u0440\u0442 \u043e\u0431\u043e\u0440\u0443\u0434\u043e\u0432\u0430\u043d\u0438\u044f", "\u0421\u0435\u0440\u0442\u0438\u0444\u0438\u043a\u0430\u0442", "\u0414\u0435\u043a\u043b\u0430\u0440\u0430\u0446\u0438\u044f"],
+                "document_types": [
+                    "\u041f\u0430\u0441\u043f\u043e\u0440\u0442 \u043e\u0431\u043e\u0440\u0443\u0434\u043e\u0432\u0430\u043d\u0438\u044f",
+                    "\u0421\u0435\u0440\u0442\u0438\u0444\u0438\u043a\u0430\u0442",
+                    "\u0414\u0435\u043a\u043b\u0430\u0440\u0430\u0446\u0438\u044f",
+                ],
                 "match_any_keywords": [
                     "\u0437\u0430\u0437\u0435\u043c\u043b",
                     "\u044d\u043b\u0435\u043a\u0442\u0440\u043e\u0434",
@@ -98,7 +104,9 @@ class SupportingDocumentsRegistry:
                 "section_number": "04",
                 "section_title": "Исполнительные схемы",
                 "title": ("Исполнительная схема " "кабельного ввода"),
-                "document_types": ["\u0418\u0441\u043f\u043e\u043b\u043d\u0438\u0442\u0435\u043b\u044c\u043d\u0430\u044f \u0441\u0445\u0435\u043c\u0430"],
+                "document_types": [
+                    "\u0418\u0441\u043f\u043e\u043b\u043d\u0438\u0442\u0435\u043b\u044c\u043d\u0430\u044f \u0441\u0445\u0435\u043c\u0430"
+                ],
                 "match_keywords": [
                     "\u043a\u0430\u0431\u0435\u043b\u044c\u043d",
                     "\u0432\u0432\u043e\u0434",
@@ -137,7 +145,11 @@ class SupportingDocumentsRegistry:
                     "Документы качества на кабель, "
                     "защитные трубы и элементы проходок"
                 ),
-                "document_types": ["\u041f\u0430\u0441\u043f\u043e\u0440\u0442 \u043e\u0431\u043e\u0440\u0443\u0434\u043e\u0432\u0430\u043d\u0438\u044f", "\u0421\u0435\u0440\u0442\u0438\u0444\u0438\u043a\u0430\u0442", "\u0414\u0435\u043a\u043b\u0430\u0440\u0430\u0446\u0438\u044f"],
+                "document_types": [
+                    "\u041f\u0430\u0441\u043f\u043e\u0440\u0442 \u043e\u0431\u043e\u0440\u0443\u0434\u043e\u0432\u0430\u043d\u0438\u044f",
+                    "\u0421\u0435\u0440\u0442\u0438\u0444\u0438\u043a\u0430\u0442",
+                    "\u0414\u0435\u043a\u043b\u0430\u0440\u0430\u0446\u0438\u044f",
+                ],
                 "match_any_keywords": [
                     "\u043a\u0430\u0431\u0435\u043b",
                     "\u0442\u0440\u0443\u0431",
@@ -158,7 +170,9 @@ class SupportingDocumentsRegistry:
                 "section_number": "04",
                 "section_title": "Исполнительные схемы",
                 "title": ("Исполнительная схема " "расположения временных опор"),
-                "document_types": ["\u0418\u0441\u043f\u043e\u043b\u043d\u0438\u0442\u0435\u043b\u044c\u043d\u0430\u044f \u0441\u0445\u0435\u043c\u0430"],
+                "document_types": [
+                    "\u0418\u0441\u043f\u043e\u043b\u043d\u0438\u0442\u0435\u043b\u044c\u043d\u0430\u044f \u0441\u0445\u0435\u043c\u0430"
+                ],
                 "match_keywords": [
                     "\u0440\u0430\u0441\u043f\u043e\u043b\u043e\u0436",
                     "\u043e\u043f\u043e\u0440",
@@ -178,7 +192,11 @@ class SupportingDocumentsRegistry:
                     "Документы качества на материалы "
                     "оснований и элементов временных опор"
                 ),
-                "document_types": ["\u041f\u0430\u0441\u043f\u043e\u0440\u0442 \u043e\u0431\u043e\u0440\u0443\u0434\u043e\u0432\u0430\u043d\u0438\u044f", "\u0421\u0435\u0440\u0442\u0438\u0444\u0438\u043a\u0430\u0442", "\u0414\u0435\u043a\u043b\u0430\u0440\u0430\u0446\u0438\u044f"],
+                "document_types": [
+                    "\u041f\u0430\u0441\u043f\u043e\u0440\u0442 \u043e\u0431\u043e\u0440\u0443\u0434\u043e\u0432\u0430\u043d\u0438\u044f",
+                    "\u0421\u0435\u0440\u0442\u0438\u0444\u0438\u043a\u0430\u0442",
+                    "\u0414\u0435\u043a\u043b\u0430\u0440\u0430\u0446\u0438\u044f",
+                ],
                 "match_any_keywords": [
                     "\u043e\u043f\u043e\u0440",
                     "\u0444\u0443\u043d\u0434\u0430\u043c\u0435\u043d\u0442",
@@ -274,9 +292,21 @@ class SupportingDocumentsRegistry:
             "priority": (requirement["priority"]),
             "confirmation_required": (True),
             "reason": (requirement["reason"]),
-            **({"document_types": list(requirement["document_types"])} if requirement.get("document_types") else {}),
-            **({"match_keywords": list(requirement["match_keywords"])} if requirement.get("match_keywords") else {}),
-            **({"match_any_keywords": list(requirement["match_any_keywords"])} if requirement.get("match_any_keywords") else {}),
+            **(
+                {"document_types": list(requirement["document_types"])}
+                if requirement.get("document_types")
+                else {}
+            ),
+            **(
+                {"match_keywords": list(requirement["match_keywords"])}
+                if requirement.get("match_keywords")
+                else {}
+            ),
+            **(
+                {"match_any_keywords": list(requirement["match_any_keywords"])}
+                if requirement.get("match_any_keywords")
+                else {}
+            ),
             "source_act": {
                 "code": (act.get("code")),
                 "title": (act.get("act_title") or act.get("title")),
@@ -323,19 +353,17 @@ class SupportingDocumentsRegistry:
 
             item = dict(requirement)
 
-            matched_document = matched_by_code.get(
-                item.get("code")
-            )
+            matched_document = matched_by_code.get(item.get("code"))
 
             if matched_document:
 
-                item["status"] = "\u0414\u043e\u043a\u0443\u043c\u0435\u043d\u0442 \u043e\u0431\u043d\u0430\u0440\u0443\u0436\u0435\u043d"
+                item["status"] = (
+                    "\u0414\u043e\u043a\u0443\u043c\u0435\u043d\u0442 \u043e\u0431\u043d\u0430\u0440\u0443\u0436\u0435\u043d"
+                )
 
                 item["matched_document"] = {
                     "filename": matched_document.get("filename"),
-                    "classification": matched_document.get(
-                        "classification"
-                    ),
+                    "classification": matched_document.get("classification"),
                 }
 
             result.append(item)

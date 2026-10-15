@@ -5,7 +5,6 @@ from app.services.knowledge_repository import KnowledgeRepository
 from app.services.knowledge_service import KnowledgeService
 
 
-
 def test_knowledge_service_finds_chunk_by_text():
     grounding = KnowledgeChunk(
         source_id="sp-grounding",
@@ -243,6 +242,7 @@ def test_knowledge_service_build_context_respects_character_limit():
 
     assert context == ""
 
+
 def test_knowledge_service_loads_chunks_from_repository(tmp_path):
     chunk = KnowledgeChunk(
         source_id="sp-grounding",
@@ -251,21 +251,18 @@ def test_knowledge_service_loads_chunks_from_repository(tmp_path):
         page=10,
         text="Grounding conductors must follow the design.",
     )
-    repository = KnowledgeRepository(
-        tmp_path / "knowledge" / "chunks.json"
-    )
+    repository = KnowledgeRepository(tmp_path / "knowledge" / "chunks.json")
     repository.save([chunk])
 
     service = KnowledgeService.from_repository(repository)
 
     assert service.search("grounding") == [chunk]
 
+
 def test_knowledge_service_persists_added_chunk_in_repository(
     tmp_path,
 ):
-    repository = KnowledgeRepository(
-        tmp_path / "knowledge" / "chunks.json"
-    )
+    repository = KnowledgeRepository(tmp_path / "knowledge" / "chunks.json")
     service = KnowledgeService.from_repository(repository)
     chunk = KnowledgeChunk(
         source_id="sp-grounding",
@@ -279,12 +276,11 @@ def test_knowledge_service_persists_added_chunk_in_repository(
 
     assert repository.load() == [chunk]
 
+
 def test_knowledge_service_does_not_persist_duplicate_chunk(
     tmp_path,
 ):
-    repository = KnowledgeRepository(
-        tmp_path / "knowledge" / "chunks.json"
-    )
+    repository = KnowledgeRepository(tmp_path / "knowledge" / "chunks.json")
     service = KnowledgeService.from_repository(repository)
     chunk = KnowledgeChunk(
         source_id="sp-grounding",
@@ -304,9 +300,7 @@ def test_knowledge_service_does_not_persist_duplicate_chunk(
 def test_knowledge_service_upserts_existing_source_page(
     tmp_path,
 ):
-    repository = KnowledgeRepository(
-        tmp_path / "knowledge" / "chunks.json"
-    )
+    repository = KnowledgeRepository(tmp_path / "knowledge" / "chunks.json")
     original = KnowledgeChunk(
         source_id="drawing-11240-24-as",
         source_title="Working documentation",
@@ -356,9 +350,7 @@ def test_knowledge_service_build_context_excludes_unreviewed_ocr_by_default():
         requires_human_review=True,
         text="Shared safety requirement from pending OCR.",
     )
-    service = KnowledgeService(
-        [native, reviewed_ocr, pending_ocr]
-    )
+    service = KnowledgeService([native, reviewed_ocr, pending_ocr])
 
     context = service.build_context("safety")
 
@@ -446,10 +438,6 @@ def test_knowledge_service_finds_matching_unreviewed_ocr_results():
         ]
     )
 
-    results = service.search_unreviewed_ocr_results(
-        "safety"
-    )
+    results = service.search_unreviewed_ocr_results("safety")
 
-    assert [result.chunk for result in results] == [
-        pending_ocr
-    ]
+    assert [result.chunk for result in results] == [pending_ocr]

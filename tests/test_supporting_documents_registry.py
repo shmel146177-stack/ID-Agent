@@ -76,10 +76,7 @@ def test_supporting_documents_registry_builds_requirements(monkeypatch, tmp_path
     assert len(result["requirements"]) == 3
     assert len(result["sections"]) == 3
 
-    codes = {
-        item["code"]
-        for item in result["requirements"]
-    }
+    codes = {item["code"] for item in result["requirements"]}
 
     assert codes == {
         "grounding_executive_scheme",
@@ -87,10 +84,7 @@ def test_supporting_documents_registry_builds_requirements(monkeypatch, tmp_path
         "grounding_quality_documents",
     }
 
-    section_codes = {
-        section["code"]
-        for section in result["sections"]
-    }
+    section_codes = {section["code"] for section in result["sections"]}
 
     assert section_codes == {
         "executive_schemes",
@@ -109,7 +103,11 @@ def test_supporting_documents_registry_builds_requirements(monkeypatch, tmp_path
     assert scheme["match_keywords"] == ["заземл"]
 
     quality = by_code["grounding_quality_documents"]
-    assert quality["document_types"] == ["Паспорт оборудования", "Сертификат", "Декларация"]
+    assert quality["document_types"] == [
+        "Паспорт оборудования",
+        "Сертификат",
+        "Декларация",
+    ]
     assert "полос" in quality["match_any_keywords"]
 
     first = result["requirements"][0]
@@ -233,30 +231,35 @@ def test_supporting_documents_registry_matches_saved_analysis(
     matched = matching["matched"][0]
 
     assert matched["requirement_code"] == "grounding_quality_documents"
-    assert matched["filename"] == "\u0421\u0435\u0440\u0442\u0438\u0444\u0438\u043a\u0430\u0442.pdf"
-    assert matched["classification"] == "\u0421\u0435\u0440\u0442\u0438\u0444\u0438\u043a\u0430\u0442"
+    assert (
+        matched["filename"]
+        == "\u0421\u0435\u0440\u0442\u0438\u0444\u0438\u043a\u0430\u0442.pdf"
+    )
+    assert (
+        matched["classification"]
+        == "\u0421\u0435\u0440\u0442\u0438\u0444\u0438\u043a\u0430\u0442"
+    )
 
+    requirements_by_code = {item["code"]: item for item in result["requirements"]}
 
-    requirements_by_code = {
-        item["code"]: item
-        for item in result["requirements"]
-    }
+    quality_requirement = requirements_by_code["grounding_quality_documents"]
 
-    quality_requirement = requirements_by_code[
-        "grounding_quality_documents"
-    ]
-
-    assert quality_requirement["status"] == "\u0414\u043e\u043a\u0443\u043c\u0435\u043d\u0442 \u043e\u0431\u043d\u0430\u0440\u0443\u0436\u0435\u043d"
+    assert (
+        quality_requirement["status"]
+        == "\u0414\u043e\u043a\u0443\u043c\u0435\u043d\u0442 \u043e\u0431\u043d\u0430\u0440\u0443\u0436\u0435\u043d"
+    )
 
     assert quality_requirement["matched_document"] == {
         "filename": "\u0421\u0435\u0440\u0442\u0438\u0444\u0438\u043a\u0430\u0442.pdf",
         "classification": "\u0421\u0435\u0440\u0442\u0438\u0444\u0438\u043a\u0430\u0442",
     }
 
-    assert requirements_by_code[
-        "grounding_executive_scheme"
-    ]["status"] != "\u0414\u043e\u043a\u0443\u043c\u0435\u043d\u0442 \u043e\u0431\u043d\u0430\u0440\u0443\u0436\u0435\u043d"
+    assert (
+        requirements_by_code["grounding_executive_scheme"]["status"]
+        != "\u0414\u043e\u043a\u0443\u043c\u0435\u043d\u0442 \u043e\u0431\u043d\u0430\u0440\u0443\u0436\u0435\u043d"
+    )
 
-    assert requirements_by_code[
-        "grounding_resistance_protocol"
-    ]["status"] != "\u0414\u043e\u043a\u0443\u043c\u0435\u043d\u0442 \u043e\u0431\u043d\u0430\u0440\u0443\u0436\u0435\u043d"
+    assert (
+        requirements_by_code["grounding_resistance_protocol"]["status"]
+        != "\u0414\u043e\u043a\u0443\u043c\u0435\u043d\u0442 \u043e\u0431\u043d\u0430\u0440\u0443\u0436\u0435\u043d"
+    )

@@ -74,7 +74,6 @@ class DocumentClassifier:
         }
 
         self.text_rules = {
-
             "Паспорт оборудования": {
                 "паспорт": 8,
                 "паспорт изделия": 10,
@@ -85,7 +84,6 @@ class DocumentClassifier:
                 "изготовитель": 2,
                 "технические характеристики": 4,
             },
-
             "Сертификат": {
                 "сертификат соответствия": 12,
                 "сертификат": 8,
@@ -94,7 +92,6 @@ class DocumentClassifier:
                 "сертификации": 3,
                 "заявитель": 2,
             },
-
             "Схема": {
                 "принципиальная схема": 12,
                 "электрическая схема": 12,
@@ -103,7 +100,6 @@ class DocumentClassifier:
                 "схема соединений": 10,
                 "схема": 4,
             },
-
             "Чертеж": {
                 "чертеж": 8,
                 "чертёж": 8,
@@ -113,7 +109,6 @@ class DocumentClassifier:
                 "разработал": 2,
                 "проверил": 2,
             },
-
             "Протокол": {
                 "протокол испытаний": 12,
                 "протокол измерений": 12,
@@ -124,7 +119,6 @@ class DocumentClassifier:
                 "испытание": 2,
                 "измерение": 2,
             },
-
             "Руководство": {
                 "руководство по эксплуатации": 12,
                 "инструкция по эксплуатации": 12,
@@ -134,14 +128,12 @@ class DocumentClassifier:
                 "техническое обслуживание": 4,
                 "эксплуатация": 3,
             },
-
             "Декларация": {
                 "декларация о соответствии": 12,
                 "декларация": 8,
                 "декларирование соответствия": 6,
                 "соответствует требованиям": 3,
             },
-
             "АОСР": {
                 "акт освидетельствования скрытых работ": 15,
                 "освидетельствования скрытых работ": 12,
@@ -149,7 +141,6 @@ class DocumentClassifier:
                 "к освидетельствованию предъявлены": 8,
                 "последующие работы": 3,
             },
-
             "Счет-фактура": {
                 "счет-фактура": 20,
                 "счет фактура": 20,
@@ -168,69 +159,35 @@ class DocumentClassifier:
             },
         }
 
-    def _normalize(
-        self,
-        value: str
-    ) -> str:
+    def _normalize(self, value: str) -> str:
 
         if not value:
             return ""
 
         value = value.lower()
 
-        value = value.replace(
-            "ё",
-            "е"
-        )
+        value = value.replace("ё", "е")
 
         # OCR иногда ставит разные тире
-        value = value.replace(
-            "–",
-            "-"
-        )
+        value = value.replace("–", "-")
 
-        value = value.replace(
-            "—",
-            "-"
-        )
+        value = value.replace("—", "-")
 
-        value = re.sub(
-            r"\s+",
-            " ",
-            value
-        )
+        value = re.sub(r"\s+", " ", value)
 
         return value.strip()
 
-    def _classify_by_filename(
-        self,
-        filename: str
-    ):
+    def _classify_by_filename(self, filename: str):
 
-        normalized_filename = (
-            self._normalize(
-                os.path.basename(
-                    filename
-                )
-            )
-        )
+        normalized_filename = self._normalize(os.path.basename(filename))
 
-        for document_type, keywords in (
-            self.filename_rules.items()
-        ):
+        for document_type, keywords in self.filename_rules.items():
 
             for keyword in keywords:
 
-                normalized_keyword = (
-                    self._normalize(
-                        keyword
-                    )
-                )
+                normalized_keyword = self._normalize(keyword)
 
-                if (
-                    normalized_keyword
-                    in normalized_filename
-                ):
+                if normalized_keyword in normalized_filename:
                     return document_type
 
         return None
@@ -256,82 +213,46 @@ class DocumentClassifier:
 
         return None
 
-    def _classify_by_text(
-        self,
-        text: str
-    ):
+    def _classify_by_text(self, text: str):
 
-        normalized_text = (
-            self._normalize(
-                text
-            )
-        )
+        normalized_text = self._normalize(text)
 
         if not normalized_text:
             return None
 
         scores = {}
 
-        for document_type, rules in (
-            self.text_rules.items()
-        ):
+        for document_type, rules in self.text_rules.items():
 
             score = 0
 
-            for phrase, weight in (
-                rules.items()
-            ):
+            for phrase, weight in rules.items():
 
-                normalized_phrase = (
-                    self._normalize(
-                        phrase
-                    )
-                )
+                normalized_phrase = self._normalize(phrase)
 
-                occurrences = (
-                    normalized_text.count(
-                        normalized_phrase
-                    )
-                )
+                occurrences = normalized_text.count(normalized_phrase)
 
                 if occurrences > 0:
 
-                    occurrences = min(
-                        occurrences,
-                        3
-                    )
+                    occurrences = min(occurrences, 3)
 
-                    score += (
-                        weight
-                        * occurrences
-                    )
+                    score += weight * occurrences
 
-            scores[
-                document_type
-            ] = score
+            scores[document_type] = score
 
         if not scores:
             return None
 
-        best_type = max(
-            scores,
-            key=scores.get
-        )
+        best_type = max(scores, key=scores.get)
 
-        best_score = scores[
-            best_type
-        ]
+        best_score = scores[best_type]
 
         if best_score < 5:
             return None
 
         return best_type
 
-    def classify(
-        self,
-        filename,
-        text: str = ""
-    ):
+    def classify(self, filename, text: str = ""):
 
         document = None
 
@@ -339,18 +260,10 @@ class DocumentClassifier:
         if not isinstance(filename, (str, bytes, os.PathLike)):
             document = filename
 
-            filename = getattr(
-                document,
-                "filename",
-                ""
-            )
+            filename = getattr(document, "filename", "")
 
             if not text:
-                text = getattr(
-                    document,
-                    "text",
-                    ""
-                )
+                text = getattr(document, "text", "")
 
         # 1. Strong text markers have highest priority
         filename_result = self._classify_by_filename(filename)
@@ -384,4 +297,6 @@ class DocumentClassifier:
 
         # Новый интерфейс: classify(filename, text)
         return result
+
+
 document_classifier = DocumentClassifier()

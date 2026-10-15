@@ -14,7 +14,7 @@ class DocumentService:
             "filename": filename,
             "extension": extension,
             "size_bytes": size,
-            "status": "Документ определён"
+            "status": "Документ определён",
         }
 
         if extension.lower() == ".pdf":

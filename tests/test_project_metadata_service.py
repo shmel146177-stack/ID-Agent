@@ -125,8 +125,5 @@ def test_project_metadata_service_updates_missing_fields(monkeypatch, tmp_path):
     assert result["project_card"]["object_name"] == "Существующее название"
     assert result["project_card"]["address"] == "Москва"
     assert result["project_card"]["designer"] == "ООО Проект"
-    assert (
-        result["project_card"]["contractor"]
-        == "ООО Старый подрядчик"
-    )
+    assert result["project_card"]["contractor"] == "ООО Старый подрядчик"
     assert result["project_card"]["contract_number"] == "15/ТП-2026"

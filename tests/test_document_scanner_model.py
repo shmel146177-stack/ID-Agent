@@ -22,9 +22,7 @@ def test_document_scanner_pdf_and_missing_file(
         },
     )
 
-    model = scanner.scan(
-        str(pdf_file)
-    )
+    model = scanner.scan(str(pdf_file))
 
     assert model.filename == "TEST.PDF"
     assert model.extension == ".pdf"
@@ -34,6 +32,4 @@ def test_document_scanner_pdf_and_missing_file(
     missing_file = tmp_path / "missing.pdf"
 
     with pytest.raises(FileNotFoundError):
-        scanner.scan(
-            str(missing_file)
-        )
+        scanner.scan(str(missing_file))

@@ -127,10 +127,10 @@ class DrawingRegisterService:
                         allow_title_only=True,
                     )
 
-                    visual_is_usable = (
-                        visual_analysis.get("register_block_detected", False)
-                        and visual_analysis.get("entries_count", 0)
-                        >= analysis.get("entries_count", 0)
+                    visual_is_usable = visual_analysis.get(
+                        "register_block_detected", False
+                    ) and visual_analysis.get("entries_count", 0) >= analysis.get(
+                        "entries_count", 0
                     )
 
                     if visual_is_usable:
@@ -145,19 +145,16 @@ class DrawingRegisterService:
                             [],
                         )
 
-                        if (
-                            not visual_analysis.get("numbering_restored", False)
-                            and embedded_expected_count == len(visual_entries)
-                        ):
+                        if not visual_analysis.get(
+                            "numbering_restored", False
+                        ) and embedded_expected_count == len(visual_entries):
 
                             for index, entry in enumerate(
                                 visual_entries,
                                 start=1,
                             ):
                                 entry["sheet_number"] = index
-                                entry["number_source"] = (
-                                    "restored_visual_sequence"
-                                )
+                                entry["number_source"] = "restored_visual_sequence"
 
                             visual_analysis["numbering_restored"] = True
                             visual_analysis["numbered_entries_count"] = len(
@@ -230,8 +227,7 @@ class DrawingRegisterService:
                 total_entries += register_data["entries_count"]
 
         expected_sheet_count = sum(
-            register.get("expected_sheet_count", 0)
-            for register in registers
+            register.get("expected_sheet_count", 0) for register in registers
         )
 
         output_path = self._output_path(project_name)

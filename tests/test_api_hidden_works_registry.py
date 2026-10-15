@@ -23,17 +23,13 @@ def test_project_api_hidden_works_registry_success_and_not_found(monkeypatch):
         lambda name: expected,
     )
 
-    result = api_module.get_hidden_works_registry(
-        project_name
-    )
+    result = api_module.get_hidden_works_registry(project_name)
 
     assert result == expected
     assert result["acts_count"] == 2
 
     def raise_not_found(name):
-        raise FileNotFoundError(
-            f"Проект не найден: {name}"
-        )
+        raise FileNotFoundError(f"Проект не найден: {name}")
 
     monkeypatch.setattr(
         api_module.hidden_works_registry,
@@ -42,9 +38,7 @@ def test_project_api_hidden_works_registry_success_and_not_found(monkeypatch):
     )
 
     with pytest.raises(HTTPException) as error:
-        api_module.get_hidden_works_registry(
-            project_name
-        )
+        api_module.get_hidden_works_registry(project_name)
 
     assert error.value.status_code == 404
     assert project_name in error.value.detail

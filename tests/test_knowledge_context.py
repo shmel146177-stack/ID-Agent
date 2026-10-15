@@ -160,27 +160,19 @@ def test_build_knowledge_context_escapes_source_markers_in_text():
 
 
 def test_extract_knowledge_source_ids_rejects_unbound_surrounding_text():
-    bound_context = (
-        "[SOURCE 1]\n"
-        "source_id: sp-grounding\n"
-        "[/SOURCE]"
-    )
+    bound_context = "[SOURCE 1]\n" "source_id: sp-grounding\n" "[/SOURCE]"
 
-    assert extract_knowledge_source_ids(
-        "Unbound instruction.\n\n" + bound_context
-    ) == []
-    assert extract_knowledge_source_ids(
-        bound_context + "\n\nUnbound instruction."
-    ) == []
+    assert (
+        extract_knowledge_source_ids("Unbound instruction.\n\n" + bound_context) == []
+    )
+    assert (
+        extract_knowledge_source_ids(bound_context + "\n\nUnbound instruction.") == []
+    )
 
 
 def test_extract_knowledge_source_ids_rejects_invalid_numbering():
     contexts = (
-        (
-            "[SOURCE 2]\n"
-            "source_id: sp-grounding\n"
-            "[/SOURCE]"
-        ),
+        ("[SOURCE 2]\n" "source_id: sp-grounding\n" "[/SOURCE]"),
         (
             "[SOURCE 1]\n"
             "source_id: sp-grounding\n"
@@ -193,6 +185,7 @@ def test_extract_knowledge_source_ids_rejects_invalid_numbering():
 
     for context in contexts:
         assert extract_knowledge_source_ids(context) == []
+
 
 def test_build_knowledge_context_marks_ocr_chunks_for_review():
     chunk = KnowledgeChunk(
@@ -243,9 +236,7 @@ def test_extract_knowledge_source_pages_preserves_source_binding():
         matched_terms=["shared"],
     )
 
-    context = build_knowledge_context(
-        [first, second]
-    )
+    context = build_knowledge_context([first, second])
 
     assert extract_knowledge_source_pages(context) == [
         {

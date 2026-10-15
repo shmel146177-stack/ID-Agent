@@ -60,9 +60,7 @@ def test_independent_review_services_reject_concurrent_stale_update(
 
     def update(service):
         try:
-            results.append(
-                service.update_fact_review("voltage", request)
-            )
+            results.append(service.update_fact_review("voltage", request))
         except AIExclusionReviewError as error:
             errors.append(error)
 
@@ -89,9 +87,7 @@ def test_independent_review_services_reject_concurrent_stale_update(
     assert results[0]["review_revision"] == 1
     assert len(errors) == 1
     assert errors[0].status_code == 409
-    assert errors[0].detail == (
-        "AI review revision mismatch: expected 0, current 1"
-    )
+    assert errors[0].detail == ("AI review revision mismatch: expected 0, current 1")
 
 
 def test_reanalysis_waits_for_review_update_before_archiving(tmp_path):
@@ -167,9 +163,7 @@ def test_reanalysis_waits_for_review_update_before_archiving(tmp_path):
 
     assert not review_thread.is_alive()
     assert not analysis_thread.is_alive()
-    archived = analysis_project.get_ai_review_history(
-        analysis["analysis_id"]
-    )
+    archived = analysis_project.get_ai_review_history(analysis["analysis_id"])
     assert archived is not None
     assert archived["review_revision"] == 1
     assert archived["excluded_fact_reviews"][0]["field"] == "voltage"

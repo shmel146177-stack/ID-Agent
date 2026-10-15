@@ -153,10 +153,7 @@ class HiddenWorksActGenerator:
         project_name: str,
     ) -> Path:
 
-        return (
-            self._project_path(project_name)
-            / "hidden_works_act_data.json"
-        )
+        return self._project_path(project_name) / "hidden_works_act_data.json"
 
     def load_act_data(
         self,
@@ -168,9 +165,7 @@ class HiddenWorksActGenerator:
         ?????? ??????????? ????.
         """
 
-        data = self._load_json(
-            self._act_data_path(project_name)
-        )
+        data = self._load_json(self._act_data_path(project_name))
 
         acts = data.get("acts", {})
 
@@ -231,9 +226,7 @@ class HiddenWorksActGenerator:
             if value:
                 confirmed[field] = value
 
-        storage_path = self._act_data_path(
-            project_name
-        )
+        storage_path = self._act_data_path(project_name)
 
         storage = self._load_json(storage_path)
 
@@ -279,9 +272,7 @@ class HiddenWorksActGenerator:
         return {
             "project": project_name,
             "act_code": act_code,
-            "saved_fields": sorted(
-                confirmed.keys()
-            ),
+            "saved_fields": sorted(confirmed.keys()),
             "file": str(storage_path),
         }
 
@@ -464,15 +455,9 @@ class HiddenWorksActGenerator:
 
         act_data = act_data or {}
 
-        act_number = (
-            act_data.get("act_number")
-            or "[УКАЗАТЬ]"
-        )
+        act_number = act_data.get("act_number") or "[УКАЗАТЬ]"
 
-        act_date = (
-            act_data.get("act_date")
-            or "[УКАЗАТЬ]"
-        )
+        act_date = act_data.get("act_date") or "[УКАЗАТЬ]"
 
         self._set_cell_text(
             table.cell(0, 0),
@@ -640,31 +625,25 @@ class HiddenWorksActGenerator:
                 "\u041f\u0440\u0435\u0434\u0441\u0442\u0430\u0432\u0438\u0442\u0435\u043b\u044c "
                 "\u0437\u0430\u0441\u0442\u0440\u043e\u0439\u0449\u0438\u043a\u0430 / "
                 "\u0437\u0430\u043a\u0430\u0437\u0447\u0438\u043a\u0430",
-                act_data.get("customer_representative")
-                or default_rep,
+                act_data.get("customer_representative") or default_rep,
             ),
             (
                 "\u041f\u0440\u0435\u0434\u0441\u0442\u0430\u0432\u0438\u0442\u0435\u043b\u044c "
                 "\u0441\u0442\u0440\u043e\u0438\u0442\u0435\u043b\u044c\u043d\u043e\u0439 "
                 "\u043e\u0440\u0433\u0430\u043d\u0438\u0437\u0430\u0446\u0438\u0438",
-                act_data.get("contractor_representative")
-                or default_rep,
+                act_data.get("contractor_representative") or default_rep,
             ),
             (
                 "\u041f\u0440\u0435\u0434\u0441\u0442\u0430\u0432\u0438\u0442\u0435\u043b\u044c "
                 "\u0441\u0442\u0440\u043e\u0438\u0442\u0435\u043b\u044c\u043d\u043e\u0433\u043e "
                 "\u043a\u043e\u043d\u0442\u0440\u043e\u043b\u044f",
-                act_data.get(
-                    "construction_control_representative"
-                )
-                or default_rep,
+                act_data.get("construction_control_representative") or default_rep,
             ),
             (
                 "\u041f\u0440\u0435\u0434\u0441\u0442\u0430\u0432\u0438\u0442\u0435\u043b\u044c "
                 "\u043f\u0440\u043e\u0435\u043a\u0442\u043d\u043e\u0439 "
                 "\u043e\u0440\u0433\u0430\u043d\u0438\u0437\u0430\u0446\u0438\u0438",
-                act_data.get("designer_representative")
-                or designer_default,
+                act_data.get("designer_representative") or designer_default,
             ),
         ]
 
@@ -750,11 +729,7 @@ class HiddenWorksActGenerator:
 
         evidence = self._build_project_evidence(act)
 
-        evidence_text = (
-            "\n".join(evidence)
-            if evidence
-            else "[УКАЗАТЬ]"
-        )
+        evidence_text = "\n".join(evidence) if evidence else "[УКАЗАТЬ]"
 
         act_data = act_data or {}
 
@@ -763,31 +738,20 @@ class HiddenWorksActGenerator:
             or "[УКАЗАТЬ участок / оси / отметки / помещение]"
         )
 
-        actual_materials_value = act_data.get(
-            "actual_materials"
-        )
+        actual_materials_value = act_data.get("actual_materials")
 
         actual_materials = (
-            actual_materials_value
-            or "[УКАЗАТЬ марки, количество и документы качества]"
+            actual_materials_value or "[УКАЗАТЬ марки, количество и документы качества]"
         )
 
         materials_hint = config["materials_hint"]
 
         if not actual_materials_value:
-            materials_hint += (
-                ". [ПОДТВЕРДИТЬ ФАКТИЧЕСКИ]"
-            )
+            materials_hint += ". [ПОДТВЕРДИТЬ ФАКТИЧЕСКИ]"
 
-        work_start_date = (
-            act_data.get("work_start_date")
-            or "[УКАЗАТЬ]"
-        )
+        work_start_date = act_data.get("work_start_date") or "[УКАЗАТЬ]"
 
-        work_finish_date = (
-            act_data.get("work_finish_date")
-            or "[УКАЗАТЬ]"
-        )
+        work_finish_date = act_data.get("work_finish_date") or "[УКАЗАТЬ]"
 
         executive_scheme = (
             act_data.get("executive_scheme")
@@ -865,9 +829,7 @@ class HiddenWorksActGenerator:
             "Что необходимо проверить",
         )
 
-        document.add_paragraph(
-            config["inspection_hint"]
-        )
+        document.add_paragraph(config["inspection_hint"])
 
     def _add_inspection_result(
         self,
@@ -883,29 +845,20 @@ class HiddenWorksActGenerator:
             or "[\u041f\u041e\u0414\u0422\u0412\u0415\u0420\u0414\u0418\u0422\u042c / \u0423\u0422\u041e\u0427\u041d\u0418\u0422\u042c]"
         )
 
-        materials_compliance = (
-            act_data.get("materials_compliance")
-            or (
-                "[\u041f\u041e\u0414\u0422\u0412\u0415\u0420\u0414\u0418\u0422\u042c / "
-                "\u0423\u0422\u041e\u0427\u041d\u0418\u0422\u042c]"
-            )
+        materials_compliance = act_data.get("materials_compliance") or (
+            "[\u041f\u041e\u0414\u0422\u0412\u0415\u0420\u0414\u0418\u0422\u042c / "
+            "\u0423\u0422\u041e\u0427\u041d\u0418\u0422\u042c]"
         )
 
-        test_results = (
-            act_data.get("test_results")
-            or (
-                "[\u0423\u041a\u0410\u0417\u0410\u0422\u042c "
-                "\u043f\u0440\u043e\u0442\u043e\u043a\u043e\u043b\u044b "
-                "\u0438 \u0437\u043d\u0430\u0447\u0435\u043d\u0438\u044f]"
-            )
+        test_results = act_data.get("test_results") or (
+            "[\u0423\u041a\u0410\u0417\u0410\u0422\u042c "
+            "\u043f\u0440\u043e\u0442\u043e\u043a\u043e\u043b\u044b "
+            "\u0438 \u0437\u043d\u0430\u0447\u0435\u043d\u0438\u044f]"
         )
 
-        geometric_parameters = (
-            act_data.get("geometric_parameters")
-            or (
-                "[\u0423\u041a\u0410\u0417\u0410\u0422\u042c "
-                "\u041f\u041e \u0424\u0410\u041a\u0422\u0423]"
-            )
+        geometric_parameters = act_data.get("geometric_parameters") or (
+            "[\u0423\u041a\u0410\u0417\u0410\u0422\u042c "
+            "\u041f\u041e \u0424\u0410\u041a\u0422\u0423]"
         )
 
         remarks = (
@@ -949,9 +902,7 @@ class HiddenWorksActGenerator:
         ]
 
         for paragraph_text in paragraphs:
-            document.add_paragraph(
-                paragraph_text
-            )
+            document.add_paragraph(paragraph_text)
 
         document.add_paragraph()
 
@@ -960,17 +911,13 @@ class HiddenWorksActGenerator:
             "\u0420\u0430\u0437\u0440\u0435\u0448\u0435\u043d\u0438\u0435 \u043d\u0430 \u043f\u043e\u0441\u043b\u0435\u0434\u0443\u044e\u0449\u0438\u0435 \u0440\u0430\u0431\u043e\u0442\u044b",
         )
 
-        next_works = act_data.get(
-            "next_works"
-        )
+        next_works = act_data.get("next_works")
 
         if next_works:
             next_works_text = next_works
             confirmation_text = ""
         else:
-            next_works_text = config[
-                "next_works"
-            ]
+            next_works_text = config["next_works"]
             confirmation_text = (
                 " [\u041f\u041e\u0414\u0422\u0412\u0415\u0420\u0414\u0418\u0422\u042c "
                 "\u041f\u0415\u0420\u0415\u0414 \u041f\u041e\u0414\u041f\u0418\u0421\u0410\u041d\u0418\u0415\u041c]"
@@ -1003,19 +950,13 @@ class HiddenWorksActGenerator:
             ),
         )
 
-        attachments = act_data.get(
-            "attachments"
-        )
+        attachments = act_data.get("attachments")
 
         if attachments:
 
-            paragraph = document.add_paragraph(
-                style="List Bullet"
-            )
+            paragraph = document.add_paragraph(style="List Bullet")
 
-            paragraph.add_run(
-                attachments
-            )
+            paragraph.add_run(attachments)
 
         else:
 
@@ -1024,17 +965,13 @@ class HiddenWorksActGenerator:
                 [],
             ):
 
-                paragraph = document.add_paragraph(
-                    style="List Bullet"
-                )
+                paragraph = document.add_paragraph(style="List Bullet")
 
                 paragraph.add_run(
                     f"{item}: [\u0423\u041a\u0410\u0417\u0410\u0422\u042c]"
                 )
 
-            paragraph = document.add_paragraph(
-                style="List Bullet"
-            )
+            paragraph = document.add_paragraph(style="List Bullet")
 
             paragraph.add_run(
                 "\u0418\u043d\u044b\u0435 \u0434\u043e\u043a\u0443\u043c\u0435\u043d\u0442\u044b: "
@@ -1283,11 +1220,7 @@ class HiddenWorksActGenerator:
                 project_name,
                 act_code,
                 registry=registry,
-                act_data=(
-                    saved_act_data
-                    if saved_act_data
-                    else None
-                ),
+                act_data=(saved_act_data if saved_act_data else None),
             )
 
             created.append(

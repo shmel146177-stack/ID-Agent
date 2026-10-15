@@ -23,22 +23,15 @@ class DocumentScanner:
         ".tiff",
     }
 
-    def analyze_pdf(
-        self,
-        file_path: str
-    ) -> dict:
+    def analyze_pdf(self, file_path: str) -> dict:
 
-        filename = os.path.basename(
-            file_path
-        )
+        filename = os.path.basename(file_path)
 
         # -------------------------------------------------
         # 1. СНАЧАЛА ПРОБУЕМ ОБЫЧНОЕ ИЗВЛЕЧЕНИЕ ТЕКСТА
         # -------------------------------------------------
 
-        text = pdf_parser.extract_text(
-            file_path
-        )
+        text = pdf_parser.extract_text(file_path)
 
         if text is None:
             text = ""
@@ -56,83 +49,44 @@ class DocumentScanner:
 
             try:
 
-                ocr_result = (
-                    ocr_service.recognize_pdf(
-                        file_path
-                    )
-                )
+                ocr_result = ocr_service.recognize_pdf(file_path)
 
-                text = (
-                    ocr_result.get(
-                        "text",
-                        ""
-                    )
-                    or ""
-                ).strip()
+                text = (ocr_result.get("text", "") or "").strip()
 
                 ocr_used = True
 
                 ocr_info = {
-                    "pages_count": (
-                        ocr_result.get(
-                            "pages_count",
-                            0
-                        )
-                    ),
+                    "pages_count": (ocr_result.get("pages_count", 0)),
                     "text_length": len(text),
-                    "language": (
-                        ocr_result.get(
-                            "language",
-                            "rus+eng"
-                        )
-                    )
+                    "language": (ocr_result.get("language", "rus+eng")),
                 }
 
             except Exception as error:
 
                 ocr_used = True
 
-                ocr_info = {
-                    "error": str(error)
-                }
+                ocr_info = {"error": str(error)}
 
         # -------------------------------------------------
         # 3. АНАЛИЗ ТЕКСТА
         # -------------------------------------------------
 
-        analysis = (
-            document_analyzer.analyze_text(
-                text
-            )
-        )
+        analysis = document_analyzer.analyze_text(text)
 
         # -------------------------------------------------
         # 4. КЛАССИФИКАЦИЯ
         # -------------------------------------------------
 
-        classification = (
-            document_classifier.classify(
-                filename,
-                text
-            )
-        )
+        classification = document_classifier.classify(filename, text)
 
         # Тип документа синхронизируем
         # с результатом классификатора
-        if isinstance(
-            analysis,
-            dict
-        ):
-            analysis["document_type"] = (
-                classification
-            )
+        if isinstance(analysis, dict):
+            analysis["document_type"] = classification
 
         # Для проектных чертежей не сохраняем случайные
         # характеристики оборудования из разных листов PDF.
-        if (
-            classification == "Чертеж"
-            and isinstance(analysis, dict)
-        ):
+        if classification == "Чертеж" and isinstance(analysis, dict):
             for field in (
                 "manufacturer",
                 "equipment",
@@ -146,7 +100,6 @@ class DocumentScanner:
             ):
                 analysis[field] = None
 
-
         return {
             "filename": filename,
             "path": file_path,
@@ -156,72 +109,39 @@ class DocumentScanner:
             "analysis": analysis,
             "text_length": len(text),
             "ocr_used": ocr_used,
-            "ocr": ocr_info
+            "ocr": ocr_info,
         }
 
-    def analyze_project(
-        self,
-        project_name: str
-    ) -> dict:
+    def analyze_project(self, project_name: str) -> dict:
 
         project_path = str(safe_project_path(project_name))
 
-        input_path = os.path.join(
-            project_path,
-            "input"
-        )
+        input_path = os.path.join(project_path, "input")
 
-        analysis_path = os.path.join(
-            project_path,
-            "analysis"
-        )
+        analysis_path = os.path.join(project_path, "analysis")
 
-        if not os.path.exists(
-            project_path
-        ):
-            raise FileNotFoundError(
-                f"Проект не найден: {project_name}"
-            )
+        if not os.path.exists(project_path):
+            raise FileNotFoundError(f"Проект не найден: {project_name}")
 
-        if not os.path.exists(
-            input_path
-        ):
-            raise FileNotFoundError(
-                f"Папка input не найдена: {input_path}"
-            )
+        if not os.path.exists(input_path):
+            raise FileNotFoundError(f"Папка input не найдена: {input_path}")
 
-        os.makedirs(
-            analysis_path,
-            exist_ok=True
-        )
+        os.makedirs(analysis_path, exist_ok=True)
 
         documents = []
 
-        files = sorted(
-            os.listdir(
-                input_path
-            )
-        )
+        files = sorted(os.listdir(input_path))
 
         for filename in files:
 
-            file_path = os.path.join(
-                input_path,
-                filename
-            )
+            file_path = os.path.join(input_path, filename)
 
-            if not os.path.isfile(
-                file_path
-            ):
+            if not os.path.isfile(file_path):
                 continue
 
-            extension = os.path.splitext(
-                filename
-            )[1].lower()
+            extension = os.path.splitext(filename)[1].lower()
 
-            if extension not in (
-                self.SUPPORTED_EXTENSIONS
-            ):
+            if extension not in (self.SUPPORTED_EXTENSIONS):
                 continue
 
             # ---------------------------------------------
@@ -232,9 +152,7 @@ class DocumentScanner:
 
                 try:
 
-                    result = self.analyze_pdf(
-                        file_path
-                    )
+                    result = self.analyze_pdf(file_path)
 
                 except Exception as error:
 
@@ -243,13 +161,11 @@ class DocumentScanner:
                         "path": file_path,
                         "extension": extension,
                         "status": "Ошибка",
-                        "classification": (
-                            "Не определён"
-                        ),
+                        "classification": ("Не определён"),
                         "analysis": {},
                         "text_length": 0,
                         "ocr_used": False,
-                        "error": str(error)
+                        "error": str(error),
                     }
 
             # ---------------------------------------------
@@ -262,54 +178,28 @@ class DocumentScanner:
                     "filename": filename,
                     "path": file_path,
                     "extension": extension,
-                    "status": (
-                        "Формат определён, "
-                        "анализ пока не реализован"
-                    ),
-                    "classification": (
-                        "Не определён"
-                    ),
+                    "status": ("Формат определён, " "анализ пока не реализован"),
+                    "classification": ("Не определён"),
                     "analysis": {},
                     "text_length": 0,
-                    "ocr_used": False
+                    "ocr_used": False,
                 }
 
-            documents.append(
-                result
-            )
+            documents.append(result)
 
             # ---------------------------------------------
             # JSON ДЛЯ КАЖДОГО ДОКУМЕНТА
             # ---------------------------------------------
 
-            json_name = (
-                os.path.splitext(
-                    filename
-                )[0]
-                + ".json"
-            )
+            json_name = os.path.splitext(filename)[0] + ".json"
 
-            json_path = os.path.join(
-                analysis_path,
-                json_name
-            )
+            json_path = os.path.join(analysis_path, json_name)
 
-            result["json_path"] = (
-                json_path
-            )
+            result["json_path"] = json_path
 
-            with open(
-                json_path,
-                "w",
-                encoding="utf-8"
-            ) as file:
+            with open(json_path, "w", encoding="utf-8") as file:
 
-                json.dump(
-                    result,
-                    file,
-                    ensure_ascii=False,
-                    indent=4
-                )
+                json.dump(result, file, ensure_ascii=False, indent=4)
 
         # -------------------------------------------------
         # ОБЩИЙ РЕЗУЛЬТАТ ПРОЕКТА
@@ -319,40 +209,22 @@ class DocumentScanner:
             [
                 document
                 for document in documents
-                if document.get(
-                    "status"
-                ) == "Обработан"
+                if document.get("status") == "Обработан"
             ]
         )
 
         result = {
             "project": project_name,
-            "documents_count": len(
-                documents
-            ),
-            "processed_count": (
-                processed_count
-            ),
-            "documents": documents
+            "documents_count": len(documents),
+            "processed_count": (processed_count),
+            "documents": documents,
         }
 
-        project_analysis_path = os.path.join(
-            analysis_path,
-            "project_analysis.json"
-        )
+        project_analysis_path = os.path.join(analysis_path, "project_analysis.json")
 
-        with open(
-            project_analysis_path,
-            "w",
-            encoding="utf-8"
-        ) as file:
+        with open(project_analysis_path, "w", encoding="utf-8") as file:
 
-            json.dump(
-                result,
-                file,
-                ensure_ascii=False,
-                indent=4
-            )
+            json.dump(result, file, ensure_ascii=False, indent=4)
 
         return result
 

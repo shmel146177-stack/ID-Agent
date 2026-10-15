@@ -111,6 +111,7 @@ def test_ai_comparison_handles_empty_facts():
         "engineering_confirmation": False,
     }
 
+
 def test_ai_comparison_treats_missing_value_as_suggestion():
     deterministic = {
         "drawing_number": None,
@@ -142,6 +143,7 @@ def test_ai_comparison_treats_missing_value_as_suggestion():
         }
     ]
     assert result["requires_human_review"] is True
+
 
 def test_ai_comparison_treats_empty_value_as_suggestion():
     deterministic = {
@@ -175,6 +177,7 @@ def test_ai_comparison_treats_empty_value_as_suggestion():
     ]
     assert result["requires_human_review"] is True
 
+
 def test_ai_comparison_treats_whitespace_value_as_suggestion():
     deterministic = {
         "drawing_number": "   ",
@@ -207,6 +210,7 @@ def test_ai_comparison_treats_whitespace_value_as_suggestion():
     ]
     assert result["requires_human_review"] is True
 
+
 def test_ai_comparison_ignores_surrounding_string_whitespace():
     deterministic = {
         "drawing_number": "  A-01  ",
@@ -238,6 +242,7 @@ def test_ai_comparison_ignores_surrounding_string_whitespace():
     assert result["conflicts"] == []
     assert result["suggestions"] == []
     assert result["requires_human_review"] is True
+
 
 def test_ai_comparison_keeps_string_case_significant():
     deterministic = {
@@ -272,6 +277,7 @@ def test_ai_comparison_keeps_string_case_significant():
     ]
     assert result["requires_human_review"] is True
 
+
 def test_ai_comparison_does_not_coerce_deterministic_types():
     deterministic = {
         "sheet_number": 1,
@@ -304,6 +310,7 @@ def test_ai_comparison_does_not_coerce_deterministic_types():
         }
     ]
     assert result["requires_human_review"] is True
+
 
 def test_ai_comparison_never_confirms_engineering_data():
     deterministic = {

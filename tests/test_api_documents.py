@@ -10,7 +10,6 @@ from app.models.ai_analysis import AIAnalysisResult
 import app.api.documents as documents_module
 from main import app
 
-
 client = TestClient(app)
 
 
@@ -72,9 +71,7 @@ def test_upload_document_pdf_pipeline(monkeypatch, tmp_path):
         file=BytesIO(b"PDF DATA"),
     )
 
-    result = asyncio.run(
-        documents_module.upload_document(upload)
-    )
+    result = asyncio.run(documents_module.upload_document(upload))
 
     saved_file = upload_dir / "test.pdf"
 
@@ -117,9 +114,7 @@ def test_upload_document_sanitizes_windows_filename_path(
         file=BytesIO(b"SAFE"),
     )
 
-    result = asyncio.run(
-        documents_module.upload_document(upload)
-    )
+    result = asyncio.run(documents_module.upload_document(upload))
 
     saved_file = upload_dir / "safe.docx"
 
@@ -188,9 +183,7 @@ def test_upload_document_pdf_with_explicit_ai(monkeypatch, tmp_path):
             assert filename == "test.pdf"
             assert text == "PDF document text"
             assert knowledge_context == (
-                "[SOURCE 1]\n"
-                "source_id: sp-grounding\n"
-                "[/SOURCE]"
+                "[SOURCE 1]\n" "source_id: sp-grounding\n" "[/SOURCE]"
             )
 
             return AIAnalysisResult(
@@ -217,11 +210,7 @@ def test_upload_document_pdf_with_explicit_ai(monkeypatch, tmp_path):
         file=BytesIO(b"PDF DATA"),
     )
 
-    knowledge_context = (
-        "[SOURCE 1]\n"
-        "source_id: sp-grounding\n"
-        "[/SOURCE]"
-    )
+    knowledge_context = "[SOURCE 1]\n" "source_id: sp-grounding\n" "[/SOURCE]"
 
     result = asyncio.run(
         documents_module.upload_document(
@@ -235,19 +224,14 @@ def test_upload_document_pdf_with_explicit_ai(monkeypatch, tmp_path):
     assert result["drawing_number"] == "TEST-001"
 
     assert result["ai_analysis"]["summary"] == "AI analysis completed."
-    assert (
-        result["ai_analysis"]["document_type_suggestion"]
-        == "ai-passport"
-    )
+    assert result["ai_analysis"]["document_type_suggestion"] == "ai-passport"
     assert result["ai_analysis"]["requires_human_review"] is True
     assert result["ai_analysis"]["engineering_confirmation"] is False
     assert result["ai_analysis"]["knowledge_source_ids"] == [
         "sp-grounding",
     ]
 
-    saved_comparison = (
-        documents_module.project_service.get_ai_comparison()
-    )
+    saved_comparison = documents_module.project_service.get_ai_comparison()
     assert saved_comparison["knowledge_source_ids"] == [
         "sp-grounding",
     ]
@@ -406,10 +390,7 @@ def test_upload_document_http_with_explicit_ai(monkeypatch, tmp_path):
     assert result["drawing_number"] == "TEST-001"
 
     assert result["ai_analysis"]["summary"] == "AI analysis completed."
-    assert (
-        result["ai_analysis"]["document_type_suggestion"]
-        == "ai-passport"
-    )
+    assert result["ai_analysis"]["document_type_suggestion"] == "ai-passport"
     assert result["ai_analysis"]["requires_human_review"] is True
     assert result["ai_analysis"]["engineering_confirmation"] is False
     assert result["ai_analysis"]["analysis_id"] == "analysis-1"

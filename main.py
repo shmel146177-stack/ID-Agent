@@ -9,11 +9,7 @@ from app.api.knowledge import router as knowledge_router
 from app.api.project_processor import router as project_processor_router
 from app.services.project_service import ProjectStateCorruptionError
 
-
-app = FastAPI(
-    title="ID-Agent",
-    version="0.5.7"
-)
+app = FastAPI(title="ID-Agent", version="0.5.7")
 
 
 app.include_router(ai_router)
@@ -36,11 +32,7 @@ async def project_state_corruption_handler(
 
 @app.get("/")
 def home():
-    return {
-        "program": "ID-Agent",
-        "version": "0.5.7",
-        "status": "Работает"
-    }
+    return {"program": "ID-Agent", "version": "0.5.7", "status": "Работает"}
 
 
 @app.get("/agent")

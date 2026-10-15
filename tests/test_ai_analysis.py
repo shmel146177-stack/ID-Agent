@@ -163,6 +163,7 @@ def test_ai_execution_result_tracks_excluded_autonomous_fact_fields():
         "manufacturer",
     ]
 
+
 def test_ai_execution_result_rejects_openai_excluded_autonomous_fields():
     from app.models.ai_analysis import AIAnalysisExecutionResult
 
@@ -210,6 +211,7 @@ def test_ai_execution_result_rejects_duplicate_excluded_autonomous_fields():
             ],
         )
 
+
 def test_autonomous_analysis_result_rejects_blank_excluded_fact_field():
     from app.models.ai_analysis import AutonomousAnalysisResult
 
@@ -233,6 +235,7 @@ def test_autonomous_analysis_result_rejects_duplicate_excluded_fact_fields():
                 "serial_number",
             ],
         )
+
 
 def test_autonomous_analysis_result_tracks_exclusion_reasons():
     from app.models.ai_analysis import AutonomousAnalysisResult
@@ -299,6 +302,7 @@ def test_ai_execution_result_rejects_openai_exclusion_reasons():
             },
         )
 
+
 def test_autonomous_analysis_result_counts_exclusion_reasons():
     from app.models.ai_analysis import AutonomousAnalysisResult
 
@@ -321,13 +325,10 @@ def test_autonomous_analysis_result_counts_exclusion_reasons():
         "insufficient_context": 2,
     }
 
+    assert result.excluded_autonomous_fact_reason_counts == expected_counts
     assert (
-        result.excluded_autonomous_fact_reason_counts
-        == expected_counts
+        result.model_dump()["excluded_autonomous_fact_reason_counts"] == expected_counts
     )
-    assert result.model_dump()[
-        "excluded_autonomous_fact_reason_counts"
-    ] == expected_counts
 
 
 def test_autonomous_analysis_result_tracks_excluded_fact_details():

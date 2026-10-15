@@ -11,9 +11,7 @@ def test_project_api_create_project_duplicate_returns_400(
     project_name = "TEST_PROJECT"
 
     def raise_duplicate(name):
-        raise ValueError(
-            f"Проект уже существует: {name}"
-        )
+        raise ValueError(f"Проект уже существует: {name}")
 
     monkeypatch.setattr(
         api_module.project_manager,

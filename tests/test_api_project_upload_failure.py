@@ -41,13 +41,7 @@ def test_project_api_upload_keeps_file_when_processing_fails(
         upload,
     )
 
-    saved_file = (
-        tmp_path
-        / "projects"
-        / project_name
-        / "input"
-        / "drawing.pdf"
-    )
+    saved_file = tmp_path / "projects" / project_name / "input" / "drawing.pdf"
 
     assert saved_file.exists()
     assert saved_file.read_bytes() == b"TEST PDF DATA"

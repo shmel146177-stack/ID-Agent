@@ -40,9 +40,7 @@ def test_hidden_works_registry_detects_act(monkeypatch, tmp_path):
         },
     )
 
-    result = registry.analyze_project(
-        "TEST_PROJECT"
-    )
+    result = registry.analyze_project("TEST_PROJECT")
 
     assert result["project"] == "TEST_PROJECT"
     assert result["acts_count"] == 1
@@ -61,9 +59,7 @@ def test_hidden_works_registry_detects_act(monkeypatch, tmp_path):
     assert output_path.exists()
     assert result["analysis_file"] == str(output_path)
 
-    saved = json.loads(
-        output_path.read_text(encoding="utf-8")
-    )
+    saved = json.loads(output_path.read_text(encoding="utf-8"))
 
     assert saved["acts_count"] == 1
     assert saved["acts"][0]["code"] == rule["code"]
@@ -236,18 +232,22 @@ def test_work_volume_reference_in_notes_is_not_a_document_designation(
     (analysis_path / "page_analysis.json").write_text(
         json.dumps(
             {
-                "documents": [{
-                    "filename": "Том АС.pdf",
-                    "pages": [{
-                        "page": 37,
-                        "page_type": "Ведомость объемов работ",
-                        "text": (
-                            "Ссылка на 11240/24-АС.ВОР в примечании\n"
-                            "1.3. Устройство постели из песка для кабельной линии\n"
-                            "1.5. Укрытие кабельных линий защитными плитами\n"
-                        ),
-                    }],
-                }]
+                "documents": [
+                    {
+                        "filename": "Том АС.pdf",
+                        "pages": [
+                            {
+                                "page": 37,
+                                "page_type": "Ведомость объемов работ",
+                                "text": (
+                                    "Ссылка на 11240/24-АС.ВОР в примечании\n"
+                                    "1.3. Устройство постели из песка для кабельной линии\n"
+                                    "1.5. Укрытие кабельных линий защитными плитами\n"
+                                ),
+                            }
+                        ],
+                    }
+                ]
             },
             ensure_ascii=False,
         ),

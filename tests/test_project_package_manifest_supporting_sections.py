@@ -56,9 +56,7 @@ def test_project_package_manifest_contains_supporting_section_requirements(tmp_p
         [],
     )
 
-    manifest = json.loads(
-        Path(manifest_path).read_text(encoding="utf-8")
-    )
+    manifest = json.loads(Path(manifest_path).read_text(encoding="utf-8"))
 
     section = manifest["document_sections"][0]
 

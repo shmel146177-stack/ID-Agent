@@ -59,9 +59,7 @@ def test_project_package_manifest_contains_supporting_section_completeness(tmp_p
         [],
     )
 
-    manifest = json.loads(
-        Path(manifest_path).read_text(encoding="utf-8")
-    )
+    manifest = json.loads(Path(manifest_path).read_text(encoding="utf-8"))
 
     section = manifest["document_sections"][0]
 
@@ -133,9 +131,7 @@ def test_project_package_manifest_keeps_unmatched_quality_documents_incomplete(
         [],
     )
 
-    manifest = json.loads(
-        Path(manifest_path).read_text(encoding="utf-8")
-    )
+    manifest = json.loads(Path(manifest_path).read_text(encoding="utf-8"))
 
     section = manifest["document_sections"][0]
 
@@ -143,7 +139,10 @@ def test_project_package_manifest_keeps_unmatched_quality_documents_incomplete(
     assert section["required_count"] == 3
     assert section["found_count"] == 0
     assert section["missing_count"] == 3
-    assert section["status"] == "\u041d\u0435\u043f\u043e\u043b\u043d\u044b\u0439 \u043a\u043e\u043c\u043f\u043b\u0435\u043a\u0442"
+    assert (
+        section["status"]
+        == "\u041d\u0435\u043f\u043e\u043b\u043d\u044b\u0439 \u043a\u043e\u043c\u043f\u043b\u0435\u043a\u0442"
+    )
 
 
 def test_project_package_manifest_keeps_matching_quality_section_complete(
@@ -206,9 +205,7 @@ def test_project_package_manifest_keeps_matching_quality_section_complete(
         [],
     )
 
-    manifest = json.loads(
-        Path(manifest_path).read_text(encoding="utf-8")
-    )
+    manifest = json.loads(Path(manifest_path).read_text(encoding="utf-8"))
 
     section = manifest["document_sections"][0]
 
@@ -217,7 +214,10 @@ def test_project_package_manifest_keeps_matching_quality_section_complete(
     assert section["required_count"] == 1
     assert section["found_count"] == 1
     assert section["missing_count"] == 0
-    assert section["status"] == "\u041a\u043e\u043c\u043f\u043b\u0435\u043a\u0442 \u0441\u0444\u043e\u0440\u043c\u0438\u0440\u043e\u0432\u0430\u043d"
+    assert (
+        section["status"]
+        == "\u041a\u043e\u043c\u043f\u043b\u0435\u043a\u0442 \u0441\u0444\u043e\u0440\u043c\u0438\u0440\u043e\u0432\u0430\u043d"
+    )
 
 
 def test_project_package_manifest_keeps_matching_cable_protocol_section_complete(
@@ -280,9 +280,7 @@ def test_project_package_manifest_keeps_matching_cable_protocol_section_complete
         [],
     )
 
-    manifest = json.loads(
-        Path(manifest_path).read_text(encoding="utf-8")
-    )
+    manifest = json.loads(Path(manifest_path).read_text(encoding="utf-8"))
 
     section = manifest["document_sections"][0]
 
@@ -291,7 +289,10 @@ def test_project_package_manifest_keeps_matching_cable_protocol_section_complete
     assert section["required_count"] == 1
     assert section["found_count"] == 1
     assert section["missing_count"] == 0
-    assert section["status"] == "\u041a\u043e\u043c\u043f\u043b\u0435\u043a\u0442 \u0441\u0444\u043e\u0440\u043c\u0438\u0440\u043e\u0432\u0430\u043d"
+    assert (
+        section["status"]
+        == "\u041a\u043e\u043c\u043f\u043b\u0435\u043a\u0442 \u0441\u0444\u043e\u0440\u043c\u0438\u0440\u043e\u0432\u0430\u043d"
+    )
 
 
 def test_project_package_manifest_keeps_wrong_cable_protocol_section_incomplete(
@@ -354,9 +355,7 @@ def test_project_package_manifest_keeps_wrong_cable_protocol_section_incomplete(
         [],
     )
 
-    manifest = json.loads(
-        Path(manifest_path).read_text(encoding="utf-8")
-    )
+    manifest = json.loads(Path(manifest_path).read_text(encoding="utf-8"))
 
     section = manifest["document_sections"][0]
 
@@ -365,7 +364,10 @@ def test_project_package_manifest_keeps_wrong_cable_protocol_section_incomplete(
     assert section["required_count"] == 1
     assert section["found_count"] == 0
     assert section["missing_count"] == 1
-    assert section["status"] == "\u041d\u0435\u043f\u043e\u043b\u043d\u044b\u0439 \u043a\u043e\u043c\u043f\u043b\u0435\u043a\u0442"
+    assert (
+        section["status"]
+        == "\u041d\u0435\u043f\u043e\u043b\u043d\u044b\u0439 \u043a\u043e\u043c\u043f\u043b\u0435\u043a\u0442"
+    )
 
 
 def test_project_package_manifest_keeps_matching_cable_entry_scheme_complete(
@@ -428,9 +430,7 @@ def test_project_package_manifest_keeps_matching_cable_entry_scheme_complete(
         [],
     )
 
-    manifest = json.loads(
-        Path(manifest_path).read_text(encoding="utf-8")
-    )
+    manifest = json.loads(Path(manifest_path).read_text(encoding="utf-8"))
 
     section = manifest["document_sections"][0]
 
@@ -439,7 +439,10 @@ def test_project_package_manifest_keeps_matching_cable_entry_scheme_complete(
     assert section["required_count"] == 1
     assert section["found_count"] == 1
     assert section["missing_count"] == 0
-    assert section["status"] == "\u041a\u043e\u043c\u043f\u043b\u0435\u043a\u0442 \u0441\u0444\u043e\u0440\u043c\u0438\u0440\u043e\u0432\u0430\u043d"
+    assert (
+        section["status"]
+        == "\u041a\u043e\u043c\u043f\u043b\u0435\u043a\u0442 \u0441\u0444\u043e\u0440\u043c\u0438\u0440\u043e\u0432\u0430\u043d"
+    )
 
 
 def test_project_package_manifest_keeps_wrong_cable_entry_scheme_incomplete(
@@ -502,9 +505,7 @@ def test_project_package_manifest_keeps_wrong_cable_entry_scheme_incomplete(
         [],
     )
 
-    manifest = json.loads(
-        Path(manifest_path).read_text(encoding="utf-8")
-    )
+    manifest = json.loads(Path(manifest_path).read_text(encoding="utf-8"))
 
     section = manifest["document_sections"][0]
 
@@ -513,7 +514,10 @@ def test_project_package_manifest_keeps_wrong_cable_entry_scheme_incomplete(
     assert section["required_count"] == 1
     assert section["found_count"] == 0
     assert section["missing_count"] == 1
-    assert section["status"] == "\u041d\u0435\u043f\u043e\u043b\u043d\u044b\u0439 \u043a\u043e\u043c\u043f\u043b\u0435\u043a\u0442"
+    assert (
+        section["status"]
+        == "\u041d\u0435\u043f\u043e\u043b\u043d\u044b\u0439 \u043a\u043e\u043c\u043f\u043b\u0435\u043a\u0442"
+    )
 
 
 def test_project_package_manifest_keeps_matching_supports_scheme_complete(
@@ -576,9 +580,7 @@ def test_project_package_manifest_keeps_matching_supports_scheme_complete(
         [],
     )
 
-    manifest = json.loads(
-        Path(manifest_path).read_text(encoding="utf-8")
-    )
+    manifest = json.loads(Path(manifest_path).read_text(encoding="utf-8"))
 
     section = manifest["document_sections"][0]
 
@@ -587,7 +589,10 @@ def test_project_package_manifest_keeps_matching_supports_scheme_complete(
     assert section["required_count"] == 1
     assert section["found_count"] == 1
     assert section["missing_count"] == 0
-    assert section["status"] == "\u041a\u043e\u043c\u043f\u043b\u0435\u043a\u0442 \u0441\u0444\u043e\u0440\u043c\u0438\u0440\u043e\u0432\u0430\u043d"
+    assert (
+        section["status"]
+        == "\u041a\u043e\u043c\u043f\u043b\u0435\u043a\u0442 \u0441\u0444\u043e\u0440\u043c\u0438\u0440\u043e\u0432\u0430\u043d"
+    )
 
 
 def test_project_package_manifest_keeps_wrong_supports_scheme_incomplete(
@@ -650,9 +655,7 @@ def test_project_package_manifest_keeps_wrong_supports_scheme_incomplete(
         [],
     )
 
-    manifest = json.loads(
-        Path(manifest_path).read_text(encoding="utf-8")
-    )
+    manifest = json.loads(Path(manifest_path).read_text(encoding="utf-8"))
 
     section = manifest["document_sections"][0]
 
@@ -661,7 +664,10 @@ def test_project_package_manifest_keeps_wrong_supports_scheme_incomplete(
     assert section["required_count"] == 1
     assert section["found_count"] == 0
     assert section["missing_count"] == 1
-    assert section["status"] == "\u041d\u0435\u043f\u043e\u043b\u043d\u044b\u0439 \u043a\u043e\u043c\u043f\u043b\u0435\u043a\u0442"
+    assert (
+        section["status"]
+        == "\u041d\u0435\u043f\u043e\u043b\u043d\u044b\u0439 \u043a\u043e\u043c\u043f\u043b\u0435\u043a\u0442"
+    )
 
 
 def test_project_package_manifest_keeps_matching_grounding_scheme_complete(
@@ -724,9 +730,7 @@ def test_project_package_manifest_keeps_matching_grounding_scheme_complete(
         [],
     )
 
-    manifest = json.loads(
-        Path(manifest_path).read_text(encoding="utf-8")
-    )
+    manifest = json.loads(Path(manifest_path).read_text(encoding="utf-8"))
 
     section = manifest["document_sections"][0]
 
@@ -798,9 +802,7 @@ def test_project_package_manifest_keeps_wrong_grounding_scheme_incomplete(
         [],
     )
 
-    manifest = json.loads(
-        Path(manifest_path).read_text(encoding="utf-8")
-    )
+    manifest = json.loads(Path(manifest_path).read_text(encoding="utf-8"))
 
     section = manifest["document_sections"][0]
 
@@ -872,9 +874,7 @@ def test_project_package_manifest_keeps_matching_supports_quality_complete(
         [],
     )
 
-    manifest = json.loads(
-        Path(manifest_path).read_text(encoding="utf-8")
-    )
+    manifest = json.loads(Path(manifest_path).read_text(encoding="utf-8"))
 
     section = manifest["document_sections"][0]
 
@@ -946,9 +946,7 @@ def test_project_package_manifest_keeps_wrong_supports_quality_incomplete(
         [],
     )
 
-    manifest = json.loads(
-        Path(manifest_path).read_text(encoding="utf-8")
-    )
+    manifest = json.loads(Path(manifest_path).read_text(encoding="utf-8"))
 
     section = manifest["document_sections"][0]
 

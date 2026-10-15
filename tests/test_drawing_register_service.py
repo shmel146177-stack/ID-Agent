@@ -73,9 +73,7 @@ def test_drawing_register_service_builds_register(monkeypatch, tmp_path):
 
     assert output_path.exists()
 
-    saved = json.loads(
-        output_path.read_text(encoding="utf-8")
-    )
+    saved = json.loads(output_path.read_text(encoding="utf-8"))
 
     assert saved["registers_count"] == 1
     assert saved["entries_count"] == 2
@@ -145,16 +143,28 @@ def test_drawing_register_service_sums_register_sheet_counts(monkeypatch, tmp_pa
             {
                 "filename": "project.pdf",
                 "pages": [
-                    {"page": 1, "page_type": "Ведомость рабочих чертежей", "text": "АС"},
-                    {"page": 2, "page_type": "Ведомость рабочих чертежей", "text": "ЭП"},
+                    {
+                        "page": 1,
+                        "page_type": "Ведомость рабочих чертежей",
+                        "text": "АС",
+                    },
+                    {
+                        "page": 2,
+                        "page_type": "Ведомость рабочих чертежей",
+                        "text": "ЭП",
+                    },
                 ],
             }
         ]
     }
     counts = iter((9, 13))
 
-    monkeypatch.setattr(service, "_load_page_analysis", lambda _name: fake_page_analysis)
-    monkeypatch.setattr(service, "_output_path", lambda _name: tmp_path / "register.json")
+    monkeypatch.setattr(
+        service, "_load_page_analysis", lambda _name: fake_page_analysis
+    )
+    monkeypatch.setattr(
+        service, "_output_path", lambda _name: tmp_path / "register.json"
+    )
     monkeypatch.setattr(
         service_module.drawing_register_analyzer,
         "analyze_text",

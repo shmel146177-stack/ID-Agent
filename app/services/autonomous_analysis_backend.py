@@ -35,7 +35,6 @@ class AutonomousAnalysisBackend:
         self.classifier = classifier or DocumentClassifier()
         self.analyzer = analyzer or DocumentAnalyzer()
 
-
     @classmethod
     def _limit_evidence(
         cls,
@@ -64,9 +63,7 @@ class AutonomousAnalysisBackend:
             fragment_end - cls.EVIDENCE_MAX_CHARS,
         )
 
-        return evidence[
-            fragment_start:fragment_end
-        ].strip()
+        return evidence[fragment_start:fragment_end].strip()
 
     @classmethod
     def _find_evidence(
@@ -74,14 +71,9 @@ class AutonomousAnalysisBackend:
         text: str,
         value: str,
     ) -> str | None:
-        value_characters = (
-            character
-            for character in value
-            if not character.isspace()
-        )
+        value_characters = (character for character in value if not character.isspace())
         flexible_value = r"[\s()=]*".join(
-            re.escape(character)
-            for character in value_characters
+            re.escape(character) for character in value_characters
         )
 
         for source_line in text.splitlines():
@@ -120,10 +112,7 @@ class AutonomousAnalysisBackend:
 
         normalized_evidence = evidence.casefold()
 
-        return any(
-            term in normalized_evidence
-            for term in required_terms
-        )
+        return any(term in normalized_evidence for term in required_terms)
 
     def __call__(
         self,
@@ -157,9 +146,7 @@ class AutonomousAnalysisBackend:
 
             if evidence is None:
                 excluded_fact_fields.append(field)
-                excluded_fact_reasons[field] = (
-                    "missing_evidence"
-                )
+                excluded_fact_reasons[field] = "missing_evidence"
                 excluded_facts.append(
                     AutonomousFactExclusion(
                         field=field,
@@ -174,9 +161,7 @@ class AutonomousAnalysisBackend:
                 evidence,
             ):
                 excluded_fact_fields.append(field)
-                excluded_fact_reasons[field] = (
-                    "insufficient_context"
-                )
+                excluded_fact_reasons[field] = "insufficient_context"
                 excluded_facts.append(
                     AutonomousFactExclusion(
                         field=field,
@@ -206,25 +191,17 @@ class AutonomousAnalysisBackend:
             ),
             document_type_suggestion=document_type,
             facts=facts,
-            excluded_autonomous_fact_fields=(
-                excluded_fact_fields
-            ),
-            excluded_autonomous_fact_reasons=(
-                excluded_fact_reasons
-            ),
+            excluded_autonomous_fact_fields=(excluded_fact_fields),
+            excluded_autonomous_fact_reasons=(excluded_fact_reasons),
             excluded_autonomous_facts=excluded_facts,
             warnings=[
-                (
-                    "Результат получен автономными "
-                    "детерминированными правилами."
-                ),
+                ("Результат получен автономными " "детерминированными правилами."),
                 "Все найденные факты требуют проверки человеком.",
             ],
         )
 
         missing_evidence_count = sum(
-            reason == "missing_evidence"
-            for reason in excluded_fact_reasons.values()
+            reason == "missing_evidence" for reason in excluded_fact_reasons.values()
         )
 
         if missing_evidence_count:

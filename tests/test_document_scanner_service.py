@@ -35,9 +35,7 @@ def test_document_scanner_uses_ocr_when_pdf_has_no_text(monkeypatch):
         lambda filename, text: "Счет-фактура",
     )
 
-    result = DocumentScanner().analyze_pdf(
-        "test_scan.pdf"
-    )
+    result = DocumentScanner().analyze_pdf("test_scan.pdf")
 
     assert result["filename"] == "test_scan.pdf"
     assert result["extension"] == ".pdf"
@@ -49,12 +47,6 @@ def test_document_scanner_uses_ocr_when_pdf_has_no_text(monkeypatch):
     assert result["text_length"] > 0
     assert result["classification"] == "Счет-фактура"
 
-    assert (
-        result["analysis"]["document_type"]
-        == "Счет-фактура"
-    )
+    assert result["analysis"]["document_type"] == "Счет-фактура"
 
-    assert (
-        result["analysis"]["date"]
-        == "12.08.2026"
-    )
+    assert result["analysis"]["date"] == "12.08.2026"

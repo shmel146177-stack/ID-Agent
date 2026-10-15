@@ -21,20 +21,16 @@ class KnowledgeRepository:
         try:
             project_path = safe_project_path(project_name, projects_root).resolve()
         except ValueError as error:
-            raise ValueError("project_name must identify one project within projects_root") from error
+            raise ValueError(
+                "project_name must identify one project within projects_root"
+            ) from error
 
-        return cls(
-            project_path
-            / "knowledge"
-            / "knowledge_chunks.json"
-        )
+        return cls(project_path / "knowledge" / "knowledge_chunks.json")
+
     def save(self, chunks: list[KnowledgeChunk]) -> None:
         self.path.parent.mkdir(parents=True, exist_ok=True)
 
-        data = [
-            chunk.model_dump(mode="json")
-            for chunk in chunks
-        ]
+        data = [chunk.model_dump(mode="json") for chunk in chunks]
 
         with self.path.open("w", encoding="utf-8") as file:
             json.dump(
@@ -51,7 +47,4 @@ class KnowledgeRepository:
         with self.path.open("r", encoding="utf-8") as file:
             data = json.load(file)
 
-        return [
-            KnowledgeChunk.model_validate(item)
-            for item in data
-        ]
+        return [KnowledgeChunk.model_validate(item) for item in data]

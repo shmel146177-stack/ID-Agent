@@ -10,7 +10,6 @@ from app.services.project_service import (
 )
 from main import app
 
-
 client = TestClient(app)
 
 
@@ -77,9 +76,7 @@ def test_project_service_reports_invalid_state_encoding(tmp_path):
 def test_project_service_reports_corrupted_review_archive(tmp_path):
     service = ProjectService()
     service.ai_review_history_dir = str(tmp_path)
-    archive_path = Path(
-        service._ai_review_history_path("analysis-1")
-    )
+    archive_path = Path(service._ai_review_history_path("analysis-1"))
     archive_path.write_text('{"analysis_id":', encoding="utf-8")
 
     with pytest.raises(

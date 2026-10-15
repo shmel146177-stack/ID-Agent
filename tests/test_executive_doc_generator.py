@@ -28,10 +28,7 @@ def test_executive_doc_generator_creates_real_docx(monkeypatch, tmp_path):
 
     document = Document(output_path)
 
-    all_text = "\n".join(
-        paragraph.text
-        for paragraph in document.paragraphs
-    )
+    all_text = "\n".join(paragraph.text for paragraph in document.paragraphs)
 
     assert "ID-Agent" in all_text
     assert "Шкаф управления TEST-001" in all_text

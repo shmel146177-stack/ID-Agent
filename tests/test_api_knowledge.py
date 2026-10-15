@@ -6,7 +6,6 @@ from app.models.knowledge import KnowledgeChunk
 from app.services.knowledge_repository import KnowledgeRepository
 from main import app
 
-
 client = TestClient(app)
 
 
@@ -37,6 +36,7 @@ def test_knowledge_search_reads_default_repository(
         }
     ]
 
+
 def test_knowledge_search_limits_default_results(
     tmp_path,
     monkeypatch,
@@ -60,6 +60,7 @@ def test_knowledge_search_limits_default_results(
     assert response.status_code == 200
     assert len(response.json()) == 20
 
+
 def test_knowledge_search_reads_project_repository(
     tmp_path,
     monkeypatch,
@@ -71,9 +72,7 @@ def test_knowledge_search_reads_project_repository(
         page=1,
         text="Grounding requirement for this project.",
     )
-    repository = KnowledgeRepository.for_project(
-        "project-a"
-    )
+    repository = KnowledgeRepository.for_project("project-a")
     repository.save([chunk])
 
     response = client.get(
@@ -92,6 +91,7 @@ def test_knowledge_search_reads_project_repository(
         }
     ]
 
+
 def test_knowledge_search_rejects_invalid_project_name():
     response = client.get(
         "/knowledge/search",
@@ -102,9 +102,7 @@ def test_knowledge_search_rejects_invalid_project_name():
     )
 
     assert response.status_code == 400
-    assert response.json()["detail"].startswith(
-        "project_name must"
-    )
+    assert response.json()["detail"].startswith("project_name must")
 
 
 def test_knowledge_review_lists_pending_project_pages(
@@ -134,9 +132,7 @@ def test_knowledge_review_lists_pending_project_pages(
         text_origin="ocr",
         requires_human_review=False,
     )
-    repository = KnowledgeRepository.for_project(
-        "project-a"
-    )
+    repository = KnowledgeRepository.for_project("project-a")
     repository.save([native, pending, reviewed])
 
     response = client.get(
@@ -145,9 +141,7 @@ def test_knowledge_review_lists_pending_project_pages(
     )
 
     assert response.status_code == 200
-    assert response.json() == [
-        pending.model_dump(mode="json")
-    ]
+    assert response.json() == [pending.model_dump(mode="json")]
 
 
 def test_knowledge_review_corrects_ocr_page(
@@ -163,9 +157,7 @@ def test_knowledge_review_corrects_ocr_page(
         text_origin="ocr",
         requires_human_review=True,
     )
-    repository = KnowledgeRepository.for_project(
-        "project-a"
-    )
+    repository = KnowledgeRepository.for_project("project-a")
     repository.save([pending])
 
     response = client.patch(
@@ -221,9 +213,7 @@ def test_knowledge_review_rejects_blank_fields(
         text_origin="ocr",
         requires_human_review=True,
     )
-    repository = KnowledgeRepository.for_project(
-        "project-a"
-    )
+    repository = KnowledgeRepository.for_project("project-a")
     repository.save([pending])
     request_data = {
         "source_id": "project-drawing",

@@ -24,12 +24,8 @@ def save_bound_ai_analysis(
 def test_project_service_saves_ai_analysis_separately(tmp_path):
     service = ProjectService()
 
-    service.file_path = str(
-        tmp_path / "current_analysis.json"
-    )
-    service.ai_file_path = str(
-        tmp_path / "current_ai_analysis.json"
-    )
+    service.file_path = str(tmp_path / "current_analysis.json")
+    service.ai_file_path = str(tmp_path / "current_ai_analysis.json")
 
     deterministic_analysis = {
         "document_type": "drawing",
@@ -46,13 +42,9 @@ def test_project_service_saves_ai_analysis_separately(tmp_path):
     service.save_analysis(deterministic_analysis)
     service.save_ai_analysis(ai_analysis)
 
-    deterministic_saved = Path(
-        service.file_path
-    ).read_text(encoding="utf-8")
+    deterministic_saved = Path(service.file_path).read_text(encoding="utf-8")
 
-    ai_saved = Path(
-        service.ai_file_path
-    ).read_text(encoding="utf-8")
+    ai_saved = Path(service.ai_file_path).read_text(encoding="utf-8")
 
     assert '"document_type": "drawing"' in deterministic_saved
     assert '"AI suggestion"' not in deterministic_saved
@@ -60,12 +52,11 @@ def test_project_service_saves_ai_analysis_separately(tmp_path):
     assert '"summary": "AI suggestion"' in ai_saved
     assert '"document_type": "drawing"' not in ai_saved
 
+
 def test_project_service_reads_ai_analysis(tmp_path):
     service = ProjectService()
 
-    service.ai_file_path = str(
-        tmp_path / "current_ai_analysis.json"
-    )
+    service.ai_file_path = str(tmp_path / "current_ai_analysis.json")
 
     ai_analysis = {
         "summary": "Saved AI analysis",
@@ -80,23 +71,17 @@ def test_project_service_reads_ai_analysis(tmp_path):
 
     assert result is not None
     assert result["summary"] == ai_analysis["summary"]
-    assert (
-        result["document_type_suggestion"]
-        == ai_analysis["document_type_suggestion"]
-    )
+    assert result["document_type_suggestion"] == ai_analysis["document_type_suggestion"]
     assert result["requires_human_review"] is True
     assert result["engineering_confirmation"] is False
     assert result["analysis_id"]
 
+
 def test_new_deterministic_analysis_invalidates_old_ai(tmp_path):
     service = ProjectService()
 
-    service.file_path = str(
-        tmp_path / "current_analysis.json"
-    )
-    service.ai_file_path = str(
-        tmp_path / "current_ai_analysis.json"
-    )
+    service.file_path = str(tmp_path / "current_analysis.json")
+    service.ai_file_path = str(tmp_path / "current_ai_analysis.json")
 
     service.save_ai_analysis(
         {
@@ -127,9 +112,7 @@ def test_failed_deterministic_analysis_preserves_current_state(
     comparison_path = tmp_path / "current_ai_comparison.json"
     service.file_path = str(analysis_path)
     service.ai_file_path = str(ai_path)
-    service.ai_review_file_path = str(
-        tmp_path / "current_ai_review.json"
-    )
+    service.ai_review_file_path = str(tmp_path / "current_ai_review.json")
     service.ai_comparison_file_path = str(comparison_path)
 
     service.save_analysis({"document_type": "drawing"})
@@ -172,9 +155,7 @@ def test_failed_deterministic_analysis_preserves_current_state(
 def test_ai_analysis_can_store_source_filename(tmp_path):
     service = ProjectService()
 
-    service.ai_file_path = str(
-        tmp_path / "current_ai_analysis.json"
-    )
+    service.ai_file_path = str(tmp_path / "current_ai_analysis.json")
 
     service.save_ai_analysis(
         {
@@ -190,12 +171,11 @@ def test_ai_analysis_can_store_source_filename(tmp_path):
     assert saved["source_filename"] == "drawing.pdf"
     assert saved["summary"] == "AI analysis"
 
+
 def test_project_service_saves_ai_comparison_with_source_binding(tmp_path):
     service = ProjectService()
 
-    service.ai_comparison_file_path = str(
-        tmp_path / "current_ai_comparison.json"
-    )
+    service.ai_comparison_file_path = str(tmp_path / "current_ai_comparison.json")
     service.ai_file_path = str(tmp_path / "current_ai_analysis.json")
     analysis = save_bound_ai_analysis(
         service,
@@ -272,19 +252,14 @@ def test_failed_ai_comparison_write_preserves_previous_file(
 
     assert comparison_path.read_bytes() == previous_bytes
     assert service.get_ai_comparison() == first
-    assert list(
-        tmp_path.glob("current_ai_comparison.json.*.tmp")
-    ) == []
+    assert list(tmp_path.glob("current_ai_comparison.json.*.tmp")) == []
+
 
 def test_new_deterministic_analysis_invalidates_old_ai_comparison(tmp_path):
     service = ProjectService()
 
-    service.file_path = str(
-        tmp_path / "current_analysis.json"
-    )
-    service.ai_comparison_file_path = str(
-        tmp_path / "current_ai_comparison.json"
-    )
+    service.file_path = str(tmp_path / "current_analysis.json")
+    service.ai_comparison_file_path = str(tmp_path / "current_ai_comparison.json")
     service.ai_file_path = str(tmp_path / "current_ai_analysis.json")
     analysis = save_bound_ai_analysis(
         service,
@@ -313,15 +288,12 @@ def test_new_deterministic_analysis_invalidates_old_ai_comparison(tmp_path):
 
     assert not Path(service.ai_comparison_file_path).exists()
 
+
 def test_new_ai_analysis_invalidates_old_ai_comparison(tmp_path):
     service = ProjectService()
 
-    service.ai_file_path = str(
-        tmp_path / "current_ai_analysis.json"
-    )
-    service.ai_comparison_file_path = str(
-        tmp_path / "current_ai_comparison.json"
-    )
+    service.ai_file_path = str(tmp_path / "current_ai_analysis.json")
+    service.ai_comparison_file_path = str(tmp_path / "current_ai_comparison.json")
     analysis = save_bound_ai_analysis(
         service,
         source_filename="old.pdf",
@@ -356,12 +328,8 @@ def test_new_ai_analysis_invalidates_old_ai_comparison(tmp_path):
 def test_ai_comparison_rejects_stale_analysis_binding(tmp_path):
     service = ProjectService()
     service.ai_file_path = str(tmp_path / "current_ai_analysis.json")
-    service.ai_review_file_path = str(
-        tmp_path / "current_ai_review.json"
-    )
-    service.ai_comparison_file_path = str(
-        tmp_path / "current_ai_comparison.json"
-    )
+    service.ai_review_file_path = str(tmp_path / "current_ai_review.json")
+    service.ai_comparison_file_path = str(tmp_path / "current_ai_comparison.json")
     old_analysis = save_bound_ai_analysis(service)
     save_bound_ai_analysis(service)
 
@@ -380,9 +348,7 @@ def test_ai_comparison_rejects_stale_analysis_binding(tmp_path):
 
 def test_project_service_saves_ai_knowledge_source_ids(tmp_path):
     service = ProjectService()
-    service.ai_file_path = str(
-        tmp_path / "current_ai_analysis.json"
-    )
+    service.ai_file_path = str(tmp_path / "current_ai_analysis.json")
 
     service.save_ai_analysis(
         {

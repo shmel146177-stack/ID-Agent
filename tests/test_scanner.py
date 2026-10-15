@@ -6,9 +6,7 @@ from app.scanner.scanner import DocumentScanner
 
 
 def test_scanner_reads_pdf():
-    pdf_files = list(
-        Path("uploads").glob("*17.08.23 (1).pdf")
-    )
+    pdf_files = list(Path("uploads").glob("*17.08.23 (1).pdf"))
 
     if not pdf_files:
         pytest.skip("Local integration PDF is not available")

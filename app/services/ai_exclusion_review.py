@@ -24,9 +24,7 @@ def _serialized_mutation(method):
     @wraps(method)
     def wrapper(self, *args, **kwargs):
         with self._mutation_lock:
-            with exclusive_file_lock(
-                self.project_service.ai_review_lock_path
-            ):
+            with exclusive_file_lock(self.project_service.ai_review_lock_path):
                 return method(self, *args, **kwargs)
 
     return wrapper
@@ -83,9 +81,7 @@ class AIExclusionReviewService:
         if review.get("analysis_id") != analysis.get("analysis_id"):
             self._error(409, "AI review analysis id mismatch")
 
-        if review.get("source_filename") != analysis.get(
-            "source_filename"
-        ):
+        if review.get("source_filename") != analysis.get("source_filename"):
             self._error(409, "AI review source filename mismatch")
 
     def _parse_excluded_facts(
@@ -114,8 +110,7 @@ class AIExclusionReviewService:
         if field not in excluded_fact_fields:
             self._error(
                 409,
-                "Reviewed field is not a current structured "
-                "autonomous exclusion",
+                "Reviewed field is not a current structured " "autonomous exclusion",
             )
 
     def _parse_review_data(self, review: dict) -> dict:
@@ -182,9 +177,7 @@ class AIExclusionReviewService:
         if not analysis.get("source_filename"):
             self._error(409, "AI analysis missing source filename")
 
-        if review.get("source_filename") != analysis.get(
-            "source_filename"
-        ):
+        if review.get("source_filename") != analysis.get("source_filename"):
             self._error(409, "AI review source filename mismatch")
 
         if review.get("knowledge_source_ids", []) != analysis.get(
@@ -194,9 +187,9 @@ class AIExclusionReviewService:
             self._error(409, "AI review knowledge sources mismatch")
 
         review_data = dict(review)
-        review_data["review_revision"] = self._parse_review_data(
-            review
-        )["review_revision"]
+        review_data["review_revision"] = self._parse_review_data(review)[
+            "review_revision"
+        ]
         return review_data
 
     def get_review_history(self, analysis_id: str) -> dict:
@@ -278,33 +271,23 @@ class AIExclusionReviewService:
         for fact in self._parse_excluded_facts(analysis):
             fact_review = fact_reviews.get(fact.field)
             review_status = (
-                fact_review.decision
-                if fact_review is not None
-                else "pending"
+                fact_review.decision if fact_review is not None else "pending"
             )
             status = fact.model_dump()
             status.update(
                 {
                     "review_status": review_status,
                     "corrected_value": (
-                        fact_review.corrected_value
-                        if fact_review is not None
-                        else None
+                        fact_review.corrected_value if fact_review is not None else None
                     ),
                     "review_notes": (
-                        fact_review.notes
-                        if fact_review is not None
-                        else None
+                        fact_review.notes if fact_review is not None else None
                     ),
                     "reviewed_by": (
-                        fact_review.reviewed_by
-                        if fact_review is not None
-                        else None
+                        fact_review.reviewed_by if fact_review is not None else None
                     ),
                     "reviewed_at": (
-                        fact_review.reviewed_at
-                        if fact_review is not None
-                        else None
+                        fact_review.reviewed_at if fact_review is not None else None
                     ),
                 }
             )
@@ -371,22 +354,15 @@ class AIExclusionReviewService:
         )
 
         reviews_by_field = {
-            item["field"]: item
-            for item in review_data["excluded_fact_reviews"]
+            item["field"]: item for item in review_data["excluded_fact_reviews"]
         }
         previous_review_data = reviews_by_field.get(field)
         history_event = ExcludedAutonomousFactReviewHistory(
             analysis_id=request.analysis_id,
             field=field,
-            action=(
-                "updated"
-                if previous_review_data is not None
-                else "created"
-            ),
+            action=("updated" if previous_review_data is not None else "created"),
             previous_review=(
-                ExcludedAutonomousFactReview.model_validate(
-                    previous_review_data
-                )
+                ExcludedAutonomousFactReview.model_validate(previous_review_data)
                 if previous_review_data is not None
                 else None
             ),
@@ -436,10 +412,7 @@ class AIExclusionReviewService:
             review_data,
             request.expected_revision,
         )
-        saved_fields = {
-            item["field"]
-            for item in review_data["excluded_fact_reviews"]
-        }
+        saved_fields = {item["field"] for item in review_data["excluded_fact_reviews"]}
 
         if field not in saved_fields:
             self._error(404, "Excluded fact review not found")
@@ -456,9 +429,7 @@ class AIExclusionReviewService:
             field=field,
             action="cleared",
             previous_review=(
-                ExcludedAutonomousFactReview.model_validate(
-                    previous_review_data
-                )
+                ExcludedAutonomousFactReview.model_validate(previous_review_data)
             ),
             current_review=None,
             reviewed_by=request.reviewed_by,
@@ -503,8 +474,7 @@ class AIExclusionReviewService:
             )
 
         reviewed_fact_fields = {
-            fact_review.field
-            for fact_review in review.excluded_fact_reviews
+            fact_review.field for fact_review in review.excluded_fact_reviews
         }
 
         if (

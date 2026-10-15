@@ -72,9 +72,7 @@ def test_upload_saves_file_and_reanalyzes_target_section(tmp_path):
                 "matching": {
                     "matched": [
                         {
-                            "requirement_code": (
-                                "grounding_resistance_protocol"
-                            ),
+                            "requirement_code": ("grounding_resistance_protocol"),
                             "filename": "grounding_protocol.pdf",
                             "classification": "Протокол",
                         }
@@ -92,12 +90,7 @@ def test_upload_saves_file_and_reanalyzes_target_section(tmp_path):
         BytesIO(b"%PDF-1.7 protocol"),
     )
 
-    saved_file = (
-        tmp_path
-        / "TEST_PROJECT"
-        / "input"
-        / "grounding_protocol.pdf"
-    )
+    saved_file = tmp_path / "TEST_PROJECT" / "input" / "grounding_protocol.pdf"
 
     assert saved_file.read_bytes() == b"%PDF-1.7 protocol"
     assert processor.calls == ["TEST_PROJECT"]
@@ -105,9 +98,10 @@ def test_upload_saves_file_and_reanalyzes_target_section(tmp_path):
     assert result["target_section"]["number"] == "05"
     assert result["section_analysis"]["found_count"] == 1
     assert result["upload_verification"]["status"] == "Подтверждён"
-    assert result["upload_verification"]["matched_requirements"][0][
-        "requirement_code"
-    ] == "grounding_resistance_protocol"
+    assert (
+        result["upload_verification"]["matched_requirements"][0]["requirement_code"]
+        == "grounding_resistance_protocol"
+    )
     assert result["upload_verification"]["routing_conflicts"] == []
 
 
@@ -226,12 +220,7 @@ def test_upload_removes_partial_file_after_copy_error(tmp_path):
             BrokenStream(),
         )
 
-    assert not (
-        tmp_path
-        / "TEST_PROJECT"
-        / "input"
-        / "protocol.pdf"
-    ).exists()
+    assert not (tmp_path / "TEST_PROJECT" / "input" / "protocol.pdf").exists()
 
 
 def test_upload_keeps_file_when_reanalysis_fails(tmp_path):
@@ -247,12 +236,7 @@ def test_upload_keeps_file_when_reanalysis_fails(tmp_path):
         BytesIO(b"certificate"),
     )
 
-    saved_file = (
-        tmp_path
-        / "TEST_PROJECT"
-        / "input"
-        / "certificate.pdf"
-    )
+    saved_file = tmp_path / "TEST_PROJECT" / "input" / "certificate.pdf"
 
     assert saved_file.exists()
     assert result["automatic_processing"] == {
@@ -277,9 +261,7 @@ def test_upload_reports_match_in_another_section(tmp_path):
                 "matching": {
                     "matched": [
                         {
-                            "requirement_code": (
-                                "grounding_quality_documents"
-                            ),
+                            "requirement_code": ("grounding_quality_documents"),
                             "filename": "document.pdf",
                             "classification": "Сертификат",
                         }
@@ -301,9 +283,9 @@ def test_upload_reports_match_in_another_section(tmp_path):
 
     assert verification["status"] == "Раздел не совпадает"
     assert verification["matched_requirements"] == []
-    assert verification["other_section_matches"][0][
-        "section_code"
-    ] == "quality_documents"
+    assert (
+        verification["other_section_matches"][0]["section_code"] == "quality_documents"
+    )
 
 
 def test_upload_reports_routing_conflict_before_confirmed_match(tmp_path):
@@ -315,12 +297,8 @@ def test_upload_reports_routing_conflict_before_confirmed_match(tmp_path):
                         "filename": "grounding_protocol.pdf",
                         "classification": "Протокол",
                         "section": "tests",
-                        "destination": (
-                            "executive_docs/05/grounding_protocol.pdf"
-                        ),
-                        "reason": (
-                            "destination_exists_different_content"
-                        ),
+                        "destination": ("executive_docs/05/grounding_protocol.pdf"),
+                        "reason": ("destination_exists_different_content"),
                     }
                 ]
             },
@@ -335,9 +313,7 @@ def test_upload_reports_routing_conflict_before_confirmed_match(tmp_path):
                 "matching": {
                     "matched": [
                         {
-                            "requirement_code": (
-                                "grounding_resistance_protocol"
-                            ),
+                            "requirement_code": ("grounding_resistance_protocol"),
                             "filename": "grounding_protocol.pdf",
                             "classification": "Протокол",
                         }
@@ -357,13 +333,12 @@ def test_upload_reports_routing_conflict_before_confirmed_match(tmp_path):
 
     verification = result["upload_verification"]
 
-    assert result["status"] == (
-        "Файл загружен, но обнаружен конфликт маршрутизации"
-    )
+    assert result["status"] == ("Файл загружен, но обнаружен конфликт маршрутизации")
     assert verification["status"] == "Конфликт маршрутизации"
-    assert verification["matched_requirements"][0][
-        "requirement_code"
-    ] == "grounding_resistance_protocol"
+    assert (
+        verification["matched_requirements"][0]["requirement_code"]
+        == "grounding_resistance_protocol"
+    )
     assert verification["routing_conflicts"][0]["section"] == "tests"
     assert verification["routing_conflicts"][0]["reason"] == (
         "destination_exists_different_content"
@@ -384,9 +359,7 @@ def test_upload_does_not_confirm_preexisting_matched_file(tmp_path):
                 "matching": {
                     "matched": [
                         {
-                            "requirement_code": (
-                                "grounding_resistance_protocol"
-                            ),
+                            "requirement_code": ("grounding_resistance_protocol"),
                             "filename": "old_protocol.pdf",
                             "classification": "Протокол",
                         }
@@ -425,12 +398,7 @@ def test_upload_rejects_empty_file_and_removes_it(tmp_path):
             BytesIO(b""),
         )
 
-    assert not (
-        tmp_path
-        / "TEST_PROJECT"
-        / "input"
-        / "scheme.pdf"
-    ).exists()
+    assert not (tmp_path / "TEST_PROJECT" / "input" / "scheme.pdf").exists()
 
 
 def test_upload_accepts_file_at_configured_size_limit(tmp_path):
@@ -460,7 +428,9 @@ def test_upload_rejects_oversized_file_and_removes_it(tmp_path):
         max_file_size_bytes=8,
     )
 
-    with pytest.raises(SupportingDocumentTooLargeError, match="превышает допустимый размер"):
+    with pytest.raises(
+        SupportingDocumentTooLargeError, match="превышает допустимый размер"
+    ):
         service.upload(
             "TEST_PROJECT",
             "tests",
@@ -469,12 +439,7 @@ def test_upload_rejects_oversized_file_and_removes_it(tmp_path):
         )
 
     assert processor.calls == []
-    assert not (
-        tmp_path
-        / "TEST_PROJECT"
-        / "input"
-        / "protocol.pdf"
-    ).exists()
+    assert not (tmp_path / "TEST_PROJECT" / "input" / "protocol.pdf").exists()
 
 
 def test_upload_rejects_non_positive_size_limit():

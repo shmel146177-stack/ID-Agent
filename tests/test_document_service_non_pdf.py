@@ -13,9 +13,7 @@ def test_document_service_non_pdf_skips_pdf_parser(
     file_path.write_bytes(b"HELLO")
 
     def fail_if_called(*args, **kwargs):
-        raise AssertionError(
-            "PDF parser не должен вызываться для TXT"
-        )
+        raise AssertionError("PDF parser не должен вызываться для TXT")
 
     monkeypatch.setattr(
         service_module.pdf_parser,
@@ -23,9 +21,7 @@ def test_document_service_non_pdf_skips_pdf_parser(
         fail_if_called,
     )
 
-    result = service.analyze(
-        str(file_path)
-    )
+    result = service.analyze(str(file_path))
 
     assert result["filename"] == "notes.txt"
     assert result["extension"] == ".txt"

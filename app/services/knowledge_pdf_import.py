@@ -31,17 +31,12 @@ class KnowledgePDFImporter:
             raise ValueError("ocr_dpi must be positive")
 
         if ocr_empty_pages and not 1 <= ocr_psm <= 13:
-            raise ValueError(
-                "ocr_psm must be between 1 and 13"
-            )
+            raise ValueError("ocr_psm must be between 1 and 13")
 
         if page_numbers is not None and any(
-            page_number <= 0
-            for page_number in page_numbers
+            page_number <= 0 for page_number in page_numbers
         ):
-            raise ValueError(
-                "page_numbers must contain positive values"
-            )
+            raise ValueError("page_numbers must contain positive values")
 
         page_texts = self.parser.extract_pages(str(file_path))
         chunks = []
@@ -50,10 +45,7 @@ class KnowledgePDFImporter:
             page_texts,
             start=1,
         ):
-            if (
-                page_numbers is not None
-                and page_number not in page_numbers
-            ):
+            if page_numbers is not None and page_number not in page_numbers:
                 continue
 
             normalized_text = page_text.strip()
@@ -70,9 +62,7 @@ class KnowledgePDFImporter:
                     dpi=ocr_dpi,
                     psm=ocr_psm,
                 )
-                normalized_text = (
-                    ocr_result.get("text") or ""
-                ).strip()
+                normalized_text = (ocr_result.get("text") or "").strip()
 
                 if normalized_text:
                     text_origin = "ocr"

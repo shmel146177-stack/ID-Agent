@@ -21,7 +21,6 @@ from app.services.knowledge_context import (
     extract_knowledge_source_ids,
 )
 
-
 router = APIRouter()
 
 UPLOAD_DIR = "uploads"
@@ -92,10 +91,8 @@ async def upload_document(
             save_options = {}
 
             if knowledge_context:
-                save_options["knowledge_source_ids"] = (
-                    extract_knowledge_source_ids(
-                        knowledge_context
-                    )
+                save_options["knowledge_source_ids"] = extract_knowledge_source_ids(
+                    knowledge_context
                 )
 
             saved_ai_analysis = project_service.save_ai_analysis(
@@ -108,21 +105,17 @@ async def upload_document(
 
             result["ai_analysis"] = saved_ai_document
 
-            ai_comparison = (
-                AIAnalysisComparisonService().compare(
-                    analysis,
-                    ai_analysis,
-                )
+            ai_comparison = AIAnalysisComparisonService().compare(
+                analysis,
+                ai_analysis,
             )
 
             comparison_options = {}
 
             if knowledge_context:
-                comparison_options["knowledge_source_ids"] = (
-                    saved_ai_document.get(
-                        "knowledge_source_ids",
-                        [],
-                    )
+                comparison_options["knowledge_source_ids"] = saved_ai_document.get(
+                    "knowledge_source_ids",
+                    [],
                 )
 
             try:

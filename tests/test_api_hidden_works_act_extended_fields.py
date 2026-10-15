@@ -89,22 +89,10 @@ def test_project_api_passes_extended_hidden_works_act_fields(
 
     act_data = saved["act_data"]
 
-    assert (
-        act_data["compliance"]
-        == "Работы соответствуют проектной документации"
-    )
+    assert act_data["compliance"] == "Работы соответствуют проектной документации"
     assert act_data["next_works"] == "Обратная засыпка"
     assert act_data["remarks"] == "Замечаний нет"
-    assert (
-        act_data["attachments"]
-        == "Исполнительная схема ИС-01"
-    )
-    assert (
-        act_data["materials_compliance"]
-        == "Materials comply with project"
-    )
+    assert act_data["attachments"] == "Исполнительная схема ИС-01"
+    assert act_data["materials_compliance"] == "Materials comply with project"
     assert act_data["test_results"] == "Test protocol 15"
-    assert (
-        act_data["geometric_parameters"]
-        == "Elevation matches project"
-    )
+    assert act_data["geometric_parameters"] == "Elevation matches project"

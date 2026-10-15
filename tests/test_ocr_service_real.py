@@ -7,18 +7,14 @@ from app.services.ocr_service import OCRService
 
 def test_real_ocr_with_rotation():
 
-    pdf_files = list(
-        Path("projects/ТП-103/input").glob("kyoScan*.pdf")
-    )
+    pdf_files = list(Path("projects/ТП-103/input").glob("kyoScan*.pdf"))
 
     if not pdf_files:
         pytest.skip("Local OCR integration PDF is not available")
 
     pdf_path = pdf_files[0]
 
-    result = OCRService().recognize_pdf(
-        str(pdf_path)
-    )
+    result = OCRService().recognize_pdf(str(pdf_path))
 
     assert result["ocr"] is True
     assert result["language"] == "rus+eng"

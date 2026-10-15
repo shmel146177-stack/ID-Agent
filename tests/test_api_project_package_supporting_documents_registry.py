@@ -51,9 +51,7 @@ def test_project_api_package_includes_supporting_documents_registry(
         fake_create,
     )
 
-    response = api_module.download_project_package(
-        project_name
-    )
+    response = api_module.download_project_package(project_name)
 
     assert isinstance(response, FileResponse)
     assert response.media_type == "application/zip"

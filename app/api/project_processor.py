@@ -3,14 +3,7 @@ from app.services.file_upload import save_upload
 import os
 from urllib.parse import quote
 
-from fastapi import (
-    APIRouter,
-    Depends,
-    Request,
-    File,
-    HTTPException,
-    UploadFile
-)
+from fastapi import APIRouter, Depends, Request, File, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
@@ -26,15 +19,9 @@ from app.services.supporting_document_upload import (
 )
 
 from app.generators.document_registry_excel import document_registry_excel
-from app.generators.project_executive_generator import (
-    project_executive_generator
-)
-from app.generators.hidden_works_act_generator import (
-    hidden_works_act_generator
-)
-from app.generators.hidden_works_journal_generator import (
-    hidden_works_journal_generator
-)
+from app.generators.project_executive_generator import project_executive_generator
+from app.generators.hidden_works_act_generator import hidden_works_act_generator
+from app.generators.hidden_works_journal_generator import hidden_works_journal_generator
 
 
 def validate_project_request(request: Request):
@@ -49,7 +36,7 @@ def validate_project_request(request: Request):
 router = APIRouter(
     prefix="/projects",
     tags=["Projects"],
-    dependencies=[Depends(validate_project_request)]
+    dependencies=[Depends(validate_project_request)],
 )
 
 
@@ -120,80 +107,60 @@ class HiddenWorksActData(BaseModel):
 # СПИСОК ПРОЕКТОВ
 # =========================================================
 
+
 @router.get("")
 def list_projects():
 
     try:
         projects = project_manager.list_projects()
 
-        return {
-            "projects_count": len(projects),
-            "projects": projects
-        }
+        return {"projects_count": len(projects), "projects": projects}
 
     except Exception as error:
-        raise HTTPException(
-            status_code=500,
-            detail=str(error)
-        )
+        raise HTTPException(status_code=500, detail=str(error))
 
 
 # =========================================================
 # СОЗДАНИЕ ПРОЕКТА
 # =========================================================
 
+
 @router.post("")
-def create_project(
-    data: ProjectCreate
-):
+def create_project(data: ProjectCreate):
 
     try:
-        project = project_manager.create_project(
-            data.project_name
-        )
+        project = project_manager.create_project(data.project_name)
 
-        return {
-            "status": "Проект готов",
-            "project": project
-        }
+        return {"status": "Проект готов", "project": project}
 
     except ProjectStateCorruptionError:
         raise
 
     except ValueError as error:
-        raise HTTPException(
-            status_code=400,
-            detail=str(error)
-        )
+        raise HTTPException(status_code=400, detail=str(error))
 
     except Exception as error:
-        raise HTTPException(
-            status_code=500,
-            detail=str(error)
-        )
+        raise HTTPException(status_code=500, detail=str(error))
 
 
 # =========================================================
 # ЗАГРУЗКА + АВТОМАТИЧЕСКИЙ АНАЛИЗ
 # =========================================================
 
+
 @router.post("/{project_name}/upload")
-def upload_project_file(
-    project_name: str,
-    file: UploadFile = File(...)
-):
+def upload_project_file(project_name: str, file: UploadFile = File(...)):
 
     file_path = None
 
     try:
         # Проверяем существование проекта
-        project_manager.get_project(
-            project_name
-        )
+        project_manager.get_project(project_name)
 
         input_path = safe_child_path(safe_project_path(project_name), "input")
         file_path, file_size = save_upload(
-            file, input_path,
+            file,
+            input_path,
             max_size=PROJECT_UPLOAD_MAX_FILE_SIZE_BYTES,
             chunk_size=PROJECT_UPLOAD_COPY_CHUNK_SIZE,
         )
@@ -206,11 +173,7 @@ def upload_project_file(
 
         try:
 
-            processing_result = (
-                project_processor.process(
-                    project_name
-                )
-            )
+            processing_result = project_processor.process(project_name)
 
             processing_status = "Готово"
             processing_error = None
@@ -221,9 +184,7 @@ def upload_project_file(
             # Ошибка анализа не должна удалять файл.
             processing_result = None
             processing_status = "Ошибка анализа"
-            processing_error = str(
-                processing_exception
-            )
+            processing_error = str(processing_exception)
 
         # ---------------------------------------------
         # 3. ВОЗВРАЩАЕМ РЕЗУЛЬТАТ
@@ -239,24 +200,18 @@ def upload_project_file(
             "automatic_processing": {
                 "status": processing_status,
                 "error": processing_error,
-                "result": processing_result
-            }
+                "result": processing_result,
+            },
         }
 
     except HTTPException:
         raise
 
     except FileNotFoundError as error:
-        raise HTTPException(
-            status_code=404,
-            detail=str(error)
-        )
+        raise HTTPException(status_code=404, detail=str(error))
 
     except Exception as error:
-        raise HTTPException(
-            status_code=500,
-            detail=str(error)
-        )
+        raise HTTPException(status_code=500, detail=str(error))
 
     finally:
 
@@ -267,9 +222,8 @@ def upload_project_file(
 # СОПРОВОДИТЕЛЬНЫЕ ДОКУМЕНТЫ РАЗДЕЛОВ 04–06
 # =========================================================
 
-@router.post(
-    "/{project_name}/supporting-documents/{section_code}/upload"
-)
+
+@router.post("/{project_name}/supporting-documents/{section_code}/upload")
 def upload_supporting_document(
     project_name: str,
     section_code: str,
@@ -321,102 +275,69 @@ def upload_supporting_document(
 # РУЧНАЯ ОБРАБОТКА ПРОЕКТА
 # =========================================================
 
+
 @router.post("/{project_name}/process")
-def process_project(
-    project_name: str
-):
+def process_project(project_name: str):
 
     try:
-        return project_processor.process(
-            project_name
-        )
+        return project_processor.process(project_name)
 
     except FileNotFoundError as error:
-        raise HTTPException(
-            status_code=404,
-            detail=str(error)
-        )
+        raise HTTPException(status_code=404, detail=str(error))
 
     except Exception as error:
-        raise HTTPException(
-            status_code=500,
-            detail=str(error)
-        )
+        raise HTTPException(status_code=500, detail=str(error))
 
 
 # =========================================================
 # КАРТОЧКА ПРОЕКТА
 # =========================================================
 
+
 @router.get("/{project_name}/card")
-def get_project_card(
-    project_name: str
-):
+def get_project_card(project_name: str):
 
     try:
-        return project_manager.get_project(
-            project_name
-        )
+        return project_manager.get_project(project_name)
 
     except ProjectStateCorruptionError:
         raise
 
     except FileNotFoundError as error:
-        raise HTTPException(
-            status_code=404,
-            detail=str(error)
-        )
+        raise HTTPException(status_code=404, detail=str(error))
 
     except Exception as error:
-        raise HTTPException(
-            status_code=500,
-            detail=str(error)
-        )
+        raise HTTPException(status_code=500, detail=str(error))
 
 
 @router.put("/{project_name}/card")
-def update_project_card(
-    project_name: str,
-    card: ProjectCardUpdate
-):
+def update_project_card(project_name: str, card: ProjectCardUpdate):
 
     try:
         return project_manager.update_project(
-            project_name,
-            card.model_dump(exclude_unset=True, exclude_none=True)
+            project_name, card.model_dump(exclude_unset=True, exclude_none=True)
         )
 
     except ProjectStateCorruptionError:
         raise
 
     except ValueError as error:
-        raise HTTPException(
-            status_code=400,
-            detail=str(error)
-        )
+        raise HTTPException(status_code=400, detail=str(error))
 
     except FileNotFoundError as error:
-        raise HTTPException(
-            status_code=404,
-            detail=str(error)
-        )
+        raise HTTPException(status_code=404, detail=str(error))
 
     except Exception as error:
-        raise HTTPException(
-            status_code=500,
-            detail=str(error)
-        )
+        raise HTTPException(status_code=500, detail=str(error))
 
 
 # =========================================================
 # СОЗДАНИЕ АОСР
 # =========================================================
 
+
 @router.post("/{project_name}/hidden-works-act")
-def create_hidden_works_act(
-    project_name: str,
-    act: HiddenWorksActData
-):
+def create_hidden_works_act(project_name: str, act: HiddenWorksActData):
 
     try:
 
@@ -428,10 +349,7 @@ def create_hidden_works_act(
         )
 
         if not act_data.get("actual_materials"):
-            act_data["actual_materials"] = (
-                act_data.get("materials")
-                or ""
-            )
+            act_data["actual_materials"] = act_data.get("materials") or ""
 
         hidden_works_act_generator.save_act_data(
             project_name,
@@ -445,75 +363,38 @@ def create_hidden_works_act(
             act_data=act_data,
         )
 
-        registry = hidden_works_registry.analyze_project(
-            project_name
-        )
+        registry = hidden_works_registry.analyze_project(project_name)
 
-        excel_path = document_registry_excel.create(
-            project_name
-        )
+        excel_path = document_registry_excel.create(project_name)
 
-        package_path = project_package.create_zip(
-            project_name
-        )
+        package_path = project_package.create_zip(project_name)
 
     except FileNotFoundError as error:
-        raise HTTPException(
-            status_code=404,
-            detail=str(error)
-        )
+        raise HTTPException(status_code=404, detail=str(error))
 
     except Exception as error:
-        raise HTTPException(
-            status_code=500,
-            detail=str(error)
-        )
+        raise HTTPException(status_code=500, detail=str(error))
 
-    if not os.path.exists(
-        file_path
-    ):
-        raise HTTPException(
-            status_code=404,
-            detail="АОСР не создан"
-        )
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="АОСР не создан")
 
-    filename = os.path.basename(
-        file_path
-    )
+    filename = os.path.basename(file_path)
 
     headers = {
-        "X-Act-Number": quote(
-            str(act.act_number)
-        ),
-        "X-Acts-Count": str(
-            registry.get(
-                "acts_count",
-                0
-            )
-        ),
-        "X-Act-Filename": quote(
-            filename
-        ),
-        "X-Excel-Updated": (
-            "true"
-            if os.path.exists(excel_path)
-            else "false"
-        ),
-        "X-Package-Updated": (
-            "true"
-            if os.path.exists(package_path)
-            else "false"
-        )
+        "X-Act-Number": quote(str(act.act_number)),
+        "X-Acts-Count": str(registry.get("acts_count", 0)),
+        "X-Act-Filename": quote(filename),
+        "X-Excel-Updated": ("true" if os.path.exists(excel_path) else "false"),
+        "X-Package-Updated": ("true" if os.path.exists(package_path) else "false"),
     }
 
     return FileResponse(
         path=file_path,
         filename=filename,
         media_type=(
-            "application/vnd.openxmlformats-officedocument."
-            "wordprocessingml.document"
+            "application/vnd.openxmlformats-officedocument." "wordprocessingml.document"
         ),
-        headers=headers
+        headers=headers,
     )
 
 
@@ -521,95 +402,59 @@ def create_hidden_works_act(
 # РЕЕСТР АОСР
 # =========================================================
 
+
 @router.get("/{project_name}/hidden-works-registry")
-def get_hidden_works_registry(
-    project_name: str
-):
+def get_hidden_works_registry(project_name: str):
 
     try:
-        return hidden_works_registry.analyze_project(
-            project_name
-        )
+        return hidden_works_registry.analyze_project(project_name)
 
     except FileNotFoundError as error:
-        raise HTTPException(
-            status_code=404,
-            detail=str(error)
-        )
+        raise HTTPException(status_code=404, detail=str(error))
 
     except Exception as error:
-        raise HTTPException(
-            status_code=500,
-            detail=str(error)
-        )
+        raise HTTPException(status_code=500, detail=str(error))
 
 
 # =========================================================
 # ЖУРНАЛ АОСР
 # =========================================================
 
+
 @router.get("/{project_name}/supporting-documents-registry")
-def get_supporting_documents_registry(
-    project_name: str
-):
+def get_supporting_documents_registry(project_name: str):
 
     try:
-        return supporting_documents_registry.analyze_project(
-            project_name
-        )
+        return supporting_documents_registry.analyze_project(project_name)
 
     except FileNotFoundError as error:
-        raise HTTPException(
-            status_code=404,
-            detail=str(error)
-        )
+        raise HTTPException(status_code=404, detail=str(error))
 
     except Exception as error:
-        raise HTTPException(
-            status_code=500,
-            detail=str(error)
-        )
+        raise HTTPException(status_code=500, detail=str(error))
 
 
 @router.get("/{project_name}/hidden-works-journal")
-def download_hidden_works_journal(
-    project_name: str
-):
+def download_hidden_works_journal(project_name: str):
 
     try:
-        file_path = (
-            hidden_works_journal_generator.create(
-                project_name
-            )
-        )
+        file_path = hidden_works_journal_generator.create(project_name)
 
     except FileNotFoundError as error:
-        raise HTTPException(
-            status_code=404,
-            detail=str(error)
-        )
+        raise HTTPException(status_code=404, detail=str(error))
 
     except Exception as error:
-        raise HTTPException(
-            status_code=500,
-            detail=str(error)
-        )
+        raise HTTPException(status_code=500, detail=str(error))
 
-    if not os.path.exists(
-        file_path
-    ):
-        raise HTTPException(
-            status_code=404,
-            detail="Журнал АОСР не создан"
-        )
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="Журнал АОСР не создан")
 
     return FileResponse(
         path=file_path,
         filename="05_Журнал_АОСР.docx",
         media_type=(
-            "application/vnd.openxmlformats-officedocument."
-            "wordprocessingml.document"
-        )
+            "application/vnd.openxmlformats-officedocument." "wordprocessingml.document"
+        ),
     )
 
 
@@ -617,38 +462,28 @@ def download_hidden_works_journal(
 # EXCEL-РЕЕСТР
 # =========================================================
 
+
 @router.get("/{project_name}/registry")
-def download_registry(
-    project_name: str
-):
+def download_registry(project_name: str):
 
     file_path = os.path.join(
         str(safe_project_path(project_name)),
         "output",
-        f"Реестр_документов_{project_name}.xlsx"
+        f"Реестр_документов_{project_name}.xlsx",
     )
 
-    if not os.path.exists(
-        file_path
-    ):
+    if not os.path.exists(file_path):
         raise HTTPException(
             status_code=404,
-            detail=(
-                "Excel-реестр не найден. "
-                "Сначала выполните обработку проекта."
-            )
+            detail=("Excel-реестр не найден. " "Сначала выполните обработку проекта."),
         )
 
     return FileResponse(
         path=file_path,
-        filename=(
-            f"Реестр_документов_"
-            f"{project_name}.xlsx"
-        ),
+        filename=(f"Реестр_документов_" f"{project_name}.xlsx"),
         media_type=(
-            "application/vnd.openxmlformats-officedocument."
-            "spreadsheetml.sheet"
-        )
+            "application/vnd.openxmlformats-officedocument." "spreadsheetml.sheet"
+        ),
     )
 
 
@@ -656,48 +491,30 @@ def download_registry(
 # ИСПОЛНИТЕЛЬНАЯ ДОКУМЕНТАЦИЯ
 # =========================================================
 
+
 @router.get("/{project_name}/executive-doc")
-def download_executive_document(
-    project_name: str
-):
+def download_executive_document(project_name: str):
 
     try:
-        file_path = (
-            project_executive_generator.create(
-                project_name
-            )
-        )
+        file_path = project_executive_generator.create(project_name)
 
     except FileNotFoundError as error:
-        raise HTTPException(
-            status_code=404,
-            detail=str(error)
-        )
+        raise HTTPException(status_code=404, detail=str(error))
 
     except Exception as error:
-        raise HTTPException(
-            status_code=500,
-            detail=str(error)
-        )
+        raise HTTPException(status_code=500, detail=str(error))
 
-    if not os.path.exists(
-        file_path
-    ):
+    if not os.path.exists(file_path):
         raise HTTPException(
-            status_code=404,
-            detail="Исполнительная документация не создана"
+            status_code=404, detail="Исполнительная документация не создана"
         )
 
     return FileResponse(
         path=file_path,
-        filename=(
-            f"Исполнительная_документация_"
-            f"{project_name}.docx"
-        ),
+        filename=(f"Исполнительная_документация_" f"{project_name}.docx"),
         media_type=(
-            "application/vnd.openxmlformats-officedocument."
-            "wordprocessingml.document"
-        )
+            "application/vnd.openxmlformats-officedocument." "wordprocessingml.document"
+        ),
     )
 
 
@@ -705,38 +522,24 @@ def download_executive_document(
 # ZIP-КОМПЛЕКТ
 # =========================================================
 
+
 @router.get("/{project_name}/package")
-def download_project_package(
-    project_name: str
-):
+def download_project_package(project_name: str):
 
     try:
-        file_path = project_package.create_zip(
-            project_name
-        )
+        file_path = project_package.create_zip(project_name)
 
     except FileNotFoundError as error:
-        raise HTTPException(
-            status_code=404,
-            detail=str(error)
-        )
+        raise HTTPException(status_code=404, detail=str(error))
 
     except Exception as error:
-        raise HTTPException(
-            status_code=500,
-            detail=str(error)
-        )
+        raise HTTPException(status_code=500, detail=str(error))
 
-    if not os.path.exists(
-        file_path
-    ):
-        raise HTTPException(
-            status_code=404,
-            detail="ZIP-комплект проекта не создан"
-        )
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="ZIP-комплект проекта не создан")
 
     return FileResponse(
         path=file_path,
         filename=f"Комплект_{project_name}.zip",
-        media_type="application/zip"
+        media_type="application/zip",
     )

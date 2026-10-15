@@ -6,9 +6,7 @@ def test_hidden_works_act_generator_create_all(monkeypatch):
 
     generator = HiddenWorksActGenerator()
 
-    supported_code = next(
-        iter(generator.ACT_CONFIG)
-    )
+    supported_code = next(iter(generator.ACT_CONFIG))
 
     registry = {
         "acts_count": 2,
@@ -68,9 +66,7 @@ def test_hidden_works_act_generator_create_all(monkeypatch):
         fake_create,
     )
 
-    result = generator.create_all(
-        "TEST_PROJECT"
-    )
+    result = generator.create_all("TEST_PROJECT")
 
     assert result["project"] == "TEST_PROJECT"
     assert result["acts_detected"] == 2
@@ -83,10 +79,7 @@ def test_hidden_works_act_generator_create_all(monkeypatch):
     assert result["created"][0]["file"] == "test_act.docx"
 
     assert len(result["skipped"]) == 1
-    assert (
-        result["skipped"][0]["code"]
-        == "__unsupported_act__"
-    )
+    assert result["skipped"][0]["code"] == "__unsupported_act__"
 
     assert len(calls) == 1
     assert calls[0]["project_name"] == "TEST_PROJECT"

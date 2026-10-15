@@ -23,9 +23,7 @@ def test_project_api_package_download_success_and_missing(
         lambda name: str(package_file),
     )
 
-    response = api_module.download_project_package(
-        project_name
-    )
+    response = api_module.download_project_package(project_name)
 
     assert isinstance(response, FileResponse)
     assert Path(response.path).resolve() == package_file.resolve()
@@ -40,8 +38,6 @@ def test_project_api_package_download_success_and_missing(
     )
 
     with pytest.raises(HTTPException) as error:
-        api_module.download_project_package(
-            project_name
-        )
+        api_module.download_project_package(project_name)
 
     assert error.value.status_code == 404

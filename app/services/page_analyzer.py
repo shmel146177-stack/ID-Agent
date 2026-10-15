@@ -162,10 +162,13 @@ class PageAnalyzer:
         # ТЕХНИЧЕСКИЕ УСЛОВИЯ
         # ---------------------------------------------------------
 
-        if not is_drawing and ("технические условия" in normalized_text or (
-            "технологическое присоединение" in normalized_text
-            and "россети московский регион" in normalized_text
-        )):
+        if not is_drawing and (
+            "технические условия" in normalized_text
+            or (
+                "технологическое присоединение" in normalized_text
+                and "россети московский регион" in normalized_text
+            )
+        ):
             return "Технические условия"
 
         # ---------------------------------------------------------
@@ -182,10 +185,14 @@ class PageAnalyzer:
         ):
             return "Согласование"
 
-        if not is_drawing and "государственное бюджетное учреждение" in normalized_text and (
-            "согласован" in normalized_text
-            or "письмо" in normalized_text
-            or "исх." in normalized_text
+        if (
+            not is_drawing
+            and "государственное бюджетное учреждение" in normalized_text
+            and (
+                "согласован" in normalized_text
+                or "письмо" in normalized_text
+                or "исх." in normalized_text
+            )
         ):
             return "Согласование"
 
@@ -342,15 +349,20 @@ class PageAnalyzer:
         is_drawing = (
             "стадия" in normalized_text
             and "лист" in normalized_text
-            and sum(label in normalized_text for label in
-                    ("разработал", "проверил", "гип", "подпись", "инв.")) >= 2
+            and sum(
+                label in normalized_text
+                for label in ("разработал", "проверил", "гип", "подпись", "инв.")
+            )
+            >= 2
         )
 
         # ---------------------------------------------------------
         # 1. ЯВНЫЕ ПРИЗНАКИ
         # ---------------------------------------------------------
 
-        priority_type = self._detect_priority_type(normalized_text, is_drawing=is_drawing)
+        priority_type = self._detect_priority_type(
+            normalized_text, is_drawing=is_drawing
+        )
 
         if priority_type:
 
@@ -369,7 +381,11 @@ class PageAnalyzer:
         scores = {}
 
         for page_type, rules in self.rules.items():
-            if is_drawing and page_type in {"Согласование", "Технические условия", "Титульный лист"}:
+            if is_drawing and page_type in {
+                "Согласование",
+                "Технические условия",
+                "Титульный лист",
+            }:
                 continue
 
             score = 0

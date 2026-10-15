@@ -7,9 +7,7 @@ from app.analyzer.document_classifier import DocumentClassifier
 
 
 def test_classifier_detects_document_type():
-    pdf_files = list(
-        Path("uploads").glob("*17.08.23 (1).pdf")
-    )
+    pdf_files = list(Path("uploads").glob("*17.08.23 (1).pdf"))
 
     if not pdf_files:
         pytest.skip("Local integration PDF is not available")

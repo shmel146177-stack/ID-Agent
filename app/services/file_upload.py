@@ -1,4 +1,5 @@
 """Shared exclusive, bounded upload persistence."""
+
 from pathlib import Path
 
 from fastapi import HTTPException
@@ -8,13 +9,22 @@ from app.services.safe_paths import safe_child_path, validate_name
 MAX_FILE_SIZE_BYTES = 512 * 1024 * 1024
 COPY_CHUNK_SIZE = 1024 * 1024
 ALLOWED_EXTENSIONS = {
-    ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".jpg", ".jpeg",
-    ".png", ".tif", ".tiff",
+    ".pdf",
+    ".doc",
+    ".docx",
+    ".xls",
+    ".xlsx",
+    ".jpg",
+    ".jpeg",
+    ".png",
+    ".tif",
+    ".tiff",
 }
 
 
-def save_upload(file, directory, *, max_size=MAX_FILE_SIZE_BYTES,
-                chunk_size=COPY_CHUNK_SIZE):
+def save_upload(
+    file, directory, *, max_size=MAX_FILE_SIZE_BYTES, chunk_size=COPY_CHUNK_SIZE
+):
     """Return (path, size); never overwrite or remove a pre-existing file."""
     try:
         filename = (file.filename or "").replace("\\", "/").split("/")[-1]
@@ -24,7 +34,9 @@ def save_upload(file, directory, *, max_size=MAX_FILE_SIZE_BYTES,
         except ValueError as error:
             raise HTTPException(400, str(error)) from error
         if path.suffix.lower() not in ALLOWED_EXTENSIONS:
-            raise HTTPException(400, f"Неподдерживаемый формат файла: {path.suffix or 'без расширения'}")
+            raise HTTPException(
+                400, f"Неподдерживаемый формат файла: {path.suffix or 'без расширения'}"
+            )
         Path(directory).mkdir(parents=True, exist_ok=True)
         try:
             destination = path.open("xb")

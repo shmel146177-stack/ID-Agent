@@ -16,24 +16,15 @@ def test_project_package_zip_includes_hidden_works_journal(
     project_path = tmp_path / project_name
     package_folder = project_path / "executive_docs"
 
-    journal_folder = (
-        package_folder
-        / "Исполнительная_документация"
-        / "07_Журналы_работ"
-    )
+    journal_folder = package_folder / "Исполнительная_документация" / "07_Журналы_работ"
 
     journal_folder.mkdir(
         parents=True,
     )
 
-    journal_file = (
-        journal_folder
-        / "Журнал_скрытых_работ_TEST_PROJECT.docx"
-    )
+    journal_file = journal_folder / "Журнал_скрытых_работ_TEST_PROJECT.docx"
 
-    journal_file.write_bytes(
-        b"HIDDEN WORKS JOURNAL"
-    )
+    journal_file.write_bytes(b"HIDDEN WORKS JOURNAL")
 
     monkeypatch.setattr(
         package,
@@ -50,9 +41,7 @@ def test_project_package_zip_includes_hidden_works_journal(
         lambda name: project_path,
     )
 
-    result = package.create_zip(
-        project_name
-    )
+    result = package.create_zip(project_name)
 
     zip_path = Path(result)
 
@@ -63,9 +52,7 @@ def test_project_package_zip_includes_hidden_works_journal(
         "r",
     ) as archive:
 
-        names = set(
-            archive.namelist()
-        )
+        names = set(archive.namelist())
 
         journal_path = (
             "Исполнительная_документация/"
@@ -75,6 +62,4 @@ def test_project_package_zip_includes_hidden_works_journal(
 
         assert journal_path in names
 
-        assert archive.read(
-            journal_path
-        ) == b"HIDDEN WORKS JOURNAL"
+        assert archive.read(journal_path) == b"HIDDEN WORKS JOURNAL"

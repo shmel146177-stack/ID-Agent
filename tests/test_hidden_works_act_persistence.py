@@ -32,9 +32,7 @@ def test_hidden_works_act_data_persistence(monkeypatch, tmp_path):
         act_data,
     )
 
-    storage_path = (
-        project_path / "hidden_works_act_data.json"
-    )
+    storage_path = project_path / "hidden_works_act_data.json"
 
     assert storage_path.is_file()
 
@@ -44,26 +42,14 @@ def test_hidden_works_act_data_persistence(monkeypatch, tmp_path):
     )
 
     assert loaded["act_number"] == "А-001"
-    assert (
-        loaded["compliance"]
-        == "Работы соответствуют проектной документации"
-    )
+    assert loaded["compliance"] == "Работы соответствуют проектной документации"
     assert loaded["next_works"] == "Обратная засыпка"
     assert loaded["remarks"] == "Замечаний нет"
-    assert (
-        loaded["attachments"]
-        == "Исполнительная схема ИС-01"
-    )
+    assert loaded["attachments"] == "Исполнительная схема ИС-01"
 
-    assert (
-        loaded["materials_compliance"]
-        == "Materials comply with project"
-    )
+    assert loaded["materials_compliance"] == "Materials comply with project"
     assert loaded["test_results"] == "Test protocol 15"
-    assert (
-        loaded["geometric_parameters"]
-        == "Elevation matches project"
-    )
+    assert loaded["geometric_parameters"] == "Elevation matches project"
 
     assert set(result["saved_fields"]) >= {
         "act_number",

@@ -27,20 +27,12 @@ class ExecutiveDocumentRouter:
         )
 
     def _load_project_analysis(self, project_name: str) -> dict:
-        path = (
-            self._project_path(project_name)
-            / "analysis"
-            / "project_analysis.json"
-        )
+        path = self._project_path(project_name) / "analysis" / "project_analysis.json"
 
         if not path.exists():
-            raise FileNotFoundError(
-                f"project_analysis.json not found: {path}"
-            )
+            raise FileNotFoundError(f"project_analysis.json not found: {path}")
 
-        return json.loads(
-            path.read_text(encoding="utf-8")
-        )
+        return json.loads(path.read_text(encoding="utf-8"))
 
     def _section_folders(self) -> dict:
         return {
@@ -166,10 +158,7 @@ class ExecutiveDocumentRouter:
                 )
                 continue
 
-            destination_folder = (
-                self._executive_root(project_name)
-                / folder_name
-            )
+            destination_folder = self._executive_root(project_name) / folder_name
 
             destination_folder.mkdir(
                 parents=True,
@@ -204,9 +193,7 @@ class ExecutiveDocumentRouter:
                     {
                         **route_data,
                         "source": str(source),
-                        "reason": (
-                            "destination_exists_different_content"
-                        ),
+                        "reason": ("destination_exists_different_content"),
                     }
                 )
                 continue

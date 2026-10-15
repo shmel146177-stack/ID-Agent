@@ -19,16 +19,12 @@ def test_project_api_process_project_success_and_not_found(monkeypatch):
         lambda name: expected,
     )
 
-    result = api_module.process_project(
-        project_name
-    )
+    result = api_module.process_project(project_name)
 
     assert result == expected
 
     def raise_not_found(name):
-        raise FileNotFoundError(
-            f"Проект не найден: {name}"
-        )
+        raise FileNotFoundError(f"Проект не найден: {name}")
 
     monkeypatch.setattr(
         api_module.project_processor,
@@ -37,9 +33,7 @@ def test_project_api_process_project_success_and_not_found(monkeypatch):
     )
 
     with pytest.raises(HTTPException) as error:
-        api_module.process_project(
-            project_name
-        )
+        api_module.process_project(project_name)
 
     assert error.value.status_code == 404
     assert project_name in error.value.detail

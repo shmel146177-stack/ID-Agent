@@ -17,7 +17,7 @@ def test_executive_doc_generator_v3_creates_real_docx(
     generator = ExecutiveDocumentGeneratorV3()
 
     data = {
-        "equipment": 'Шкаф управления TEST:001/А',
+        "equipment": "Шкаф управления TEST:001/А",
         "manufacturer": "ООО Тест",
         "date": "12.08.2026",
         "drawing_number": "TEST-DWG-001",
@@ -53,7 +53,7 @@ def test_executive_doc_generator_v3_creates_real_docx(
     )
 
     assert "ID-Agent" in all_text
-    assert 'Шкаф управления TEST:001/А' in all_text
+    assert "Шкаф управления TEST:001/А" in all_text
     assert "ООО Тест" in all_text
     assert "TEST-DWG-001" in all_text
     assert "7,5 кВт" in all_text

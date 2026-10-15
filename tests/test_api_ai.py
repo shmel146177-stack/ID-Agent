@@ -6,7 +6,6 @@ from app.models.ai_analysis import AIAnalysisResult
 from app.services.ai_settings import AISettings
 from main import app
 
-
 client = TestClient(app)
 
 
@@ -56,8 +55,6 @@ def test_ai_analyze_without_api_key_is_safe(monkeypatch):
     assert "OpenAI API" in data["summary"]
 
 
-
-
 def test_ai_analyze_does_not_use_openai_when_disabled(
     monkeypatch,
     tmp_path,
@@ -90,9 +87,7 @@ def test_ai_analyze_does_not_use_openai_when_disabled(
         ai_client=None,
         max_input_chars=40_000,
     ):
-        raise AssertionError(
-            "OpenAI backend must not be initialized"
-        )
+        raise AssertionError("OpenAI backend must not be initialized")
 
     monkeypatch.setattr(
         ai_module.AIDocumentAnalysisService,
@@ -184,6 +179,7 @@ def test_ai_analyze_uses_openai_when_active(monkeypatch):
         )
     ]
 
+
 def test_ai_latest_returns_saved_analysis(
     monkeypatch,
     tmp_path,
@@ -219,6 +215,7 @@ def test_ai_latest_returns_saved_analysis(
     assert result["source_filename"] == "document.pdf"
     assert result["summary"] == saved["summary"]
     assert result["document_type_suggestion"] == "drawing"
+
 
 def test_ai_latest_returns_404_when_missing(monkeypatch):
     from app.services.project_service import project_service
@@ -758,8 +755,7 @@ def test_ai_review_rejects_unknown_excluded_fact_field(monkeypatch):
     assert response.status_code == 409
     assert response.json() == {
         "detail": (
-            "Reviewed field is not a current structured "
-            "autonomous exclusion"
+            "Reviewed field is not a current structured " "autonomous exclusion"
         ),
     }
 
@@ -941,10 +937,10 @@ def test_excluded_fact_review_statuses_merge_partial_review(monkeypatch):
                 "reason": "insufficient_context",
                 "evidence": "220 В",
                 "review_status": "corrected",
-                    "corrected_value": "230 В",
-                    "review_notes": "Checked against the nameplate.",
-                    "reviewed_by": None,
-                    "reviewed_at": None,
+                "corrected_value": "230 В",
+                "review_notes": "Checked against the nameplate.",
+                "reviewed_by": None,
+                "reviewed_at": None,
             },
             {
                 "field": "ip",
@@ -952,10 +948,10 @@ def test_excluded_fact_review_statuses_merge_partial_review(monkeypatch):
                 "reason": "missing_evidence",
                 "evidence": None,
                 "review_status": "pending",
-                    "corrected_value": None,
-                    "review_notes": None,
-                    "reviewed_by": None,
-                    "reviewed_at": None,
+                "corrected_value": None,
+                "review_notes": None,
+                "reviewed_by": None,
+                "reviewed_at": None,
             },
         ],
         "excluded_fact_review_summary": {
@@ -1001,9 +997,10 @@ def test_excluded_fact_review_statuses_are_pending_without_review(
     response = client.get("/ai/review/exclusions")
 
     assert response.status_code == 200
-    assert response.json()["excluded_fact_review_statuses"][0][
-        "review_status"
-    ] == "pending"
+    assert (
+        response.json()["excluded_fact_review_statuses"][0]["review_status"]
+        == "pending"
+    )
     assert response.json()["excluded_fact_review_summary"] == {
         "total": 1,
         "reviewed": 0,
@@ -1174,9 +1171,7 @@ def test_single_excluded_fact_review_preserves_existing_decisions(
     assert fact_reviews[1]["field"] == "ip"
     assert fact_reviews[1]["decision"] == "rejected"
     assert fact_reviews[1]["corrected_value"] is None
-    assert fact_reviews[1]["notes"] == (
-        "Not an equipment characteristic."
-    )
+    assert fact_reviews[1]["notes"] == ("Not an equipment characteristic.")
     assert fact_reviews[1]["reviewed_by"] == "Engineer A"
     assert fact_reviews[1]["reviewed_at"]
     history = response.json()["excluded_fact_review_history"]
@@ -1232,9 +1227,7 @@ def test_single_excluded_fact_review_creates_partial_review(monkeypatch):
 
     assert response.status_code == 200
     assert response.json()["decision"] == "needs_changes"
-    assert response.json()["knowledge_source_ids"] == [
-        "passport-source"
-    ]
+    assert response.json()["knowledge_source_ids"] == ["passport-source"]
     assert saved_review == response.json()
 
 
@@ -1386,9 +1379,7 @@ def test_single_excluded_fact_review_rejects_stale_revision(monkeypatch):
 
     assert response.status_code == 409
     assert response.json() == {
-        "detail": (
-            "AI review revision mismatch: expected 1, current 2"
-        ),
+        "detail": ("AI review revision mismatch: expected 1, current 2"),
     }
 
 
@@ -1449,9 +1440,7 @@ def test_clear_excluded_fact_review_rejects_stale_revision(monkeypatch):
 
     assert response.status_code == 409
     assert response.json() == {
-        "detail": (
-            "AI review revision mismatch: expected 1, current 2"
-        ),
+        "detail": ("AI review revision mismatch: expected 1, current 2"),
     }
     assert save_calls == []
     assert saved_review["review_revision"] == 2
@@ -1542,9 +1531,7 @@ def test_clear_excluded_fact_review_returns_field_to_pending(monkeypatch):
             "notes": None,
         },
     ]
-    assert response.json()["knowledge_source_ids"] == [
-        "passport-source"
-    ]
+    assert response.json()["knowledge_source_ids"] == ["passport-source"]
     assert saved_review == response.json()
     history = response.json()["excluded_fact_review_history"]
     assert history[0]["action"] == "cleared"
@@ -1661,9 +1648,7 @@ def test_ai_review_history_returns_archived_review(monkeypatch):
         project_service,
         "get_ai_review_history",
         lambda analysis_id: (
-            archived_review
-            if analysis_id == "analysis-old"
-            else None
+            archived_review if analysis_id == "analysis-old" else None
         ),
     )
 
@@ -2125,6 +2110,7 @@ def test_ai_review_get_returns_saved_review(monkeypatch):
         "review_revision": 0,
     }
 
+
 def test_ai_review_get_returns_404_when_missing(monkeypatch):
     from app.services.project_service import project_service
 
@@ -2140,6 +2126,7 @@ def test_ai_review_get_returns_404_when_missing(monkeypatch):
     assert response.json() == {
         "detail": "AI review not found",
     }
+
 
 def test_ai_review_rejects_analysis_id_mismatch(monkeypatch):
     from app.services.project_service import project_service
@@ -2169,6 +2156,7 @@ def test_ai_review_rejects_analysis_id_mismatch(monkeypatch):
     assert response.json() == {
         "detail": "AI analysis id mismatch",
     }
+
 
 def test_ai_analyze_persists_analysis_id(
     monkeypatch,
@@ -2284,11 +2272,7 @@ def test_ai_analyze_passes_knowledge_context_when_active(monkeypatch):
         },
     )
 
-    knowledge_context = (
-        "[SOURCE 1]\n"
-        "source_id: sp-grounding\n"
-        "[/SOURCE]"
-    )
+    knowledge_context = "[SOURCE 1]\n" "source_id: sp-grounding\n" "[/SOURCE]"
 
     response = client.post(
         "/ai/analyze",
@@ -2331,17 +2315,9 @@ def test_ai_analysis_request_accepts_maximum_knowledge_context():
         MAX_KNOWLEDGE_CONTEXT_CHARS,
     )
 
-    prefix = (
-        "[SOURCE 1]\n"
-        "source_id: sp-test\n"
-        "text:\n"
-    )
+    prefix = "[SOURCE 1]\n" "source_id: sp-test\n" "text:\n"
     suffix = "\n[/SOURCE]"
-    content_length = (
-        MAX_KNOWLEDGE_CONTEXT_CHARS
-        - len(prefix)
-        - len(suffix)
-    )
+    content_length = MAX_KNOWLEDGE_CONTEXT_CHARS - len(prefix) - len(suffix)
     knowledge_context = prefix + ("x" * content_length) + suffix
 
     request = AIAnalysisRequest(
@@ -2437,6 +2413,7 @@ def test_ai_comparison_rejects_knowledge_source_mismatch(monkeypatch):
         "detail": "AI comparison knowledge sources mismatch",
     }
 
+
 def test_ai_analyze_builds_project_knowledge_context(
     monkeypatch,
     tmp_path,
@@ -2472,9 +2449,7 @@ def test_ai_analyze_builds_project_knowledge_context(
             text,
             knowledge_context=None,
         ):
-            calls.append(
-                (filename, text, knowledge_context)
-            )
+            calls.append((filename, text, knowledge_context))
             return AIAnalysisResult(
                 summary="AI backend selected.",
             )
@@ -2528,13 +2503,8 @@ def test_ai_analyze_builds_project_knowledge_context(
 
     assert "[SOURCE 1]" in knowledge_context
     assert "source_id: project-grounding" in knowledge_context
-    assert (
-        "Grounding requirement for this project."
-        in knowledge_context
-    )
-    assert response.json()[
-        "included_knowledge_pages"
-    ] == [
+    assert "Grounding requirement for this project." in knowledge_context
+    assert response.json()["included_knowledge_pages"] == [
         {
             "source_id": "project-grounding",
             "page": 10,
@@ -2543,6 +2513,7 @@ def test_ai_analyze_builds_project_knowledge_context(
     assert response.json()["knowledge_source_ids"] == [
         "project-grounding",
     ]
+
 
 @pytest.mark.parametrize(
     "project_fields",
@@ -2576,6 +2547,7 @@ def test_ai_analyze_rejects_incomplete_project_knowledge_request(
 
     assert response.status_code == 422
 
+
 def test_ai_analyze_rejects_invalid_knowledge_project_name(
     monkeypatch,
 ):
@@ -2592,16 +2564,11 @@ def test_ai_analyze_rejects_invalid_knowledge_project_name(
     )
 
     assert response.status_code == 400
-    assert response.json()["detail"].startswith(
-        "project_name must"
-    )
+    assert response.json()["detail"].startswith("project_name must")
+
 
 def test_ai_analyze_rejects_combined_knowledge_modes():
-    knowledge_context = (
-        "[SOURCE 1]\n"
-        "source_id: sp-grounding\n"
-        "[/SOURCE]"
-    )
+    knowledge_context = "[SOURCE 1]\n" "source_id: sp-grounding\n" "[/SOURCE]"
 
     response = client.post(
         "/ai/analyze",
@@ -2654,9 +2621,7 @@ def test_ai_analyze_controls_unreviewed_project_ocr(
             text,
             knowledge_context=None,
         ):
-            calls.append(
-                (filename, text, knowledge_context)
-            )
+            calls.append((filename, text, knowledge_context))
             return AIAnalysisResult(
                 summary="AI backend selected.",
             )
@@ -2716,28 +2681,20 @@ def test_ai_analyze_controls_unreviewed_project_ocr(
     assert default_response.status_code == 200
     assert opt_in_response.status_code == 200
     assert len(calls) == 2
-    assert default_response.json()[
-        "included_knowledge_pages"
-    ] == []
-    assert opt_in_response.json()[
-        "included_knowledge_pages"
-    ] == [
+    assert default_response.json()["included_knowledge_pages"] == []
+    assert opt_in_response.json()["included_knowledge_pages"] == [
         {
             "source_id": "pending-ocr",
             "page": 3,
         }
     ]
-    assert default_response.json()[
-        "excluded_unreviewed_ocr_pages"
-    ] == [
+    assert default_response.json()["excluded_unreviewed_ocr_pages"] == [
         {
             "source_id": "pending-ocr",
             "page": 3,
         }
     ]
-    assert opt_in_response.json()[
-        "excluded_unreviewed_ocr_pages"
-    ] == []
+    assert opt_in_response.json()["excluded_unreviewed_ocr_pages"] == []
     assert calls[0][2] is None
     assert "source_id: pending-ocr" in calls[1][2]
     assert "requires_human_review: true" in calls[1][2]
@@ -2748,10 +2705,7 @@ def test_ai_analysis_request_rejects_unreviewed_ocr_flag_without_project():
 
     with pytest.raises(
         ValueError,
-        match=(
-            "include_unreviewed_ocr requires "
-            "project knowledge search"
-        ),
+        match=("include_unreviewed_ocr requires " "project knowledge search"),
     ):
         AIAnalysisRequest(
             filename="document.pdf",
@@ -2806,6 +2760,7 @@ def test_ai_analyze_saves_autonomous_execution_diagnostics(
     assert saved["ai_provider"] == "openai"
     assert saved["ai_model"] == "test-model"
     assert saved["fallback_reason"] == "ai_disabled"
+
 
 def test_ai_analyze_saves_credit_balance_fallback_reason(
     monkeypatch,
@@ -2921,10 +2876,7 @@ def test_ai_analyze_returns_and_saves_autonomous_facts(
     assert response.status_code == 200
 
     data = response.json()
-    facts = {
-        fact["field"]: fact["value"]
-        for fact in data["facts"]
-    }
+    facts = {fact["field"]: fact["value"] for fact in data["facts"]}
 
     assert data["analysis_mode"] == "autonomous"
     assert data["fallback_reason"] == "ai_disabled"
@@ -2941,6 +2893,7 @@ def test_ai_analyze_returns_and_saves_autonomous_facts(
     assert saved["analysis_mode"] == "autonomous"
     assert saved["fallback_reason"] == "ai_disabled"
     assert saved["facts"] == data["facts"]
+
 
 def test_ai_analyze_returns_and_saves_excluded_autonomous_fact_fields(
     monkeypatch,

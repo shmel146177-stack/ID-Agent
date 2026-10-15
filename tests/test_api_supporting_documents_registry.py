@@ -23,17 +23,13 @@ def test_project_api_supporting_documents_registry_success_and_not_found(monkeyp
         lambda name: expected,
     )
 
-    result = api_module.get_supporting_documents_registry(
-        project_name
-    )
+    result = api_module.get_supporting_documents_registry(project_name)
 
     assert result == expected
     assert result["requirements_count"] == 2
 
     def raise_not_found(name):
-        raise FileNotFoundError(
-            f"Проект не найден: {name}"
-        )
+        raise FileNotFoundError(f"Проект не найден: {name}")
 
     monkeypatch.setattr(
         api_module.supporting_documents_registry,
@@ -42,9 +38,7 @@ def test_project_api_supporting_documents_registry_success_and_not_found(monkeyp
     )
 
     with pytest.raises(HTTPException) as error:
-        api_module.get_supporting_documents_registry(
-            project_name
-        )
+        api_module.get_supporting_documents_registry(project_name)
 
     assert error.value.status_code == 404
     assert project_name in error.value.detail

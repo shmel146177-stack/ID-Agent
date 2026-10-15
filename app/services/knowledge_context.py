@@ -2,7 +2,6 @@ import re
 
 from app.models.knowledge import KnowledgeSearchResult
 
-
 MAX_KNOWLEDGE_CONTEXT_CHARS = 20_000
 
 
@@ -53,10 +52,7 @@ def build_knowledge_context(
         separator_length = 2 if blocks else 0
         added_length = separator_length + len(block)
 
-        if (
-            max_chars is not None
-            and context_length + added_length > max_chars
-        ):
+        if max_chars is not None and context_length + added_length > max_chars:
             break
 
         blocks.append(block)
@@ -68,12 +64,7 @@ def build_knowledge_context(
 def extract_knowledge_source_ids(
     context: str | None,
 ) -> list[str]:
-    normalized = (
-        (context or "")
-        .replace("\r\n", "\n")
-        .replace("\r", "\n")
-        .strip()
-    )
+    normalized = (context or "").replace("\r\n", "\n").replace("\r", "\n").strip()
     pattern = re.compile(
         r"^\[SOURCE (?P<source_number>\d+)\]\n"
         r"source_id: (?P<source_id>[^\n]+)\n"
@@ -92,7 +83,7 @@ def extract_knowledge_source_ids(
     for match_index, match in enumerate(matches):
         expected_separator = "" if match_index == 0 else "\n\n"
 
-        if normalized[cursor:match.start()] != expected_separator:
+        if normalized[cursor : match.start()] != expected_separator:
             return []
 
         source_number = int(match.group("source_number"))
@@ -120,12 +111,7 @@ def extract_knowledge_source_ids(
 def extract_knowledge_source_pages(
     context: str | None,
 ) -> list[dict[str, str | int | None]]:
-    normalized = (
-        (context or "")
-        .replace("\r\n", "\n")
-        .replace("\r", "\n")
-        .strip()
-    )
+    normalized = (context or "").replace("\r\n", "\n").replace("\r", "\n").strip()
 
     if not normalized:
         return []
@@ -158,10 +144,7 @@ def extract_knowledge_source_pages(
         matches,
         start=1,
     ):
-        if (
-            int(match.group("source_number"))
-            != expected_number
-        ):
+        if int(match.group("source_number")) != expected_number:
             return []
 
         source_id = match.group("source_id").strip()

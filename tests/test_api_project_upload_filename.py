@@ -41,13 +41,7 @@ def test_project_api_upload_sanitizes_filename_path(
         upload,
     )
 
-    expected_file = (
-        tmp_path
-        / "projects"
-        / project_name
-        / "input"
-        / "evil.pdf"
-    )
+    expected_file = tmp_path / "projects" / project_name / "input" / "evil.pdf"
 
     assert expected_file.exists()
     assert expected_file.read_bytes() == b"SAFE PDF"

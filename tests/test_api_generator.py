@@ -51,8 +51,7 @@ def test_api_generator_handles_missing_data_and_returns_file(monkeypatch, tmp_pa
     assert Path(response.path) == output_file
 
     assert response.media_type == (
-        "application/vnd.openxmlformats-officedocument."
-        "wordprocessingml.document"
+        "application/vnd.openxmlformats-officedocument." "wordprocessingml.document"
     )
 
     assert received == analysis

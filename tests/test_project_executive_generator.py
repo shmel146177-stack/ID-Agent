@@ -12,12 +12,7 @@ def test_project_executive_generator_creates_real_docx(monkeypatch, tmp_path):
 
     project_name = "TEST_PROJECT"
 
-    analysis_path = (
-        tmp_path
-        / "projects"
-        / project_name
-        / "analysis"
-    )
+    analysis_path = tmp_path / "projects" / project_name / "analysis"
 
     analysis_path.mkdir(
         parents=True,
@@ -52,10 +47,7 @@ def test_project_executive_generator_creates_real_docx(monkeypatch, tmp_path):
         ],
     }
 
-    (
-        analysis_path
-        / "project_analysis.json"
-    ).write_text(
+    (analysis_path / "project_analysis.json").write_text(
         json.dumps(
             project_analysis,
             ensure_ascii=False,
@@ -64,10 +56,7 @@ def test_project_executive_generator_creates_real_docx(monkeypatch, tmp_path):
         encoding="utf-8",
     )
 
-    (
-        analysis_path
-        / "document_completeness.json"
-    ).write_text(
+    (analysis_path / "document_completeness.json").write_text(
         json.dumps(
             completeness,
             ensure_ascii=False,
@@ -78,9 +67,7 @@ def test_project_executive_generator_creates_real_docx(monkeypatch, tmp_path):
 
     generator = ProjectExecutiveGenerator()
 
-    result = generator.create(
-        project_name
-    )
+    result = generator.create(project_name)
 
     output_path = Path(result)
 

@@ -47,9 +47,7 @@ class SupportingDocumentUpload:
         max_file_size_bytes: int = DEFAULT_MAX_FILE_SIZE_BYTES,
     ):
         if max_file_size_bytes <= 0:
-            raise ValueError(
-                "Максимальный размер файла должен быть положительным"
-            )
+            raise ValueError("Максимальный размер файла должен быть положительным")
 
         self.projects_root = Path("projects")
         self.processor = processor
@@ -80,10 +78,7 @@ class SupportingDocumentUpload:
 
         if section is None:
             allowed = ", ".join(self.SECTIONS)
-            raise ValueError(
-                "Раздел должен быть одним из: "
-                f"{allowed}"
-            )
+            raise ValueError("Раздел должен быть одним из: " f"{allowed}")
 
         return section
 
@@ -92,8 +87,7 @@ class SupportingDocumentUpload:
 
         if extension not in self.ALLOWED_EXTENSIONS:
             raise ValueError(
-                "Неподдерживаемый формат файла: "
-                f"{extension or 'без расширения'}"
+                "Неподдерживаемый формат файла: " f"{extension or 'без расширения'}"
             )
 
         return extension
@@ -168,14 +162,10 @@ class SupportingDocumentUpload:
             {},
         ).get("conflicts", []):
             conflict_value = (
-                conflict.get("filename", "")
-                or conflict.get("destination", "")
-                or ""
+                conflict.get("filename", "") or conflict.get("destination", "") or ""
             ).replace("\\", "/")
             conflict_filename = (
-                PurePosixPath(conflict_value).name
-                if conflict_value
-                else ""
+                PurePosixPath(conflict_value).name if conflict_value else ""
             )
 
             if conflict_filename == filename:
@@ -185,15 +175,8 @@ class SupportingDocumentUpload:
             "matching",
             {},
         ).get("matched", []):
-            match_value = (
-                match.get("filename", "")
-                or ""
-            ).replace("\\", "/")
-            match_filename = (
-                PurePosixPath(match_value).name
-                if match_value
-                else ""
-            )
+            match_value = (match.get("filename", "") or "").replace("\\", "/")
+            match_filename = PurePosixPath(match_value).name if match_value else ""
 
             if match_filename != filename:
                 continue
@@ -202,9 +185,8 @@ class SupportingDocumentUpload:
                 match.get("requirement_code"),
                 {},
             )
-            matched_section = (
-                match.get("section_code")
-                or requirement.get("section_code")
+            matched_section = match.get("section_code") or requirement.get(
+                "section_code"
             )
             verified_match = {
                 **match,
@@ -244,9 +226,7 @@ class SupportingDocumentUpload:
         project_path = self._project_path(project_name)
 
         if not project_path.is_dir():
-            raise FileNotFoundError(
-                f"Проект не найден: {project_name}"
-            )
+            raise FileNotFoundError(f"Проект не найден: {project_name}")
 
         section = self._validate_section(section_code)
         safe_name = self._safe_filename(filename)
@@ -261,9 +241,7 @@ class SupportingDocumentUpload:
             with destination.open("xb") as target:
                 file_size = self._copy_upload(source, target)
         except FileExistsError as error:
-            raise FileExistsError(
-                f"Файл уже существует: {safe_name}"
-            ) from error
+            raise FileExistsError(f"Файл уже существует: {safe_name}") from error
         except Exception:
             destination.unlink(missing_ok=True)
             raise
@@ -306,10 +284,7 @@ class SupportingDocumentUpload:
             section_code,
             safe_name,
         )
-        has_routing_conflict = (
-            upload_verification["status"]
-            == "Конфликт маршрутизации"
-        )
+        has_routing_conflict = upload_verification["status"] == "Конфликт маршрутизации"
         response_status = (
             "Файл загружен, но обнаружен конфликт маршрутизации"
             if has_routing_conflict

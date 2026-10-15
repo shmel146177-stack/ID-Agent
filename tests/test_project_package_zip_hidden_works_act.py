@@ -17,23 +17,16 @@ def test_project_package_zip_includes_hidden_works_act(
     package_folder = project_path / "executive_docs"
 
     acts_folder = (
-        package_folder
-        / "Исполнительная_документация"
-        / "03_Акты_скрытых_работ"
+        package_folder / "Исполнительная_документация" / "03_Акты_скрытых_работ"
     )
 
     acts_folder.mkdir(
         parents=True,
     )
 
-    act_file = (
-        acts_folder
-        / "АОСР_Заземление_TEST_PROJECT.docx"
-    )
+    act_file = acts_folder / "АОСР_Заземление_TEST_PROJECT.docx"
 
-    act_file.write_bytes(
-        b"HIDDEN WORKS ACT"
-    )
+    act_file.write_bytes(b"HIDDEN WORKS ACT")
 
     monkeypatch.setattr(
         package,
@@ -50,9 +43,7 @@ def test_project_package_zip_includes_hidden_works_act(
         lambda name: project_path,
     )
 
-    result = package.create_zip(
-        project_name
-    )
+    result = package.create_zip(project_name)
 
     zip_path = Path(result)
 
@@ -63,9 +54,7 @@ def test_project_package_zip_includes_hidden_works_act(
         "r",
     ) as archive:
 
-        names = set(
-            archive.namelist()
-        )
+        names = set(archive.namelist())
 
         act_path = (
             "Исполнительная_документация/"
@@ -75,6 +64,4 @@ def test_project_package_zip_includes_hidden_works_act(
 
         assert act_path in names
 
-        assert archive.read(
-            act_path
-        ) == b"HIDDEN WORKS ACT"
+        assert archive.read(act_path) == b"HIDDEN WORKS ACT"

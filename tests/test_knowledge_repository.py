@@ -13,10 +13,7 @@ def test_knowledge_repository_saves_and_loads_chunks(tmp_path):
             source_title="Grounding standard",
             section="section-1",
             page=10,
-            text=(
-                "Grounding conductors must be installed "
-                "according to design."
-            ),
+            text=("Grounding conductors must be installed " "according to design."),
         )
     ]
 
@@ -24,14 +21,14 @@ def test_knowledge_repository_saves_and_loads_chunks(tmp_path):
 
     assert repository.load() == chunks
 
+
 def test_knowledge_repository_loads_empty_list_when_file_is_missing(
     tmp_path,
 ):
-    repository = KnowledgeRepository(
-        tmp_path / "missing" / "knowledge.json"
-    )
+    repository = KnowledgeRepository(tmp_path / "missing" / "knowledge.json")
 
     assert repository.load() == []
+
 
 def test_knowledge_repository_uses_default_project_path(
     tmp_path,
@@ -47,14 +44,10 @@ def test_knowledge_repository_uses_default_project_path(
 
     repository.save([chunk])
 
-    expected_path = (
-        tmp_path
-        / "projects"
-        / "data"
-        / "knowledge_chunks.json"
-    )
+    expected_path = tmp_path / "projects" / "data" / "knowledge_chunks.json"
     assert expected_path.is_file()
     assert repository.load() == [chunk]
+
 
 def test_knowledge_repository_uses_project_specific_path(
     tmp_path,
@@ -73,14 +66,10 @@ def test_knowledge_repository_uses_project_specific_path(
 
     repository.save([chunk])
 
-    expected_path = (
-        projects_root
-        / "project-a"
-        / "knowledge"
-        / "knowledge_chunks.json"
-    )
+    expected_path = projects_root / "project-a" / "knowledge" / "knowledge_chunks.json"
     assert expected_path.is_file()
     assert repository.load() == [chunk]
+
 
 @pytest.mark.parametrize(
     "project_name",
@@ -102,6 +91,7 @@ def test_knowledge_repository_rejects_invalid_project_name(
             project_name,
             projects_root=tmp_path / "projects",
         )
+
 
 def test_knowledge_repository_loads_legacy_quality_defaults(
     tmp_path,

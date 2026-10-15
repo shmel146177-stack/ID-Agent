@@ -31,14 +31,10 @@ def test_pdf_parser_extracts_text_from_pages(monkeypatch):
 
     parser = PDFParser()
 
-    result = parser.extract_text(
-        "test.pdf"
-    )
+    result = parser.extract_text("test.pdf")
 
-    assert result == (
-        "Первая страница\n"
-        "Третья страница\n"
-    )
+    assert result == ("Первая страница\n" "Третья страница\n")
+
 
 def test_pdf_parser_extracts_pages_separately(monkeypatch):
     class FakePage:
@@ -69,6 +65,7 @@ def test_pdf_parser_extracts_pages_separately(monkeypatch):
         "",
         "Third page",
     ]
+
 
 def test_pdf_parser_falls_back_to_pymupdf(monkeypatch):
     class FailingPage:

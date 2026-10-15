@@ -80,13 +80,7 @@ def test_project_upload_rejects_oversized_file_and_removes_partial(
             upload,
         )
 
-    saved_file = (
-        tmp_path
-        / "projects"
-        / project_name
-        / "input"
-        / "drawing.pdf"
-    )
+    saved_file = tmp_path / "projects" / project_name / "input" / "drawing.pdf"
 
     assert error.value.status_code == 413
     assert not saved_file.exists()
@@ -113,13 +107,7 @@ def test_project_upload_rejects_empty_file(
             upload,
         )
 
-    saved_file = (
-        tmp_path
-        / "projects"
-        / project_name
-        / "input"
-        / "drawing.pdf"
-    )
+    saved_file = tmp_path / "projects" / project_name / "input" / "drawing.pdf"
 
     assert error.value.status_code == 400
     assert not saved_file.exists()
@@ -160,13 +148,7 @@ def test_project_upload_removes_partial_file_on_copy_failure(
             upload,
         )
 
-    saved_file = (
-        tmp_path
-        / "projects"
-        / project_name
-        / "input"
-        / "drawing.pdf"
-    )
+    saved_file = tmp_path / "projects" / project_name / "input" / "drawing.pdf"
 
     assert error.value.status_code == 500
     assert not saved_file.exists()

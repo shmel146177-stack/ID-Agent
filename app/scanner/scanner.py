@@ -14,10 +14,7 @@ class DocumentScanner:
         if not path.exists():
             raise FileNotFoundError(file_path)
 
-        model = DocumentModel(
-            filename=path.name,
-            extension=path.suffix.lower()
-        )
+        model = DocumentModel(filename=path.name, extension=path.suffix.lower())
 
         if model.extension == ".pdf":
             result = self.pdf.read(file_path)

@@ -15,23 +15,16 @@ def test_project_package_manifest_contains_generated_hidden_works_act(
     destination_folder = tmp_path / "executive_docs"
 
     acts_folder = (
-        destination_folder
-        / "Исполнительная_документация"
-        / "03_Акты_скрытых_работ"
+        destination_folder / "Исполнительная_документация" / "03_Акты_скрытых_работ"
     )
 
     acts_folder.mkdir(
         parents=True,
     )
 
-    act_file = (
-        acts_folder
-        / "АОСР_Заземление_TEST_PROJECT.docx"
-    )
+    act_file = acts_folder / "АОСР_Заземление_TEST_PROJECT.docx"
 
-    act_file.write_bytes(
-        b"HIDDEN WORKS ACT"
-    )
+    act_file.write_bytes(b"HIDDEN WORKS ACT")
 
     processor_result = {
         "status": "Готово",
@@ -80,25 +73,16 @@ def test_project_package_manifest_contains_generated_hidden_works_act(
         )
     )
 
-    hidden_works = manifest[
-        "hidden_works_acts"
-    ]
+    hidden_works = manifest["hidden_works_acts"]
 
     assert hidden_works["acts_detected"] == 1
     assert hidden_works["acts_created"] == 1
     assert hidden_works["acts_skipped"] == 0
-    assert (
-        hidden_works["requires_field_confirmation"]
-        is True
-    )
+    assert hidden_works["requires_field_confirmation"] is True
 
-    assert len(
-        hidden_works["created"]
-    ) == 1
+    assert len(hidden_works["created"]) == 1
 
-    act = hidden_works[
-        "created"
-    ][0]
+    act = hidden_works["created"][0]
 
     expected_path = (
         "Исполнительная_документация/"

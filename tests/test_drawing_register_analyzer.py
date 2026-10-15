@@ -42,10 +42,7 @@ def test_drawing_register_analyzer_restores_sheet_sequence():
         6,
     ]
 
-    assert [
-        entry["sheet_number"]
-        for entry in result["entries"]
-    ] == [
+    assert [entry["sheet_number"] for entry in result["entries"]] == [
         1,
         2,
         3,
@@ -55,15 +52,12 @@ def test_drawing_register_analyzer_restores_sheet_sequence():
     ]
 
     assert all(
-        entry["number_source"] == "restored_sequence"
-        for entry in result["entries"]
+        entry["number_source"] == "restored_sequence" for entry in result["entries"]
     )
 
     assert result["entries"][0]["title"] == "Общие данные"
 
-    assert result["entries"][2]["title"] == (
-        "Структурная схема электроснабжения"
-    )
+    assert result["entries"][2]["title"] == ("Структурная схема электроснабжения")
 
     assert result["entries"][5]["title"] == "Чертеж ограждения"
 
@@ -98,15 +92,10 @@ def test_drawing_register_analyzer_reads_numbered_visual_ocr_rows():
     assert result["numbering_restored"] is True
     assert result["expected_sheet_count"] == 14
 
-    assert [
-        entry["sheet_number"]
-        for entry in result["entries"]
-    ] == list(range(1, 15))
+    assert [entry["sheet_number"] for entry in result["entries"]] == list(range(1, 15))
 
     assert result["entries"][1]["title"] == "Ситуационный план"
-    assert result["entries"][7]["title"] == (
-        "Узел монтажа ВРЩ-0,4кВ абонента"
-    )
+    assert result["entries"][7]["title"] == ("Узел монтажа ВРЩ-0,4кВ абонента")
 
 
 def test_drawing_register_analyzer_extracts_designated_entries():
@@ -131,8 +120,7 @@ def test_drawing_register_analyzer_extracts_designated_entries():
     assert result["entries"][1]["designation"] == "11240/24-АС-Ч2"
     assert result["entries"][1]["number_source"] == "drawing_designation"
     assert result["entries"][1]["title"] == (
-        "Ситуационный план расположения проектируемой БКТП "
-        "и кабельных линий"
+        "Ситуационный план расположения проектируемой БКТП " "и кабельных линий"
     )
 
 
@@ -165,9 +153,5 @@ def test_drawing_register_analyzer_can_read_visual_titles_without_numbers():
 
     assert result["entries_count"] == 14
     assert result["numbering_restored"] is False
-    assert result["entries"][6]["title"] == (
-        "Компоновка ВРЩ-0,4кВ абонента"
-    )
-    assert result["entries"][7]["title"] == (
-        "Узел монтажа ВРЩ-0,4кВ абонента"
-    )
+    assert result["entries"][6]["title"] == ("Компоновка ВРЩ-0,4кВ абонента")
+    assert result["entries"][7]["title"] == ("Узел монтажа ВРЩ-0,4кВ абонента")

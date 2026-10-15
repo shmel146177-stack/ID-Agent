@@ -18,13 +18,9 @@ class FakePDFParser:
 
 
 def test_knowledge_pdf_import_saves_nonblank_pages(tmp_path):
-    repository = KnowledgeRepository(
-        tmp_path / "knowledge" / "chunks.json"
-    )
+    repository = KnowledgeRepository(tmp_path / "knowledge" / "chunks.json")
     service = KnowledgeService.from_repository(repository)
-    importer = KnowledgePDFImporter(
-        parser=FakePDFParser()
-    )
+    importer = KnowledgePDFImporter(parser=FakePDFParser())
 
     chunks = importer.import_file(
         "source.pdf",
@@ -49,6 +45,7 @@ def test_knowledge_pdf_import_saves_nonblank_pages(tmp_path):
     ]
     assert repository.load() == chunks
 
+
 class FakeOCRService:
     def __init__(self):
         self.calls = []
@@ -60,9 +57,7 @@ class FakeOCRService:
         dpi=300,
         psm=6,
     ):
-        self.calls.append(
-            (file_path, page_number, dpi, psm)
-        )
+        self.calls.append((file_path, page_number, dpi, psm))
 
         return {
             "page": page_number,
@@ -74,9 +69,7 @@ class FakeOCRService:
 def test_knowledge_pdf_import_uses_ocr_for_blank_pages(
     tmp_path,
 ):
-    repository = KnowledgeRepository(
-        tmp_path / "knowledge" / "chunks.json"
-    )
+    repository = KnowledgeRepository(tmp_path / "knowledge" / "chunks.json")
     service = KnowledgeService.from_repository(repository)
     ocr_service = FakeOCRService()
     importer = KnowledgePDFImporter(
@@ -105,6 +98,7 @@ def test_knowledge_pdf_import_uses_ocr_for_blank_pages(
     ]
     assert repository.load() == chunks
 
+
 @pytest.mark.parametrize("ocr_dpi", [0, -1])
 def test_knowledge_pdf_import_rejects_nonpositive_ocr_dpi(
     ocr_dpi,
@@ -131,9 +125,7 @@ def test_knowledge_pdf_import_rejects_nonpositive_ocr_dpi(
 def test_knowledge_pdf_import_replaces_selected_page(
     tmp_path,
 ):
-    repository = KnowledgeRepository(
-        tmp_path / "knowledge" / "chunks.json"
-    )
+    repository = KnowledgeRepository(tmp_path / "knowledge" / "chunks.json")
     original = KnowledgeChunk(
         source_id="drawing-11240-24-as",
         source_title="Working documentation",
@@ -163,9 +155,7 @@ def test_knowledge_pdf_import_replaces_selected_page(
 
     assert [chunk.page for chunk in imported] == [2]
     assert len(service.chunks) == 1
-    assert service.chunks[0].text == (
-        "OCR second page requirement."
-    )
+    assert service.chunks[0].text == ("OCR second page requirement.")
     assert repository.load() == service.chunks
     assert ocr_service.calls == [
         ("source.pdf", 2, 300, 6),

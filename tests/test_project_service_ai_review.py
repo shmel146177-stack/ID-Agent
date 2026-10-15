@@ -10,12 +10,8 @@ from app.services.project_service import ProjectService
 def test_project_service_saves_ai_review_separately(tmp_path):
     service = ProjectService()
 
-    service.ai_file_path = str(
-        tmp_path / "current_ai_analysis.json"
-    )
-    service.ai_review_file_path = str(
-        tmp_path / "current_ai_review.json"
-    )
+    service.ai_file_path = str(tmp_path / "current_ai_analysis.json")
+    service.ai_review_file_path = str(tmp_path / "current_ai_review.json")
 
     ai_analysis = {
         "summary": "AI suggestion",
@@ -112,9 +108,7 @@ def test_failed_ai_analysis_write_preserves_previous_file(
     service = ProjectService()
     analysis_path = tmp_path / "current_ai_analysis.json"
     service.ai_file_path = str(analysis_path)
-    service.ai_review_file_path = str(
-        tmp_path / "current_ai_review.json"
-    )
+    service.ai_review_file_path = str(tmp_path / "current_ai_review.json")
     first = service.save_ai_analysis(
         {"summary": "First analysis"},
         source_filename="drawing.pdf",
@@ -142,20 +136,14 @@ def test_failed_ai_analysis_write_preserves_previous_file(
 
     assert analysis_path.read_bytes() == previous_bytes
     assert service.get_ai_analysis() == first
-    assert list(
-        tmp_path.glob("current_ai_analysis.json.*.tmp")
-    ) == []
+    assert list(tmp_path.glob("current_ai_analysis.json.*.tmp")) == []
 
 
 def test_new_ai_analysis_invalidates_old_review(tmp_path):
     service = ProjectService()
 
-    service.ai_file_path = str(
-        tmp_path / "current_ai_analysis.json"
-    )
-    service.ai_review_file_path = str(
-        tmp_path / "current_ai_review.json"
-    )
+    service.ai_file_path = str(tmp_path / "current_ai_analysis.json")
+    service.ai_review_file_path = str(tmp_path / "current_ai_review.json")
 
     service.save_ai_review(
         {
@@ -182,15 +170,9 @@ def test_new_ai_analysis_invalidates_old_review(tmp_path):
 def test_new_deterministic_analysis_invalidates_old_review(tmp_path):
     service = ProjectService()
 
-    service.file_path = str(
-        tmp_path / "current_analysis.json"
-    )
-    service.ai_file_path = str(
-        tmp_path / "current_ai_analysis.json"
-    )
-    service.ai_review_file_path = str(
-        tmp_path / "current_ai_review.json"
-    )
+    service.file_path = str(tmp_path / "current_analysis.json")
+    service.ai_file_path = str(tmp_path / "current_ai_analysis.json")
+    service.ai_review_file_path = str(tmp_path / "current_ai_review.json")
 
     service.save_ai_review(
         {
@@ -210,15 +192,12 @@ def test_new_deterministic_analysis_invalidates_old_review(tmp_path):
 
     assert not Path(service.ai_review_file_path).exists()
 
+
 def test_ai_analysis_gets_new_id_for_each_save(tmp_path):
     service = ProjectService()
 
-    service.ai_file_path = str(
-        tmp_path / "current_ai_analysis.json"
-    )
-    service.ai_review_file_path = str(
-        tmp_path / "current_ai_review.json"
-    )
+    service.ai_file_path = str(tmp_path / "current_ai_analysis.json")
+    service.ai_review_file_path = str(tmp_path / "current_ai_review.json")
 
     analysis = {
         "summary": "AI suggestion",
@@ -287,9 +266,10 @@ def test_new_ai_analysis_archives_matching_review(tmp_path):
     assert archived is not None
     assert archived["analysis_id"] == first["analysis_id"]
     assert archived["review_revision"] == 3
-    assert archived["excluded_fact_review_history"] == review[
-        "excluded_fact_review_history"
-    ]
+    assert (
+        archived["excluded_fact_review_history"]
+        == review["excluded_fact_review_history"]
+    )
     assert archived["archived_at"]
 
 
@@ -329,9 +309,7 @@ def test_ai_review_history_path_does_not_use_raw_analysis_id(tmp_path):
     service = ProjectService()
     service.ai_review_history_dir = str(tmp_path / "review_history")
 
-    archive_path = Path(
-        service._ai_review_history_path("../../outside")
-    )
+    archive_path = Path(service._ai_review_history_path("../../outside"))
 
     assert archive_path.parent == tmp_path / "review_history"
     assert archive_path.suffix == ".json"

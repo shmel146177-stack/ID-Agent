@@ -409,7 +409,8 @@ class ProjectSectionExporter:
             project_name,
             page_analysis,
             groups["unclassified_pages"],
-            self._working_folder(project_name) / f"Требуют_проверки_{safe_project_name}.pdf",
+            self._working_folder(project_name)
+            / f"Требуют_проверки_{safe_project_name}.pdf",
         )
 
         result = {
@@ -423,7 +424,8 @@ class ProjectSectionExporter:
             "unclassified_pages_count": (len(groups["unclassified_pages"])),
             "unclassified_pages": (groups["unclassified_pages"]),
             "total_exported_pages": (
-                source_result["pages_count"] + working_result["pages_count"]
+                source_result["pages_count"]
+                + working_result["pages_count"]
                 + review_result["pages_count"]
             ),
         }

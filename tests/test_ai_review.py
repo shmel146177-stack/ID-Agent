@@ -53,6 +53,7 @@ def test_ai_review_decision_rejects_unknown_decision():
             decision="automatic",
         )
 
+
 def test_ai_review_decision_requires_analysis_id():
     with pytest.raises(ValidationError):
         AIReviewDecision(

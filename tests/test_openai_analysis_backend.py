@@ -182,7 +182,6 @@ def test_openai_backend_limits_input_and_adds_warning():
     assert result.engineering_confirmation is False
 
 
-
 def test_openai_backend_translates_sdk_connection_error():
     expected = AIAnalysisResult(
         summary="unused",
@@ -190,7 +189,7 @@ def test_openai_backend_translates_sdk_connection_error():
     backend, openai_stub, _ = create_backend(expected)
 
     def failing_parse(**kwargs):
-                raise APIConnectionError(request=object())
+        raise APIConnectionError(request=object())
 
     openai_stub.responses.parse = failing_parse
 
@@ -252,6 +251,7 @@ def test_openai_backend_includes_source_bound_knowledge_context():
     assert result is expected
     assert "Document text." in user_content
     assert knowledge_context in user_content
+
 
 def test_openai_backend_exposes_credit_balance_failure_reason():
     expected = AIAnalysisResult(summary="unused")

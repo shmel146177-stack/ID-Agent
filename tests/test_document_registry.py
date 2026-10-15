@@ -9,11 +9,7 @@ def test_document_registry_builds_and_saves_json(monkeypatch, tmp_path):
 
     project_name = "TEST_PROJECT"
 
-    project_path = (
-        tmp_path
-        / "projects"
-        / project_name
-    )
+    project_path = tmp_path / "projects" / project_name
 
     analysis_path = project_path / "analysis"
     analysis_path.mkdir(parents=True)
@@ -48,10 +44,7 @@ def test_document_registry_builds_and_saves_json(monkeypatch, tmp_path):
         ],
     }
 
-    project_analysis_path = (
-        analysis_path
-        / "project_analysis.json"
-    )
+    project_analysis_path = analysis_path / "project_analysis.json"
 
     project_analysis_path.write_text(
         json.dumps(
@@ -79,10 +72,7 @@ def test_document_registry_builds_and_saves_json(monkeypatch, tmp_path):
     assert result["documents"][1]["manufacturer"] == "ООО Завод"
     assert result["documents"][1]["equipment"] == "Трансформатор ТМГ"
 
-    output_path = (
-        analysis_path
-        / "document_registry.json"
-    )
+    output_path = analysis_path / "document_registry.json"
 
     assert output_path.exists()
 

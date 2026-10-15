@@ -67,9 +67,7 @@ def test_project_package_manifest_contains_supporting_documents(tmp_path):
         [],
     )
 
-    manifest = json.loads(
-        Path(manifest_path).read_text(encoding="utf-8")
-    )
+    manifest = json.loads(Path(manifest_path).read_text(encoding="utf-8"))
 
     supporting = manifest["supporting_documents"]
 
@@ -83,10 +81,11 @@ def test_project_package_manifest_contains_supporting_documents(tmp_path):
     assert supporting["high_priority_count"] == 2
     assert supporting["requires_field_confirmation"] is True
 
-    assert [
-        section["number"]
-        for section in supporting["sections"]
-    ] == ["04", "05", "06"]
+    assert [section["number"] for section in supporting["sections"]] == [
+        "04",
+        "05",
+        "06",
+    ]
 
     assert supporting["sections"][0]["code"] == "executive_schemes"
     assert supporting["sections"][1]["code"] == "tests"

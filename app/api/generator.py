@@ -13,14 +13,12 @@ def generate_document():
     analysis = project_service.get_analysis()
 
     if analysis is None:
-        return {
-            "status": "Нет данных для генерации"
-        }
+        return {"status": "Нет данных для генерации"}
 
     file_path = executive_generator_v3.create(analysis)
 
     return FileResponse(
         path=file_path,
         filename="Исполнительная_документация.docx",
-        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     )

@@ -73,10 +73,7 @@ def test_project_api_hidden_works_journal_uses_saved_act_data(
         "acts": [
             {
                 "code": "grounding_device",
-                "act_title": (
-                    "АОСР на устройство "
-                    "заземляющего устройства"
-                ),
+                "act_title": ("АОСР на устройство " "заземляющего устройства"),
                 "priority": "Высокий",
                 "status": "Подтверждено",
                 "evidence": [],
@@ -90,9 +87,7 @@ def test_project_api_hidden_works_journal_uses_saved_act_data(
         lambda name: registry,
     )
 
-    response = api_module.download_hidden_works_journal(
-        project_name
-    )
+    response = api_module.download_hidden_works_journal(project_name)
 
     assert isinstance(response, FileResponse)
 

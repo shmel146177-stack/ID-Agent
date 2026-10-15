@@ -76,9 +76,6 @@ def test_hidden_works_act_generator_creates_real_docx(monkeypatch, tmp_path):
     assert len(document.paragraphs) > 0
     assert len(document.tables) > 0
 
-    full_text = "\n".join(
-        paragraph.text
-        for paragraph in document.paragraphs
-    )
+    full_text = "\n".join(paragraph.text for paragraph in document.paragraphs)
 
     assert "ID-Agent" in full_text

@@ -54,10 +54,7 @@ class AIDocumentAnalysisService:
     ):
         self.ai_client = ai_client or AIClient()
         self.analysis_backend = analysis_backend
-        self.autonomous_backend = (
-            autonomous_backend
-            or AutonomousAnalysisBackend()
-        )
+        self.autonomous_backend = autonomous_backend or AutonomousAnalysisBackend()
 
     @classmethod
     def with_settings(
@@ -98,13 +95,14 @@ class AIDocumentAnalysisService:
         analysis_mode: str,
         fallback_reason: str | None = None,
         excluded_autonomous_fact_fields: list[str] | None = None,
-        excluded_autonomous_fact_reasons: dict[
-            str,
-            AutonomousFactExclusionReason,
-        ] | None = None,
-        excluded_autonomous_facts: list[
-            AutonomousFactExclusion
-        ] | None = None,
+        excluded_autonomous_fact_reasons: (
+            dict[
+                str,
+                AutonomousFactExclusionReason,
+            ]
+            | None
+        ) = None,
+        excluded_autonomous_facts: list[AutonomousFactExclusion] | None = None,
     ) -> AIAnalysisExecutionResult:
         return AIAnalysisExecutionResult(
             **result.model_dump(),
@@ -112,17 +110,10 @@ class AIDocumentAnalysisService:
             ai_provider="openai",
             ai_model=self.ai_client.settings.model,
             fallback_reason=fallback_reason,
-            excluded_autonomous_fact_fields=(
-                excluded_autonomous_fact_fields or []
-            ),
-            excluded_autonomous_fact_reasons=(
-                excluded_autonomous_fact_reasons or {}
-            ),
-            excluded_autonomous_facts=(
-                excluded_autonomous_facts or []
-            ),
+            excluded_autonomous_fact_fields=(excluded_autonomous_fact_fields or []),
+            excluded_autonomous_fact_reasons=(excluded_autonomous_fact_reasons or {}),
+            excluded_autonomous_facts=(excluded_autonomous_facts or []),
         )
-
 
     def _build_autonomous_result(
         self,
@@ -138,9 +129,7 @@ class AIDocumentAnalysisService:
         )
 
         if not isinstance(result, AIAnalysisResult):
-            raise TypeError(
-                "Autonomous backend must return AIAnalysisResult"
-            )
+            raise TypeError("Autonomous backend must return AIAnalysisResult")
 
         excluded_fact_fields = list(
             getattr(
@@ -181,9 +170,7 @@ class AIDocumentAnalysisService:
             "excluded_autonomous_fact_reason_counts",
             None,
         )
-        result_data["summary"] = (
-            f"{fallback_result.summary} {result.summary}"
-        )
+        result_data["summary"] = f"{fallback_result.summary} {result.summary}"
         result_data["warnings"] = [
             *fallback_result.warnings,
             *result.warnings,
@@ -193,12 +180,8 @@ class AIDocumentAnalysisService:
             AIAnalysisResult(**result_data),
             analysis_mode="autonomous",
             fallback_reason=fallback_reason,
-            excluded_autonomous_fact_fields=(
-                excluded_fact_fields
-            ),
-            excluded_autonomous_fact_reasons=(
-                excluded_fact_reasons
-            ),
+            excluded_autonomous_fact_fields=(excluded_fact_fields),
+            excluded_autonomous_fact_reasons=(excluded_fact_reasons),
             excluded_autonomous_facts=excluded_facts,
         )
 
@@ -293,9 +276,7 @@ class AIDocumentAnalysisService:
             )
 
         if not isinstance(result, AIAnalysisResult):
-            raise TypeError(
-                "AI backend должен возвращать AIAnalysisResult"
-            )
+            raise TypeError("AI backend должен возвращать AIAnalysisResult")
 
         return self._build_execution_result(
             result,

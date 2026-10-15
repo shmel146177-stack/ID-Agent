@@ -65,11 +65,7 @@ def test_project_api_persists_hidden_works_act_data(
 
     assert isinstance(response, FileResponse)
 
-    storage_path = (
-        Path("projects")
-        / project_name
-        / "hidden_works_act_data.json"
-    )
+    storage_path = Path("projects") / project_name / "hidden_works_act_data.json"
 
     assert storage_path.is_file()
 
@@ -85,7 +81,4 @@ def test_project_api_persists_hidden_works_act_data(
     assert saved["compliance"] == "Соответствует проекту"
     assert saved["next_works"] == "Обратная засыпка"
     assert saved["remarks"] == "Замечаний нет"
-    assert (
-        saved["attachments"]
-        == "Исполнительная схема ИС-03"
-    )
+    assert saved["attachments"] == "Исполнительная схема ИС-03"

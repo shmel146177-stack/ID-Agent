@@ -21,7 +21,6 @@ from app.services.knowledge_repository import KnowledgeRepository
 from app.services.knowledge_service import KnowledgeService
 from app.services.project_service import project_service
 
-
 router = APIRouter(prefix="/ai", tags=["AI"])
 exclusion_review_service = AIExclusionReviewService(project_service)
 
@@ -31,8 +30,6 @@ def _review_http_error(error: AIExclusionReviewError) -> HTTPException:
         status_code=error.status_code,
         detail=error.detail,
     )
-
-
 
 
 class AIAnalysisRequest(BaseModel):
@@ -58,28 +55,17 @@ class AIAnalysisRequest(BaseModel):
     @model_validator(mode="after")
     def validate_knowledge_context_binding(self):
         context = (self.knowledge_context or "").strip()
-        project_name = (
-            self.knowledge_project_name or ""
-        ).strip()
+        project_name = (self.knowledge_project_name or "").strip()
         query = (self.knowledge_query or "").strip()
 
         if context and not extract_knowledge_source_ids(context):
-            raise ValueError(
-                "knowledge_context must contain source binding"
-            )
+            raise ValueError("knowledge_context must contain source binding")
 
-        if (
-            self.knowledge_project_name is not None
-            and not project_name
-        ):
-            raise ValueError(
-                "knowledge_project_name must not be blank"
-            )
+        if self.knowledge_project_name is not None and not project_name:
+            raise ValueError("knowledge_project_name must not be blank")
 
         if self.knowledge_query is not None and not query:
-            raise ValueError(
-                "knowledge_query must not be blank"
-            )
+            raise ValueError("knowledge_query must not be blank")
 
         if bool(project_name) != bool(query):
             raise ValueError(
@@ -89,14 +75,12 @@ class AIAnalysisRequest(BaseModel):
 
         if self.include_unreviewed_ocr and not project_name:
             raise ValueError(
-                "include_unreviewed_ocr requires "
-                "project knowledge search"
+                "include_unreviewed_ocr requires " "project knowledge search"
             )
 
         if context and project_name:
             raise ValueError(
-                "knowledge_context cannot be combined with "
-                "project knowledge search"
+                "knowledge_context cannot be combined with " "project knowledge search"
             )
 
         if project_name:
@@ -170,10 +154,8 @@ def get_ai_comparison():
             detail="AI analysis missing analysis id",
         )
 
-    if (
-        latest_ai is not None
-        and comparison.get("analysis_id")
-        != latest_ai.get("analysis_id")
+    if latest_ai is not None and comparison.get("analysis_id") != latest_ai.get(
+        "analysis_id"
     ):
         raise HTTPException(
             status_code=409,
@@ -192,10 +174,8 @@ def get_ai_comparison():
             detail="AI analysis missing source filename",
         )
 
-    if (
-        latest_ai is not None
-        and comparison.get("source_filename")
-        != latest_ai.get("source_filename")
+    if latest_ai is not None and comparison.get("source_filename") != latest_ai.get(
+        "source_filename"
     ):
         raise HTTPException(
             status_code=409,
@@ -215,6 +195,7 @@ def get_ai_comparison():
         )
 
     return comparison
+
 
 @router.get("/review")
 def get_ai_review():
@@ -309,30 +290,21 @@ def analyze_document(request: AIAnalysisRequest):
     knowledge_context = request.knowledge_context
     excluded_unreviewed_ocr_pages = None
 
-    if (
-        knowledge_context is None
-        and request.knowledge_project_name is not None
-    ):
+    if knowledge_context is None and request.knowledge_project_name is not None:
         try:
-            repository = KnowledgeRepository.for_project(
-                request.knowledge_project_name
-            )
+            repository = KnowledgeRepository.for_project(request.knowledge_project_name)
         except ValueError as error:
             raise HTTPException(
                 status_code=400,
                 detail=str(error),
             ) from error
-        knowledge_service = KnowledgeService.from_repository(
-            repository
-        )
+        knowledge_service = KnowledgeService.from_repository(repository)
 
         if request.include_unreviewed_ocr:
             excluded_unreviewed_ocr_pages = []
         else:
-            unreviewed_ocr_results = (
-                knowledge_service.search_unreviewed_ocr_results(
-                    request.knowledge_query or ""
-                )
+            unreviewed_ocr_results = knowledge_service.search_unreviewed_ocr_results(
+                request.knowledge_query or ""
             )
             excluded_unreviewed_ocr_pages = [
                 {
@@ -342,14 +314,15 @@ def analyze_document(request: AIAnalysisRequest):
                 for result in unreviewed_ocr_results
             ]
 
-        knowledge_context = knowledge_service.build_context(
-            request.knowledge_query or "",
-            max_results=5,
-            max_chars=MAX_KNOWLEDGE_CONTEXT_CHARS,
-            include_unreviewed_ocr=(
-                request.include_unreviewed_ocr
-            ),
-        ) or None
+        knowledge_context = (
+            knowledge_service.build_context(
+                request.knowledge_query or "",
+                max_results=5,
+                max_chars=MAX_KNOWLEDGE_CONTEXT_CHARS,
+                include_unreviewed_ocr=(request.include_unreviewed_ocr),
+            )
+            or None
+        )
 
     if knowledge_context:
         result = service.analyze_text(
@@ -367,31 +340,21 @@ def analyze_document(request: AIAnalysisRequest):
     included_knowledge_pages = None
 
     if knowledge_context:
-        included_knowledge_pages = (
-            extract_knowledge_source_pages(
-                knowledge_context
-            )
-        )
+        included_knowledge_pages = extract_knowledge_source_pages(knowledge_context)
     elif request.knowledge_project_name is not None:
         included_knowledge_pages = []
 
     if included_knowledge_pages is not None:
-        result_data["included_knowledge_pages"] = (
-            included_knowledge_pages
-        )
+        result_data["included_knowledge_pages"] = included_knowledge_pages
 
     if excluded_unreviewed_ocr_pages is not None:
-        result_data["excluded_unreviewed_ocr_pages"] = (
-            excluded_unreviewed_ocr_pages
-        )
+        result_data["excluded_unreviewed_ocr_pages"] = excluded_unreviewed_ocr_pages
 
     save_options = {}
 
     if knowledge_context:
-        save_options["knowledge_source_ids"] = (
-            extract_knowledge_source_ids(
-                knowledge_context
-            )
+        save_options["knowledge_source_ids"] = extract_knowledge_source_ids(
+            knowledge_context
         )
 
     saved_ai_analysis = project_service.save_ai_analysis(

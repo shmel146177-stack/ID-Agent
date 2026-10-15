@@ -30,9 +30,7 @@ def test_upload_document_non_pdf_skips_pdf_analysis(
     )
 
     def fail_if_called(*args, **kwargs):
-        raise AssertionError(
-            "PDF-анализ не должен вызываться для DOCX"
-        )
+        raise AssertionError("PDF-анализ не должен вызываться для DOCX")
 
     monkeypatch.setattr(
         documents_module.pdf_parser,
@@ -59,9 +57,7 @@ def test_upload_document_non_pdf_skips_pdf_analysis(
 
     import asyncio
 
-    result = asyncio.run(
-        documents_module.upload_document(upload)
-    )
+    result = asyncio.run(documents_module.upload_document(upload))
 
     saved_file = upload_dir / "test.docx"
 

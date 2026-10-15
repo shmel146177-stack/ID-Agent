@@ -125,8 +125,7 @@ class KnowledgeService:
             result
             for result in self.search_results(query)
             if (
-                result.chunk.text_origin == "ocr"
-                and result.chunk.requires_human_review
+                result.chunk.text_origin == "ocr" and result.chunk.requires_human_review
             )
         ]
 

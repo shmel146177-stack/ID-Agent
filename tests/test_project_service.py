@@ -32,12 +32,7 @@ def test_project_service_saves_and_loads_analysis(monkeypatch, tmp_path):
     assert save_result["document"] == data
     assert "status" in save_result
 
-    output_path = (
-        tmp_path
-        / "projects"
-        / "data"
-        / "current_analysis.json"
-    )
+    output_path = tmp_path / "projects" / "data" / "current_analysis.json"
 
     assert output_path.exists()
     assert output_path.is_file()

@@ -56,10 +56,7 @@ def test_project_report_adds_supporting_documents_section():
         supporting_documents,
     )
 
-    full_text = "\n".join(
-        paragraph.text
-        for paragraph in document.paragraphs
-    )
+    full_text = "\n".join(paragraph.text for paragraph in document.paragraphs)
 
     assert "Сопроводительная исполнительная документация" in full_text
     assert "Исполнительные схемы" in full_text

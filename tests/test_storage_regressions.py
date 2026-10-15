@@ -12,11 +12,30 @@ from app.services.safe_paths import safe_project_path
 from main import app
 
 
-@pytest.mark.parametrize("name", [
-    "../escaped-project", "..\\escaped-project", "/absolute", "C:\\escape",
-    "C:escape", "a/b", "a\\b", ".", "..", "", "CON", "nul.pdf",
-    "COM1", "LPT9.txt", "name.", "name ", "a:b", "a?b", "a\x00b",
-])
+@pytest.mark.parametrize(
+    "name",
+    [
+        "../escaped-project",
+        "..\\escaped-project",
+        "/absolute",
+        "C:\\escape",
+        "C:escape",
+        "a/b",
+        "a\\b",
+        ".",
+        "..",
+        "",
+        "CON",
+        "nul.pdf",
+        "COM1",
+        "LPT9.txt",
+        "name.",
+        "name ",
+        "a:b",
+        "a?b",
+        "a\x00b",
+    ],
+)
 def test_project_names_cannot_escape(tmp_path, monkeypatch, name):
     monkeypatch.chdir(tmp_path)
     with pytest.raises(ValueError):
@@ -29,7 +48,9 @@ def test_project_names_cannot_escape(tmp_path, monkeypatch, name):
 def test_card_update_preserves_unspecified_fields(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     client = TestClient(app)
-    assert client.post("/projects", json={"project_name": "Объект-1"}).status_code == 200
+    assert (
+        client.post("/projects", json={"project_name": "Объект-1"}).status_code == 200
+    )
     url = "/projects/Объект-1/card"
     client.put(url, json={"customer": "Заказчик", "contractor": "Подрядчик"})
     response = client.put(url, json={"project_note": "Примечание"})
@@ -48,14 +69,25 @@ class BrokenStream(BytesIO):
 
 
 @pytest.mark.parametrize("route", ["general", "project"])
-@pytest.mark.parametrize("case,status", [
-    ("duplicate", 409), ("empty", 400), ("oversized", 413),
-    ("broken", 500), ("reserved", 400), ("ads", 400),
-])
-def test_both_uploaders_enforce_safe_storage(tmp_path, monkeypatch, route, case, status):
+@pytest.mark.parametrize(
+    "case,status",
+    [
+        ("duplicate", 409),
+        ("empty", 400),
+        ("oversized", 413),
+        ("broken", 500),
+        ("reserved", 400),
+        ("ads", 400),
+    ],
+)
+def test_both_uploaders_enforce_safe_storage(
+    tmp_path, monkeypatch, route, case, status
+):
     monkeypatch.chdir(tmp_path)
     monkeypatch.setattr(projects.project_processor, "process", lambda name: {})
-    monkeypatch.setattr(documents.document_service, "analyze", lambda path: {"extension": ".docx"})
+    monkeypatch.setattr(
+        documents.document_service, "analyze", lambda path: {"extension": ".docx"}
+    )
     monkeypatch.setattr(documents, "UPLOAD_MAX_FILE_SIZE_BYTES", 4)
     monkeypatch.setattr(projects, "PROJECT_UPLOAD_MAX_FILE_SIZE_BYTES", 4)
     projects.project_manager.create_project("test")
@@ -65,8 +97,12 @@ def test_both_uploaders_enforce_safe_storage(tmp_path, monkeypatch, route, case,
     target = directory / filename
     if case == "duplicate":
         target.write_bytes(b"original")
-    stream = BrokenStream(b"1234") if case == "broken" else BytesIO(
-        b"" if case == "empty" else b"12345" if case == "oversized" else b"1234"
+    stream = (
+        BrokenStream(b"1234")
+        if case == "broken"
+        else BytesIO(
+            b"" if case == "empty" else b"12345" if case == "oversized" else b"1234"
+        )
     )
     upload = UploadFile(filename=filename, file=stream)
     with pytest.raises(HTTPException) as error:
@@ -105,7 +141,9 @@ def test_project_routes_reject_invalid_names(tmp_path, monkeypatch, name):
 def test_upload_at_limit_and_duplicate_api(tmp_path, monkeypatch, route):
     monkeypatch.chdir(tmp_path)
     monkeypatch.setattr(projects.project_processor, "process", lambda name: {})
-    monkeypatch.setattr(documents.document_service, "analyze", lambda path: {"extension": ".docx"})
+    monkeypatch.setattr(
+        documents.document_service, "analyze", lambda path: {"extension": ".docx"}
+    )
     monkeypatch.setattr(documents, "UPLOAD_MAX_FILE_SIZE_BYTES", 4)
     monkeypatch.setattr(projects, "PROJECT_UPLOAD_MAX_FILE_SIZE_BYTES", 4)
     projects.project_manager.create_project("test")

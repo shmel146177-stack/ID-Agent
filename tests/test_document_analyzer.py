@@ -7,9 +7,7 @@ from app.services.document_analyzer import DocumentAnalyzer
 
 
 def test_document_analyzer_extracts_equipment_data():
-    pdf_files = list(
-        Path("uploads").glob("*17.08.23 (1).pdf")
-    )
+    pdf_files = list(Path("uploads").glob("*17.08.23 (1).pdf"))
 
     if not pdf_files:
         pytest.skip("Local integration PDF is not available")
@@ -21,7 +19,10 @@ def test_document_analyzer_extracts_equipment_data():
 
     assert result["document_type"] == "Документация оборудования"
     assert result["manufacturer"] == 'ООО "Торговый Дом АДЛ"'
-    assert result["equipment"] == 'Шкаф управления "Грантор" АЭП40-016-54К-22У, 7,5 кВт, Iном=(10 - 16) А'
+    assert (
+        result["equipment"]
+        == 'Шкаф управления "Грантор" АЭП40-016-54К-22У, 7,5 кВт, Iном=(10 - 16) А'
+    )
     assert result["date"] == "17.08.2023"
     assert result["drawing_number"] == "ТДЭО.30182.АЭП40-016-54К-22У"
     assert result["power"] == "7,5 кВт"

@@ -19,6 +19,7 @@ class KnowledgeChunk(BaseModel):
             raise ValueError("source_id must be single-line")
 
         return value.strip()
+
     source_title: str = Field(min_length=1)
 
     @field_validator("source_title")
@@ -31,6 +32,7 @@ class KnowledgeChunk(BaseModel):
             raise ValueError("source_title must be single-line")
 
         return value.strip()
+
     section: str | None = None
 
     @field_validator("section")
@@ -39,12 +41,11 @@ class KnowledgeChunk(BaseModel):
         if value is not None and not value.strip():
             raise ValueError("section must not be blank")
 
-        if value is not None and (
-            "\n" in value or "\r" in value
-        ):
+        if value is not None and ("\n" in value or "\r" in value):
             raise ValueError("section must be single-line")
 
         return value.strip() if value is not None else None
+
     page: int | None = Field(default=None, ge=1)
     text_origin: Literal["native", "ocr"] = "native"
     requires_human_review: bool = False
@@ -59,6 +60,7 @@ class KnowledgeChunk(BaseModel):
             raise ValueError("text must not be blank")
         return value
 
+
 class KnowledgeSearchResult(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -71,10 +73,7 @@ class KnowledgeSearchResult(BaseModel):
         if any(not term.strip() for term in value):
             raise ValueError("matched_terms must not contain blank values")
 
-        if any(
-            "\n" in term or "\r" in term
-            for term in value
-        ):
+        if any("\n" in term or "\r" in term for term in value):
             raise ValueError("matched_terms must be single-line")
 
         return [term.strip() for term in value]

@@ -11,9 +11,7 @@ def test_project_api_update_card_missing_project_returns_404(
     project_name = "MISSING_PROJECT"
 
     def raise_not_found(name, data):
-        raise FileNotFoundError(
-            f"Проект не найден: {name}"
-        )
+        raise FileNotFoundError(f"Проект не найден: {name}")
 
     monkeypatch.setattr(
         api_module.project_manager,

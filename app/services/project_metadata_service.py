@@ -70,23 +70,12 @@ class ProjectMetadataService:
                     if not ocr_text:
                         continue
 
-                    ocr_metadata = (
-                        project_metadata_analyzer.analyze_text(
-                            ocr_text
-                        )
-                    )
+                    ocr_metadata = project_metadata_analyzer.analyze_text(ocr_text)
 
-                    result["designer"] = (
-                        ocr_metadata.get("designer")
-                    )
-                    result["chief_engineer"] = (
-                        ocr_metadata.get("chief_engineer")
-                    )
+                    result["designer"] = ocr_metadata.get("designer")
+                    result["chief_engineer"] = ocr_metadata.get("chief_engineer")
 
-                    if (
-                        result["designer"]
-                        or result["chief_engineer"]
-                    ):
+                    if result["designer"] or result["chief_engineer"]:
                         return result
 
         return result
@@ -142,27 +131,14 @@ class ProjectMetadataService:
         metadata = project_metadata_analyzer.analyze_text(combined_text)
 
         # PROJECT PEOPLE OCR FALLBACK
-        if (
-            not metadata.get("designer")
-            or not metadata.get("chief_engineer")
-        ):
-            people = self._extract_project_people_with_ocr(
-                pdf_files
-            )
+        if not metadata.get("designer") or not metadata.get("chief_engineer"):
+            people = self._extract_project_people_with_ocr(pdf_files)
 
-            if (
-                not metadata.get("designer")
-                and people.get("designer")
-            ):
+            if not metadata.get("designer") and people.get("designer"):
                 metadata["designer"] = people["designer"]
 
-            if (
-                not metadata.get("chief_engineer")
-                and people.get("chief_engineer")
-            ):
-                metadata["chief_engineer"] = (
-                    people["chief_engineer"]
-                )
+            if not metadata.get("chief_engineer") and people.get("chief_engineer"):
+                metadata["chief_engineer"] = people["chief_engineer"]
 
         current_project = project_manager.get_project(project_name)
 

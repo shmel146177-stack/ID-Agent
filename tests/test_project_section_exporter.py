@@ -154,7 +154,9 @@ def test_project_section_exporter_builds_export_summary(monkeypatch, tmp_path):
     assert saved["total_exported_pages"] == 4
 
 
-def test_real_pdf_export_preserves_unknown_pages_and_cleans_stale_review(tmp_path, monkeypatch):
+def test_real_pdf_export_preserves_unknown_pages_and_cleans_stale_review(
+    tmp_path, monkeypatch
+):
     import fitz
 
     monkeypatch.chdir(tmp_path)
@@ -167,12 +169,19 @@ def test_real_pdf_export_preserves_unknown_pages_and_cleans_stale_review(tmp_pat
             document.new_page().insert_text((40, 40), f"Source page {number}")
         document.save(original)
     original_bytes = original.read_bytes()
-    analysis = {"documents": [{"filename": "sample.pdf", "pages": [
-        {"page": 1, "page_type": "Титульный лист"},
-        {"page": 2, "page_type": "Рабочий чертеж"},
-        {"page": 3, "page_type": "Не определено"},
-        {"page": 4, "page_type": "Общие данные"},
-    ]}]}
+    analysis = {
+        "documents": [
+            {
+                "filename": "sample.pdf",
+                "pages": [
+                    {"page": 1, "page_type": "Титульный лист"},
+                    {"page": 2, "page_type": "Рабочий чертеж"},
+                    {"page": 3, "page_type": "Не определено"},
+                    {"page": 4, "page_type": "Общие данные"},
+                ],
+            }
+        ]
+    }
     analysis_file = root / "analysis" / "page_analysis.json"
     analysis_file.write_text(json.dumps(analysis), encoding="utf-8")
     exporter = ProjectSectionExporter()

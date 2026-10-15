@@ -19,16 +19,10 @@ def test_project_api_package_creates_real_zip_with_hidden_works_documents(
     package_folder = project_path / "executive_docs"
 
     act_folder = (
-        package_folder
-        / "Исполнительная_документация"
-        / "03_Акты_скрытых_работ"
+        package_folder / "Исполнительная_документация" / "03_Акты_скрытых_работ"
     )
 
-    journal_folder = (
-        package_folder
-        / "Исполнительная_документация"
-        / "07_Журналы_работ"
-    )
+    journal_folder = package_folder / "Исполнительная_документация" / "07_Журналы_работ"
 
     act_folder.mkdir(
         parents=True,
@@ -38,23 +32,13 @@ def test_project_api_package_creates_real_zip_with_hidden_works_documents(
         parents=True,
     )
 
-    act_file = (
-        act_folder
-        / "АОСР_Заземление_TEST_PROJECT.docx"
-    )
+    act_file = act_folder / "АОСР_Заземление_TEST_PROJECT.docx"
 
-    journal_file = (
-        journal_folder
-        / "Журнал_скрытых_работ_TEST_PROJECT.docx"
-    )
+    journal_file = journal_folder / "Журнал_скрытых_работ_TEST_PROJECT.docx"
 
-    act_file.write_bytes(
-        b"HIDDEN WORKS ACT"
-    )
+    act_file.write_bytes(b"HIDDEN WORKS ACT")
 
-    journal_file.write_bytes(
-        b"HIDDEN WORKS JOURNAL"
-    )
+    journal_file.write_bytes(b"HIDDEN WORKS JOURNAL")
 
     monkeypatch.setattr(
         package,
@@ -71,9 +55,7 @@ def test_project_api_package_creates_real_zip_with_hidden_works_documents(
         lambda name: project_path,
     )
 
-    response = api_module.download_project_package(
-        project_name
-    )
+    response = api_module.download_project_package(project_name)
 
     assert isinstance(
         response,
@@ -82,9 +64,7 @@ def test_project_api_package_creates_real_zip_with_hidden_works_documents(
 
     assert response.media_type == "application/zip"
 
-    zip_path = Path(
-        response.path
-    )
+    zip_path = Path(response.path)
 
     assert zip_path.is_file()
 
@@ -93,9 +73,7 @@ def test_project_api_package_creates_real_zip_with_hidden_works_documents(
         "r",
     ) as archive:
 
-        names = set(
-            archive.namelist()
-        )
+        names = set(archive.namelist())
 
         act_path = (
             "Исполнительная_документация/"
@@ -112,10 +90,6 @@ def test_project_api_package_creates_real_zip_with_hidden_works_documents(
         assert act_path in names
         assert journal_path in names
 
-        assert archive.read(
-            act_path
-        ) == b"HIDDEN WORKS ACT"
+        assert archive.read(act_path) == b"HIDDEN WORKS ACT"
 
-        assert archive.read(
-            journal_path
-        ) == b"HIDDEN WORKS JOURNAL"
+        assert archive.read(journal_path) == b"HIDDEN WORKS JOURNAL"

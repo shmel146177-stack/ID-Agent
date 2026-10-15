@@ -3,9 +3,7 @@
 from app.services.project_service import project_service
 from main import app
 
-
 client = TestClient(app)
-
 
 
 def test_ai_review_persistence_cycle(
@@ -82,9 +80,7 @@ def test_ai_review_persistence_cycle(
 
     assert response.status_code == 409
     assert response.json() == {
-        "detail": (
-            "AI review revision mismatch: expected 1, current 2"
-        ),
+        "detail": ("AI review revision mismatch: expected 1, current 2"),
     }
     assert review_file.read_bytes() == review_before_conflict
 
@@ -228,6 +224,7 @@ def test_new_ai_analysis_invalidates_saved_review(
     assert response.status_code == 200
     assert response.json()["source_filename"] == "new.pdf"
 
+
 def test_old_analysis_id_is_rejected_after_same_file_reanalysis(
     monkeypatch,
     tmp_path,
@@ -293,6 +290,7 @@ def test_old_analysis_id_is_rejected_after_same_file_reanalysis(
     }
 
     assert not review_file.exists()
+
 
 def test_upload_analysis_id_can_be_used_for_review(
     monkeypatch,
@@ -409,10 +407,8 @@ def test_upload_analysis_id_can_be_used_for_review(
     )
 
     assert review_response.status_code == 200
-    assert (
-        review_response.json()["analysis_id"]
-        == ai_analysis["analysis_id"]
-    )
+    assert review_response.json()["analysis_id"] == ai_analysis["analysis_id"]
+
 
 def test_direct_ai_analysis_can_be_reviewed(
     monkeypatch,
@@ -489,14 +485,12 @@ def test_direct_ai_analysis_can_be_reviewed(
     )
 
     assert review_response.status_code == 200
-    assert (
-        review_response.json()["analysis_id"]
-        == ai_analysis["analysis_id"]
-    )
+    assert review_response.json()["analysis_id"] == ai_analysis["analysis_id"]
 
     saved_review = project_service.get_ai_review()
 
     assert saved_review == review_response.json()
+
 
 def test_direct_ai_reanalysis_invalidates_review(
     monkeypatch,

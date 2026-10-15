@@ -18,9 +18,7 @@ def test_project_api_create_and_list_projects(monkeypatch):
         project_name="TEST_PROJECT",
     )
 
-    create_result = api_module.create_project(
-        create_data
-    )
+    create_result = api_module.create_project(create_data)
 
     assert create_result["project"] == created_project
     assert "status" in create_result

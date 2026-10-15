@@ -85,9 +85,7 @@ def list_pending_knowledge_reviews(
     project_name: Annotated[str, Query(min_length=1)],
 ):
     try:
-        repository = KnowledgeRepository.for_project(
-            project_name
-        )
+        repository = KnowledgeRepository.for_project(project_name)
     except ValueError as error:
         raise HTTPException(
             status_code=400,
@@ -99,10 +97,7 @@ def list_pending_knowledge_reviews(
     return [
         chunk
         for chunk in service.chunks
-        if (
-            chunk.text_origin == "ocr"
-            and chunk.requires_human_review
-        )
+        if (chunk.text_origin == "ocr" and chunk.requires_human_review)
     ]
 
 
@@ -115,9 +110,7 @@ def review_knowledge_page(
     project_name: Annotated[str, Query(min_length=1)],
 ):
     try:
-        repository = KnowledgeRepository.for_project(
-            project_name
-        )
+        repository = KnowledgeRepository.for_project(project_name)
     except ValueError as error:
         raise HTTPException(
             status_code=400,
@@ -131,8 +124,7 @@ def review_knowledge_page(
             current_chunk
             for current_chunk in service.chunks
             if (
-                current_chunk.source_id
-                == request.source_id
+                current_chunk.source_id == request.source_id
                 and current_chunk.page == request.page
             )
         ),
@@ -145,10 +137,7 @@ def review_knowledge_page(
             detail="Knowledge page not found",
         )
 
-    if (
-        chunk.text_origin != "ocr"
-        or not chunk.requires_human_review
-    ):
+    if chunk.text_origin != "ocr" or not chunk.requires_human_review:
         raise HTTPException(
             status_code=409,
             detail="Knowledge page does not require OCR review",

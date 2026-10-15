@@ -96,10 +96,7 @@ def test_executive_document_router_routes_and_reports(monkeypatch, tmp_path):
 
     assert result["skipped"][0]["reason"] == "no_route"
 
-    reasons = {
-        item["reason"]
-        for item in result["missing_source"]
-    }
+    reasons = {item["reason"] for item in result["missing_source"]}
 
     assert reasons == {
         "path_missing",
@@ -150,9 +147,7 @@ def test_router_keeps_identical_existing_document_unchanged(
     assert result["routed_count"] == 0
     assert result["already_routed_count"] == 1
     assert result["conflict_count"] == 0
-    assert result["already_routed"][0]["reason"] == (
-        "already_routed_same_content"
-    )
+    assert result["already_routed"][0]["reason"] == ("already_routed_same_content")
     assert destination.read_bytes() == b"PROTOCOL"
     assert destination.stat().st_mtime_ns == original_mtime
 
@@ -198,9 +193,7 @@ def test_router_reports_conflict_without_overwriting_existing_document(
     assert result["routed_count"] == 0
     assert result["already_routed_count"] == 0
     assert result["conflict_count"] == 1
-    assert result["conflicts"][0]["reason"] == (
-        "destination_exists_different_content"
-    )
+    assert result["conflicts"][0]["reason"] == ("destination_exists_different_content")
     assert destination.read_bytes() == b"ORIGINAL CERTIFICATE"
 
 

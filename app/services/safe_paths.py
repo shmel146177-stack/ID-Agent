@@ -1,15 +1,17 @@
 """Portable path validation for project storage and uploaded filenames."""
+
 from pathlib import Path
 
 WINDOWS_RESERVED_NAMES = {"CON", "PRN", "AUX", "NUL", "CONIN$", "CONOUT$"} | {
-    f"{prefix}{number}" for prefix in ("COM", "LPT")
-    for number in "123456789¹²³"
+    f"{prefix}{number}" for prefix in ("COM", "LPT") for number in "123456789¹²³"
 }
 
 
 def validate_name(name: str) -> str:
     if (
-        not name or name != name.strip() or name in {".", ".."}
+        not name
+        or name != name.strip()
+        or name in {".", ".."}
         or name.endswith(".")
         or any(ord(char) < 32 or char in '<>:"/\\|?*' for char in name)
         or name.split(".")[0].rstrip(" ").upper() in WINDOWS_RESERVED_NAMES

@@ -23,9 +23,7 @@ def test_project_api_executive_document_success_and_missing(
         lambda name: str(executive_file),
     )
 
-    response = api_module.download_executive_document(
-        project_name
-    )
+    response = api_module.download_executive_document(project_name)
 
     assert isinstance(response, FileResponse)
     assert Path(response.path).resolve() == executive_file.resolve()
@@ -39,8 +37,6 @@ def test_project_api_executive_document_success_and_missing(
     )
 
     with pytest.raises(HTTPException) as error:
-        api_module.download_executive_document(
-            project_name
-        )
+        api_module.download_executive_document(project_name)
 
     assert error.value.status_code == 404

@@ -37,13 +37,9 @@ def test_pdf_scanner_reads_pages_and_text(monkeypatch):
 
     scanner = PDFScanner()
 
-    result = scanner.read(
-        "test.pdf"
-    )
+    result = scanner.read("test.pdf")
 
     assert result["pages"] == 3
     assert result["text"] == (
-        "Первая страница\n"
-        "Вторая страница\n"
-        "Третья страница\n"
+        "Первая страница\n" "Вторая страница\n" "Третья страница\n"
     )

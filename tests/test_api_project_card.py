@@ -17,9 +17,7 @@ def test_project_api_gets_and_updates_project_card(monkeypatch):
         lambda name: existing_card,
     )
 
-    result = api_module.get_project_card(
-        project_name
-    )
+    result = api_module.get_project_card(project_name)
 
     assert result == existing_card
     assert result["object_name"] == "ТП-101"

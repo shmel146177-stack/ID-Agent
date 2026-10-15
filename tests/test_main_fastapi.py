@@ -33,4 +33,3 @@ def test_main_fastapi_app_and_routes():
     assert "/projects/{project_name}/process" in paths
     assert "/projects/{project_name}/card" in paths
     assert "/projects/{project_name}/package" in paths
-

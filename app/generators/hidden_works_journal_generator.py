@@ -473,21 +473,12 @@ class HiddenWorksJournalGenerator:
             if not isinstance(saved, dict):
                 saved = {}
 
-            work_start_date = (
-                saved.get("work_start_date")
-                or ""
-            )
+            work_start_date = saved.get("work_start_date") or ""
 
-            work_finish_date = (
-                saved.get("work_finish_date")
-                or ""
-            )
+            work_finish_date = saved.get("work_finish_date") or ""
 
             if work_start_date and work_finish_date:
-                work_date = (
-                    f"{work_start_date} - "
-                    f"{work_finish_date}"
-                )
+                work_date = f"{work_start_date} - " f"{work_finish_date}"
             else:
                 work_date = (
                     work_start_date
@@ -496,26 +487,16 @@ class HiddenWorksJournalGenerator:
                     or "[УКАЗАТЬ]"
                 )
 
-            act_number = (
-                saved.get("act_number")
-                or "[УКАЗАТЬ]"
-            )
+            act_number = saved.get("act_number") or "[УКАЗАТЬ]"
 
             values = [
                 str(row_index),
-                (
-                    act.get("act_title")
-                    or act.get("title")
-                    or ""
-                ),
+                (act.get("act_title") or act.get("title") or ""),
                 self._evidence_text(act),
                 (act.get("priority") or ""),
                 work_date,
                 act_number,
-                (
-                    act.get("status")
-                    or "Требует подтверждения"
-                ),
+                (act.get("status") or "Требует подтверждения"),
             ]
 
             for column_index, value in enumerate(values):
@@ -667,9 +648,7 @@ class HiddenWorksJournalGenerator:
 
         project_card = self._load_json(self._project_card_path(project_name))
 
-        act_data = self._load_json(
-            project_path / "hidden_works_act_data.json"
-        )
+        act_data = self._load_json(project_path / "hidden_works_act_data.json")
 
         # ---------------------------------------------------------
         # 3. DOCX

@@ -125,6 +125,7 @@ def test_ai_document_analysis_rejects_invalid_backend_result():
             "Текст документа.",
         )
 
+
 def test_ai_document_analysis_with_openai_builds_backend():
     ai_client = create_ai_client("test-key")
 
@@ -136,7 +137,6 @@ def test_ai_document_analysis_with_openai_builds_backend():
     assert service.ai_client is ai_client
     assert service.analysis_backend.ai_client is ai_client
     assert service.analysis_backend.max_input_chars == 1234
-
 
 
 def test_ai_document_analysis_falls_back_when_backend_unavailable():
@@ -157,9 +157,7 @@ def test_ai_document_analysis_falls_back_when_backend_unavailable():
     assert result.engineering_confirmation is False
     assert "AI-анализ" in result.summary
     assert "временно недоступен" in result.summary
-    assert "Детерминированный анализ ID-Agent остается доступен." in (
-        result.warnings
-    )
+    assert "Детерминированный анализ ID-Agent остается доступен." in (result.warnings)
 
 
 def test_ai_document_analysis_passes_knowledge_context_to_backend():
@@ -175,11 +173,7 @@ def test_ai_document_analysis_passes_knowledge_context_to_backend():
         ai_client=create_ai_client("test-key"),
         analysis_backend=backend,
     )
-    knowledge_context = (
-        "[SOURCE 1]\n"
-        "source_id: sp-grounding\n"
-        "[/SOURCE]"
-    )
+    knowledge_context = "[SOURCE 1]\n" "source_id: sp-grounding\n" "[/SOURCE]"
 
     result = service.analyze_text(
         "document.pdf",
@@ -268,6 +262,7 @@ def test_ai_document_analysis_reports_unavailable_provider_diagnostics():
     assert result.ai_model == "test-model"
     assert result.fallback_reason == "provider_unavailable"
 
+
 def test_ai_document_analysis_preserves_provider_failure_reason():
     def backend(filename, text):
         raise AIUnavailableError(
@@ -341,6 +336,7 @@ def test_ai_document_analysis_uses_autonomous_backend_without_api_key():
     assert "Autonomous analysis completed." in result.summary
     assert "Autonomous deterministic rules used." in result.warnings
 
+
 def test_ai_document_analysis_uses_autonomous_backend_when_disabled():
     calls = []
 
@@ -382,6 +378,7 @@ def test_ai_document_analysis_uses_autonomous_backend_when_disabled():
     assert result.facts[0].field == "voltage"
     assert result.facts[0].value == "400 В"
     assert "Local deterministic analysis completed." in result.summary
+
 
 def test_ai_document_analysis_uses_autonomous_backend_after_provider_failure():
     autonomous_calls = []
@@ -431,6 +428,7 @@ def test_ai_document_analysis_uses_autonomous_backend_after_provider_failure():
     assert result.facts[0].field == "ip"
     assert result.facts[0].value == "IP54"
     assert "Local fallback analysis completed." in result.summary
+
 
 def test_ai_document_analysis_preserves_excluded_autonomous_fact_fields():
     from app.models.ai_analysis import AutonomousAnalysisResult

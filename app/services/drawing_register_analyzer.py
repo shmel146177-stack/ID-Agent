@@ -343,16 +343,17 @@ class DrawingRegisterAnalyzer:
         marker_indexes = [
             index
             for index, line in enumerate(lines)
-            if any(
-                marker in self._normalize(line)
-                for marker in self.REGISTER_MARKERS
-            )
+            if any(marker in self._normalize(line) for marker in self.REGISTER_MARKERS)
         ]
 
-        start_index = marker_indexes[0] if marker_indexes else (
-            self._find_register_block_start(
-                lines,
-                allow_title_only=allow_title_only,
+        start_index = (
+            marker_indexes[0]
+            if marker_indexes
+            else (
+                self._find_register_block_start(
+                    lines,
+                    allow_title_only=allow_title_only,
+                )
             )
         )
 

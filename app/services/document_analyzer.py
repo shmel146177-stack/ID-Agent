@@ -17,7 +17,7 @@ class DocumentAnalyzer:
             "ip": None,
             "frequency": None,
             "weight": None,
-            "serial_number": None
+            "serial_number": None,
         }
 
         text_lower = text.lower()
@@ -30,57 +30,38 @@ class DocumentAnalyzer:
             result["document_type"] = "Документация оборудования"
 
         # Изготовитель
-        match = re.search(
-            r'ООО\s+"[^"]+"',
-            text
-        )
+        match = re.search(r'ООО\s+"[^"]+"', text)
 
         if match:
             result["manufacturer"] = match.group().strip()
 
         # Дата
-        match = re.search(
-            r"\d{2}\.\d{2}\.\d{4}",
-            text
-        )
+        match = re.search(r"\d{2}\.\d{2}\.\d{4}", text)
 
         if match:
             result["date"] = match.group()
 
         # Номер чертежа
-        match = re.search(
-            r"[А-ЯA-Z]{2,}\.\d+\.[А-ЯA-Z0-9\-]+",
-            text
-        )
+        match = re.search(r"[А-ЯA-Z]{2,}\.\d+\.[А-ЯA-Z0-9\-]+", text)
 
         if match:
             result["drawing_number"] = match.group()
 
         # Оборудование
-        match = re.search(
-            r"Шкаф управления[^\n]+",
-            text,
-            re.IGNORECASE
-        )
+        match = re.search(r"Шкаф управления[^\n]+", text, re.IGNORECASE)
 
         if match:
             result["equipment"] = match.group().strip()
 
         # Мощность
-        match = re.search(
-            r"\d+(?:,\d+)?\s*кВт",
-            text,
-            re.IGNORECASE
-        )
+        match = re.search(r"\d+(?:,\d+)?\s*кВт", text, re.IGNORECASE)
 
         if match:
             result["power"] = match.group().strip()
 
         # Номинальный ток
         match = re.search(
-            r"Iном\s*=?\s*\(?([0-9]+\s*-\s*[0-9]+)\)?\s*А",
-            text,
-            re.IGNORECASE
+            r"Iном\s*=?\s*\(?([0-9]+\s*-\s*[0-9]+)\)?\s*А", text, re.IGNORECASE
         )
 
         if match:
@@ -100,11 +81,7 @@ class DocumentAnalyzer:
         )
 
         if input_voltage_match:
-            result["voltage"] = (
-                " ".join(
-                    input_voltage_match.group(1).split()
-                )
-            )
+            result["voltage"] = " ".join(input_voltage_match.group(1).split())
         else:
             match = re.search(
                 r"\b\d+(?:,\d+)?\s*В\b",
@@ -116,43 +93,22 @@ class DocumentAnalyzer:
                 result["voltage"] = match.group().strip()
 
         # Степень защиты
-        match = re.search(
-            r"\bIP\s*\d{2}\b",
-            text,
-            re.IGNORECASE
-        )
+        match = re.search(r"\bIP\s*\d{2}\b", text, re.IGNORECASE)
 
         if match:
-            result["ip"] = (
-                match.group()
-                .replace(" ", "")
-                .upper()
-            )
+            result["ip"] = match.group().replace(" ", "").upper()
 
         # Частота
-        match = re.search(
-            r"\b\d+\s*Гц\b",
-            text,
-            re.IGNORECASE
-        )
+        match = re.search(r"\b\d+\s*Гц\b", text, re.IGNORECASE)
 
         if match:
             value = match.group().strip()
-            value = re.sub(
-                r"\s*Гц",
-                " Гц",
-                value,
-                flags=re.IGNORECASE
-            )
+            value = re.sub(r"\s*Гц", " Гц", value, flags=re.IGNORECASE)
 
             result["frequency"] = value
 
         # Масса
-        match = re.search(
-            r"\b\d+(?:,\d+)?\s*кг\b",
-            text,
-            re.IGNORECASE
-        )
+        match = re.search(r"\b\d+(?:,\d+)?\s*кг\b", text, re.IGNORECASE)
 
         if match:
             result["weight"] = match.group().strip()
@@ -165,16 +121,12 @@ class DocumentAnalyzer:
         serial_patterns = [
             r"серийный\s+номер\s*[:№]?\s*([A-ZА-ЯЁ0-9][A-ZА-ЯЁ0-9\-\/\.]{2,})",
             r"заводской\s+номер\s*[:№]?\s*([A-ZА-ЯЁ0-9][A-ZА-ЯЁ0-9\-\/\.]{2,})",
-            r"зав\.\s*№\s*([A-ZА-ЯЁ0-9][A-ZА-ЯЁ0-9\-\/\.]{2,})"
+            r"зав\.\s*№\s*([A-ZА-ЯЁ0-9][A-ZА-ЯЁ0-9\-\/\.]{2,})",
         ]
 
         for pattern in serial_patterns:
 
-            match = re.search(
-                pattern,
-                text,
-                re.IGNORECASE
-            )
+            match = re.search(pattern, text, re.IGNORECASE)
 
             if match:
 

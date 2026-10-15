@@ -27,11 +27,14 @@ def test_project_api_creates_hidden_works_act(
     monkeypatch.setattr(
         api_module.hidden_works_act_generator,
         "save_act_data",
-        lambda project_name, act_code, act_data: saved.update({
-            "project_name": project_name,
-            "act_code": act_code,
-            "act_data": act_data,
-        }) or {"status": "saved"},
+        lambda project_name, act_code, act_data: saved.update(
+            {
+                "project_name": project_name,
+                "act_code": act_code,
+                "act_data": act_data,
+            }
+        )
+        or {"status": "saved"},
     )
 
     monkeypatch.setattr(
@@ -77,13 +80,9 @@ def test_project_api_creates_hidden_works_act(
     assert saved["project_name"] == project_name
     assert saved["act_code"] == "grounding_device"
 
-    assert (
-        saved["act_data"]["actual_materials"]
-        == "Полоса 40x5 мм"
-    )
+    assert saved["act_data"]["actual_materials"] == "Полоса 40x5 мм"
 
     assert response.headers["x-act-number"] == "1"
     assert response.headers["x-acts-count"] == "1"
     assert response.headers["x-excel-updated"] == "true"
     assert response.headers["x-package-updated"] == "true"
-

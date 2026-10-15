@@ -15,16 +15,12 @@ def test_project_package_create_zip_creates_real_archive(monkeypatch, tmp_path):
 
     package_folder.mkdir(parents=True)
 
-    (package_folder / "report.docx").write_bytes(
-        b"REPORT"
-    )
+    (package_folder / "report.docx").write_bytes(b"REPORT")
 
     nested_folder = package_folder / "08_final"
     nested_folder.mkdir()
 
-    (nested_folder / "registry.xlsx").write_bytes(
-        b"REGISTRY"
-    )
+    (nested_folder / "registry.xlsx").write_bytes(b"REGISTRY")
 
     (nested_folder / "package_manifest.json").write_text(
         '{"project": "TEST_PROJECT"}',
@@ -60,21 +56,15 @@ def test_project_package_create_zip_creates_real_archive(monkeypatch, tmp_path):
         "r",
     ) as archive:
 
-        names = set(
-            archive.namelist()
-        )
+        names = set(archive.namelist())
 
         assert "report.docx" in names
         assert "08_final/registry.xlsx" in names
         assert "08_final/package_manifest.json" in names
 
-        assert archive.read(
-            "report.docx"
-        ) == b"REPORT"
+        assert archive.read("report.docx") == b"REPORT"
 
-        assert archive.read(
-            "08_final/registry.xlsx"
-        ) == b"REGISTRY"
+        assert archive.read("08_final/registry.xlsx") == b"REGISTRY"
 
 
 def test_project_package_zip_preserves_unmatched_quality_section_manifest(
@@ -146,9 +136,7 @@ def test_project_package_zip_preserves_unmatched_quality_section_manifest(
         assert "package_manifest.json" in archive.namelist()
 
         archived_manifest = json.loads(
-            archive.read(
-                "package_manifest.json"
-            ).decode("utf-8")
+            archive.read("package_manifest.json").decode("utf-8")
         )
 
     section = archived_manifest["document_sections"][0]
@@ -230,9 +218,7 @@ def test_project_package_zip_preserves_matching_quality_section_manifest(
         assert "package_manifest.json" in archive.namelist()
 
         archived_manifest = json.loads(
-            archive.read(
-                "package_manifest.json"
-            ).decode("utf-8")
+            archive.read("package_manifest.json").decode("utf-8")
         )
 
     section = archived_manifest["document_sections"][0]
@@ -314,9 +300,7 @@ def test_project_package_zip_preserves_matching_cable_protocol_section_manifest(
         assert "package_manifest.json" in archive.namelist()
 
         archived_manifest = json.loads(
-            archive.read(
-                "package_manifest.json"
-            ).decode("utf-8")
+            archive.read("package_manifest.json").decode("utf-8")
         )
 
     section = archived_manifest["document_sections"][0]
@@ -398,9 +382,7 @@ def test_project_package_zip_preserves_wrong_cable_protocol_section_incomplete(
         assert "package_manifest.json" in archive.namelist()
 
         archived_manifest = json.loads(
-            archive.read(
-                "package_manifest.json"
-            ).decode("utf-8")
+            archive.read("package_manifest.json").decode("utf-8")
         )
 
     section = archived_manifest["document_sections"][0]
@@ -482,9 +464,7 @@ def test_project_package_zip_preserves_matching_cable_entry_scheme_manifest(
         assert "package_manifest.json" in archive.namelist()
 
         archived_manifest = json.loads(
-            archive.read(
-                "package_manifest.json"
-            ).decode("utf-8")
+            archive.read("package_manifest.json").decode("utf-8")
         )
 
     section = archived_manifest["document_sections"][0]
@@ -566,9 +546,7 @@ def test_project_package_zip_preserves_wrong_cable_entry_scheme_incomplete(
         assert "package_manifest.json" in archive.namelist()
 
         archived_manifest = json.loads(
-            archive.read(
-                "package_manifest.json"
-            ).decode("utf-8")
+            archive.read("package_manifest.json").decode("utf-8")
         )
 
     section = archived_manifest["document_sections"][0]
@@ -650,9 +628,7 @@ def test_project_package_zip_preserves_matching_supports_scheme_manifest(
         assert "package_manifest.json" in archive.namelist()
 
         archived_manifest = json.loads(
-            archive.read(
-                "package_manifest.json"
-            ).decode("utf-8")
+            archive.read("package_manifest.json").decode("utf-8")
         )
 
     section = archived_manifest["document_sections"][0]
@@ -734,9 +710,7 @@ def test_project_package_zip_preserves_wrong_supports_scheme_incomplete(
         assert "package_manifest.json" in archive.namelist()
 
         archived_manifest = json.loads(
-            archive.read(
-                "package_manifest.json"
-            ).decode("utf-8")
+            archive.read("package_manifest.json").decode("utf-8")
         )
 
     section = archived_manifest["document_sections"][0]
@@ -818,9 +792,7 @@ def test_project_package_zip_preserves_matching_grounding_scheme_manifest(
         assert "package_manifest.json" in archive.namelist()
 
         archived_manifest = json.loads(
-            archive.read(
-                "package_manifest.json"
-            ).decode("utf-8")
+            archive.read("package_manifest.json").decode("utf-8")
         )
 
     section = archived_manifest["document_sections"][0]
@@ -902,9 +874,7 @@ def test_project_package_zip_preserves_wrong_grounding_scheme_incomplete(
         assert "package_manifest.json" in archive.namelist()
 
         archived_manifest = json.loads(
-            archive.read(
-                "package_manifest.json"
-            ).decode("utf-8")
+            archive.read("package_manifest.json").decode("utf-8")
         )
 
     section = archived_manifest["document_sections"][0]

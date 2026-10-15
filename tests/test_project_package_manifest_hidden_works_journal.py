@@ -15,23 +15,16 @@ def test_project_package_manifest_contains_hidden_works_journal(
     destination_folder = tmp_path / "executive_docs"
 
     journal_folder = (
-        destination_folder
-        / "Исполнительная_документация"
-        / "07_Журналы_работ"
+        destination_folder / "Исполнительная_документация" / "07_Журналы_работ"
     )
 
     journal_folder.mkdir(
         parents=True,
     )
 
-    journal_file = (
-        journal_folder
-        / "Журнал_скрытых_работ_TEST_PROJECT.docx"
-    )
+    journal_file = journal_folder / "Журнал_скрытых_работ_TEST_PROJECT.docx"
 
-    journal_file.write_bytes(
-        b"JOURNAL"
-    )
+    journal_file.write_bytes(b"JOURNAL")
 
     processor_result = {
         "status": "Готово",
@@ -71,9 +64,7 @@ def test_project_package_manifest_contains_hidden_works_journal(
         )
     )
 
-    journal = manifest[
-        "hidden_works_journal"
-    ]
+    journal = manifest["hidden_works_journal"]
 
     expected_path = (
         "Исполнительная_документация"
@@ -85,9 +76,4 @@ def test_project_package_manifest_contains_hidden_works_journal(
     assert journal["exists"] is True
     assert journal["size_bytes"] > 0
 
-    assert (
-        manifest["generated_documents"][
-            "hidden_works_journal"
-        ]
-        == expected_path
-    )
+    assert manifest["generated_documents"]["hidden_works_journal"] == expected_path

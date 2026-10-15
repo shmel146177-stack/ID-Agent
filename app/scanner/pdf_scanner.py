@@ -12,7 +12,4 @@ class PDFScanner:
         for page in doc:
             text += page.get_text()
 
-        return {
-            "pages": len(doc),
-            "text": text
-        }
+        return {"pages": len(doc), "text": text}

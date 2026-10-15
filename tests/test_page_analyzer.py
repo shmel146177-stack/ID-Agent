@@ -37,10 +37,7 @@ def test_page_analyzer_priority_ocr_and_unknown():
     )
 
     assert priority_result["page"] == 2
-    assert (
-        priority_result["page_type"]
-        == "Ведомость рабочих чертежей"
-    )
+    assert priority_result["page_type"] == "Ведомость рабочих чертежей"
     assert priority_result["score"] == 100
     assert priority_result["text_length"] == len(priority_text)
     assert priority_result["preview"]
@@ -85,8 +82,16 @@ def test_drawing_title_block_is_not_approval():
 
 def test_real_approval_without_drawing_stamp_is_preserved():
     analyzer = PageAnalyzer()
-    assert analyzer.analyze_page("Лист согласования к ТЗ. Согласовано начальником", 8)["page_type"] == "Согласование"
-    assert analyzer.analyze_page("Технические условия на присоединение", 9)["page_type"] == "Технические условия"
+    assert (
+        analyzer.analyze_page("Лист согласования к ТЗ. Согласовано начальником", 8)[
+            "page_type"
+        ]
+        == "Согласование"
+    )
+    assert (
+        analyzer.analyze_page("Технические условия на присоединение", 9)["page_type"]
+        == "Технические условия"
+    )
 
 
 def test_review_pages_are_classified_by_stable_markers():

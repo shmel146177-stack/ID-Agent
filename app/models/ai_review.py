@@ -41,13 +41,9 @@ class ExcludedAutonomousFactReview(BaseModel):
 
         if self.decision == "corrected":
             if self.corrected_value is None:
-                raise ValueError(
-                    "corrected decision requires corrected value"
-                )
+                raise ValueError("corrected decision requires corrected value")
         elif self.corrected_value is not None:
-            raise ValueError(
-                "corrected value is only allowed for corrected decision"
-            )
+            raise ValueError("corrected value is only allowed for corrected decision")
 
         if self.notes is not None:
             self.notes = self.notes.strip()
@@ -62,14 +58,9 @@ class ExcludedAutonomousFactReview(BaseModel):
                 raise ValueError("reviewed by must not be blank")
 
         if (self.reviewed_by is None) != (self.reviewed_at is None):
-            raise ValueError(
-                "reviewed by and reviewed at must be provided together"
-            )
+            raise ValueError("reviewed by and reviewed at must be provided together")
 
-        if (
-            self.reviewed_at is not None
-            and self.reviewed_at.tzinfo is None
-        ):
+        if self.reviewed_at is not None and self.reviewed_at.tzinfo is None:
             raise ValueError("reviewed at must include timezone")
 
         return self
@@ -103,20 +94,17 @@ class ExcludedAutonomousFactReviewHistory(BaseModel):
             raise ValueError("history reviewed at must include timezone")
 
         if self.action == "created" and (
-            self.previous_review is not None
-            or self.current_review is None
+            self.previous_review is not None or self.current_review is None
         ):
             raise ValueError("created history requires only current review")
 
         if self.action == "updated" and (
-            self.previous_review is None
-            or self.current_review is None
+            self.previous_review is None or self.current_review is None
         ):
             raise ValueError("updated history requires both reviews")
 
         if self.action == "cleared" and (
-            self.previous_review is None
-            or self.current_review is not None
+            self.previous_review is None or self.current_review is not None
         ):
             raise ValueError("cleared history requires only previous review")
 
@@ -139,12 +127,10 @@ class AIReviewDecision(BaseModel):
     ]
     review_revision: int = Field(default=0, ge=0)
     notes: str | None = None
-    excluded_fact_reviews: list[
-        ExcludedAutonomousFactReview
-    ] = Field(default_factory=list)
-    excluded_fact_review_history: list[
-        ExcludedAutonomousFactReviewHistory
-    ] = Field(
+    excluded_fact_reviews: list[ExcludedAutonomousFactReview] = Field(
+        default_factory=list
+    )
+    excluded_fact_review_history: list[ExcludedAutonomousFactReviewHistory] = Field(
         default_factory=list,
         exclude_if=lambda value: not value,
     )
@@ -154,9 +140,7 @@ class AIReviewDecision(BaseModel):
         fields = [review.field for review in self.excluded_fact_reviews]
 
         if len(fields) != len(set(fields)):
-            raise ValueError(
-                "reviewed excluded fact fields must be unique"
-            )
+            raise ValueError("reviewed excluded fact fields must be unique")
 
         return self
 
