@@ -4,7 +4,7 @@ import json
 from collections.abc import Callable
 from typing import NoReturn, TypeVar
 
-from openai import APIError, RateLimitError
+from openai import APIError, AuthenticationError, RateLimitError
 from pydantic import ValidationError
 
 from app.models.ai_analysis import AIAnalysisResult
@@ -134,6 +134,12 @@ def run_provider_call(call: Callable[[], ResultT], label: str) -> ResultT:
 
 def raise_provider_error(error: Exception, label: str) -> NoReturn:
     """Перевести ошибку провайдера в AIUnavailableError с причиной."""
+
+    if isinstance(error, AuthenticationError):
+        raise AIUnavailableError(
+            f"{label} API отклонил ключ: проверьте ID_AGENT_AI_API_KEY",
+            reason="invalid_credential",
+        ) from error
 
     if isinstance(error, RateLimitError):
         if getattr(error, "code", None) == "credit_balance_exhausted":

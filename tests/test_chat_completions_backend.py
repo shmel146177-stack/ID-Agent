@@ -1,5 +1,10 @@
 import pytest
-from openai import APIConnectionError, BadRequestError, RateLimitError
+from openai import (
+    APIConnectionError,
+    AuthenticationError,
+    BadRequestError,
+    RateLimitError,
+)
 
 from app.models.ai_analysis import AIAnalysisResult
 from app.services.ai_client import AIClient, AIUnavailableError
@@ -314,3 +319,19 @@ def test_analysis_reports_configured_provider_and_model():
     assert result.ai_model == "deepseek-flash"
     assert result.analysis_mode == "openai"
     assert result.fallback_reason is None
+
+
+def test_chat_backend_reports_rejected_key():
+    def failing_parse(**kwargs):
+        exception = AuthenticationError.__new__(AuthenticationError)
+        Exception.__init__(exception, "Authentication Fails")
+        raise exception
+
+    backend, openai_stub, _ = create_backend([])
+    openai_stub.chat.completions.parse = failing_parse
+
+    with pytest.raises(AIUnavailableError) as error:
+        backend("document.pdf", "Текст документа.")
+
+    assert error.value.reason == "invalid_credential"
+    assert "ID_AGENT_AI_API_KEY" in str(error.value)

@@ -14,6 +14,7 @@ AIFallbackReason = Literal[
     "ai_disabled",
     "backend_not_connected",
     "provider_unavailable",
+    "invalid_credential",
     "credit_balance_exhausted",
     "rate_limit_exceeded",
     "invalid_provider_response",
