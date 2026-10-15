@@ -23,6 +23,9 @@ def test_ai_status_without_api_key(monkeypatch):
 
     assert data == {
         "provider": "openai",
+        "protocol": "responses",
+        "base_url": None,
+        "requires_api_key": True,
         "configured": False,
         "enabled": False,
         "active": False,
@@ -102,6 +105,9 @@ def test_ai_analyze_does_not_use_openai_when_disabled(
     assert status_response.status_code == 200
     assert status_response.json() == {
         "provider": "openai",
+        "protocol": "responses",
+        "base_url": None,
+        "requires_api_key": True,
         "configured": True,
         "enabled": False,
         "active": False,

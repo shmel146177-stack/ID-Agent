@@ -1,14 +1,15 @@
-﻿from collections.abc import Callable
+from collections.abc import Callable
 from typing import Any
 
 from openai import OpenAI
 
 from app.services.ai_settings import AISettings
 
+LOCAL_API_KEY_PLACEHOLDER = "local-provider"
+
 
 class AIUnavailableError(RuntimeError):
     """AI-сервис не настроен или временно недоступен."""
-
 
     DEFAULT_REASON = "provider_unavailable"
 
@@ -47,7 +48,8 @@ class AIClient:
     def get_client(self):
         if not self.configured:
             raise AIUnavailableError(
-                "OpenAI API не настроен: отсутствует OPENAI_API_KEY",
+                "AI-провайдер не настроен: задайте ID_AGENT_AI_API_KEY "
+                "или OPENAI_API_KEY",
                 reason="api_not_configured",
             )
 
@@ -58,8 +60,22 @@ class AIClient:
             )
 
         if self._client is None:
-            self._client = self.client_factory(
-                api_key=self.settings.api_key,
-            )
+            self._client = self._build_client()
 
         return self._client
+
+    def _build_client(self):
+        """Создать клиент провайдера с учётом адреса и наличия ключа."""
+
+        kwargs: dict[str, Any] = {}
+
+        if self.settings.api_key:
+            kwargs["api_key"] = self.settings.api_key
+        elif not self.settings.requires_api_key:
+            # Локальный сервер ключ не проверяет, но SDK требует значение.
+            kwargs["api_key"] = LOCAL_API_KEY_PLACEHOLDER
+
+        if self.settings.base_url:
+            kwargs["base_url"] = self.settings.base_url
+
+        return self.client_factory(**kwargs)

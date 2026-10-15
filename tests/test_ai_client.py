@@ -1,6 +1,10 @@
-﻿import pytest
+import pytest
 
-from app.services.ai_client import AIClient, AIUnavailableError
+from app.services.ai_client import (
+    LOCAL_API_KEY_PLACEHOLDER,
+    AIClient,
+    AIUnavailableError,
+)
 from app.services.ai_settings import AISettings
 
 
@@ -28,6 +32,9 @@ def test_ai_client_does_not_initialize_without_api_key():
     assert client.configured is False
     assert client.status() == {
         "provider": "openai",
+        "protocol": "responses",
+        "base_url": None,
+        "requires_api_key": True,
         "configured": False,
         "enabled": False,
         "active": False,
@@ -128,6 +135,7 @@ def test_ai_client_does_not_initialize_when_ai_disabled():
     assert error.value.reason == "ai_disabled"
     assert factory.calls == []
 
+
 def test_ai_unavailable_error_exposes_reason():
     error = AIUnavailableError(
         "Provider unavailable",
@@ -136,3 +144,56 @@ def test_ai_unavailable_error_exposes_reason():
 
     assert str(error) == "Provider unavailable"
     assert error.reason == "credit_balance_exhausted"
+
+
+def test_ai_client_passes_base_url_of_provider():
+    factory = ClientFactoryStub()
+    settings = AISettings(
+        api_key="deepseek-key",
+        model="deepseek-flash",
+        enabled=True,
+        provider="deepseek",
+        protocol="chat_completions",
+        base_url="https://api.deepseek.com",
+    )
+    client = AIClient(
+        settings=settings,
+        client_factory=factory,
+    )
+
+    client.get_client()
+
+    assert factory.calls == [
+        {
+            "api_key": "deepseek-key",
+            "base_url": "https://api.deepseek.com",
+        }
+    ]
+
+
+def test_ai_client_uses_placeholder_key_for_local_provider():
+    factory = ClientFactoryStub()
+    settings = AISettings(
+        api_key=None,
+        model="local-qwen-coder",
+        enabled=True,
+        provider="local-qwen",
+        protocol="chat_completions",
+        base_url="http://127.0.0.1:1234/v1",
+        requires_api_key=False,
+    )
+    client = AIClient(
+        settings=settings,
+        client_factory=factory,
+    )
+
+    assert client.configured is True
+
+    client.get_client()
+
+    assert factory.calls == [
+        {
+            "api_key": LOCAL_API_KEY_PLACEHOLDER,
+            "base_url": "http://127.0.0.1:1234/v1",
+        }
+    ]
